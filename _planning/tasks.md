@@ -41,11 +41,13 @@
 
 10. **Design tokens + default theme**  
     - Define minimal `--rs-*` tokens for colors, typography, spacing; implement default theme in base package.  
-    - Document tokens in `_planning/rocketship-plan.md`.
+    - Document tokens in `_planning/rocketship-plan.md`.  
+    - **Combined MR:** Use prompt `_planning/prompt-tasks-10-11-14.md` — **must deliver 10, 11, and 14 together.**
 
 11. **Container component**  
     - Implement Astro Container component + SCSS; support `full`, `wide`, `content` modifiers and `media-breakpoint-up` only.  
-    - Document usage and breakpoints.
+    - Document usage and breakpoints.  
+    - **Combined MR:** Same as task 10 (see prompt above).
 
 12. **Button component**  
     - Implement `.rs-button` with BEM, CSS variables, and container-query-based small/medium/large sizes.  
@@ -57,7 +59,8 @@
 
 14. **Typography components/utilities**  
     - Implement heading/text primitives or utilities using tokens; support size variants via container queries.  
-    - Document mapping between tokens and visual scale.
+    - Document mapping between tokens and visual scale.  
+    - **Combined MR:** Same as tasks 10 and 11 (see `_planning/prompt-tasks-10-11-14.md`); **all three tasks required in one MR.**
 
 15. **Storybook app**  
     - Add `apps/storybook` with Storybook for Astro, wired to `@rocketship/base`.  

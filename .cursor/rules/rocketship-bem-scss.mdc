@@ -1,0 +1,42 @@
+---
+description: BEM naming with rs prefix, SCSS usage, and --rs-* variable conventions for Rocketship components.
+globs:
+  - "**/*.astro"
+  - "**/*.scss"
+alwaysApply: false
+---
+
+# Rocketship BEM and SCSS Conventions
+
+- **BEM block naming**
+  - Use `rs` as the global block prefix to avoid clashes, e.g.:
+    - `.rs-button`, `.rs-button__icon`, `.rs-button--primary`
+    - `.rs-link`, `.rs-link__icon`, `.rs-link--muted`
+  - Elements use `__`, modifiers use `--` exactly as in classic BEM.
+
+- **Class responsibilities**
+  - Blocks are reusable components (e.g. `rs-button`, `rs-container`).
+  - Elements are structural parts of a block (e.g. `rs-button__label`, `rs-card__media`).
+  - Modifiers represent visual/behavioral variants (e.g. `rs-button--secondary`, `rs-button--outline`).
+
+- **SCSS usage**
+  - Prefer SCSS for authoring styles; compile to CSS for consumers.
+  - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
+  - Keep SCSS files organized by component (e.g. `button.scss`, `container.scss`, `typography.scss`).
+
+- **CSS variable conventions**
+  - All design tokens and component-level variables exposed to users should be named with the `--rs-*` prefix, for example:
+    - `--rs-color-bg`, `--rs-color-fg`
+    - `--rs-color-accent`, `--rs-color-border`
+    - `--rs-font-family-sans`, `--rs-font-size-md`
+    - `--rs-space-sm`, `--rs-radius-md`
+  - Component-specific variables should still follow the `--rs-*` prefix and clearly indicate scope (e.g. `--rs-button-bg`, `--rs-button-border-radius`).
+
+- **No inline styles for design**
+  - Do not use inline `style="..."` attributes for anything related to design or theming.
+  - Use classes + `--rs-*` variables instead so themes and consumers can override styles cleanly.
+
+- **Selector style**
+  - Prefer class-based selectors; avoid element-tag or ID-based styling in reusable components.
+  - Keep selector nesting shallow in SCSS; rely on BEM structure rather than deep descendant chains.
+

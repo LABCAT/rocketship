@@ -1,0 +1,38 @@
+---
+description: Rocketship theming model with default rocketship theme and planet theme packages using CSS variables only.
+globs:
+  - "**/*.astro"
+  - "**/*.scss"
+alwaysApply: false
+---
+
+# Rocketship Themes
+
+- **Default theme**
+  - Implement a “rocketship / space-station” visual identity as the default theme.
+  - Default theme lives in the base package (e.g. `@rocketship/base`) and provides fallback values for all `--rs-*` variables.
+  - Components should look good and be accessible using only the default theme values.
+
+- **Planet themes**
+  - Provide eight additional themes, one per planet (e.g. Mars, Venus, Jupiter).
+  - Each theme is a separate package (e.g. `@rocketship/theme-mars`) that exports **only CSS variable overrides**; no components.
+  - Planet themes override subsets of the `--rs-*` variables to evoke the character of each planet while respecting accessibility constraints.
+
+- **Theming mechanics**
+  - Theming is driven purely by CSS variables (no JS required for the base experience).
+  - Variables follow the `--rs-*` naming convention and are grouped into:
+    - Color tokens (backgrounds, text, borders, accents)
+    - Typography tokens (font families, sizes, weights, line heights)
+    - Layout tokens (spacing, radius, shadows)
+  - Default theme = variable definitions; planet themes = overrides.
+
+- **Light / dark modes**
+  - Each theme should support light and dark variants guided by user preference (e.g. `prefers-color-scheme` or a root attribute).
+  - Use the same variable names across modes; only values change.
+
+- **Consumer experience**
+  - Consumers should be able to:
+    - Use the default theme out of the box (no extra configuration).
+    - Swap in a planet theme by including its CSS and applying the recommended root selector / attribute.
+    - Further customize by overriding `--rs-*` variables at project level without editing Rocketship source.
+

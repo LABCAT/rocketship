@@ -1,0 +1,33 @@
+---
+description: Accessibility expectations for Rocketship components and stories (WCAG targets, semantics, Storybook a11y).
+globs:
+  - "**/*.astro"
+  - "**/*.tsx"
+  - "**/*.ts"
+alwaysApply: false
+---
+
+# Rocketship Accessibility (a11y)
+
+- **Targets**
+  - Treat **WCAG 2.1 AA** as the minimum bar; aim for **AAA** where it does not conflict with the intended aesthetic or legibility.
+  - Follow contrast ratios of at least 4.5:1 for normal text, 3:1 for large text; prefer 7:1 / 4.5:1 when practical.
+
+- **Semantics and structure**
+  - Use semantic HTML elements by default: buttons as `<button>`, links as `<a>`, headings as `<h1>`–`<h6>`, etc.
+  - Ensure every interactive component has clear focus states and is operable via keyboard.
+  - Avoid using `div`/`span` with click handlers for semantic controls unless there is a strong reason and ARIA is correctly applied.
+
+- **ARIA and roles**
+  - Add ARIA attributes only when needed to express semantics that HTML cannot represent alone.
+  - Do not overuse roles; prefer native elements over re-creating them with ARIA.
+
+- **Storybook usage**
+  - All interactive components should have stories that include:
+    - Keyboard interaction examples.
+    - At least one variant that passes the Storybook a11y checks.
+  - Use automated a11y tooling (e.g. axe Storybook addon) as part of the review process.
+
+- **Docs**
+  - When a trade-off is made (e.g. visually subtle focus ring, theme-specific contrast issue), document it in the component’s MDX/notes so future changes are intentional.
+

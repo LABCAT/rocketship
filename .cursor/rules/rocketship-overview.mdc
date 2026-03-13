@@ -1,0 +1,34 @@
+---
+description: Rocketship Astro component library overview, architecture, and goals.
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Rocketship Overview
+
+- **What Rocketship is**
+  - Astro-focused component library designed to be highly themeable and CSS-first.
+  - Lives in this pnpm monorepo alongside the Payload/Next backend and Astro frontend.
+  - Long-term: full component suite comparable to other major UI libraries, plus a Payload template / collection / component library and optional Figma kit.
+
+- **Core principles**
+  - Prefer **SCSS/CSS over JavaScript**; MVP must be complete with CSS-only components and themes before any JS-required components are added.
+  - Components are styled via **CSS custom properties** (`--rs-*`) with sensible fallback values.
+  - Use **BEM with `rs` prefix** for all blocks (e.g. `.rs-button`, `.rs-button__icon`, `.rs-button--primary`).
+
+- **Monorepo / packaging strategy**
+  - Base package (e.g. `@rocketship/base`) exports primitives, design tokens, default theme, and core components.
+  - Add-on packages (forms, layout, ecommerce, etc.) extend the system without breaking the base.
+  - All packages are intended to be consumable via npm; internal apps (Astro frontend, Storybook) depend on them via workspace references.
+
+- **Theming model**
+  - Default theme = “rocketship / space-station” aesthetic, implemented as fallback values for `--rs-*`.
+  - Eight planet themes shipped as separate packages of **CSS variable overrides only** (no components).
+  - Light/dark variants per theme follow user preference; theming is purely CSS-based.
+
+- **Docs and tooling**
+  - `_planning/rocketship-plan.md` is the source of truth for project vision, decisions, and roadmap.
+  - `_planning/tasks.md` holds the task list and acceptance criteria used by background agents.
+  - A dedicated **Storybook for Astro** app (e.g. `apps/storybook`) will be used for demos, visual regression, and a11y testing.
+

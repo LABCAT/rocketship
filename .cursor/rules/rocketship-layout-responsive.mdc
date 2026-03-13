@@ -1,0 +1,37 @@
+---
+description: Rocketship layout and responsive rules using media queries for layout only and container queries for component sizing.
+globs:
+  - "**/*.astro"
+  - "**/*.scss"
+alwaysApply: false
+---
+
+# Rocketship Layout and Responsive Rules
+
+- **Media queries = layout only**
+  - Use viewport media queries **only** for top-level layout and container components.
+  - Follow a Bootstrap-style `media-breakpoint-up` pattern (min-width breakpoints, mobile-first).
+  - Do not sprinkle viewport media queries into individual components for sizing; use container queries instead.
+
+- **Container component**
+  - Provide a dedicated Container layout block (e.g. `.rs-container`) with width modifiers:
+    - `full` (full width)
+    - `wide` (default ~1200px)
+    - `content` (default ~800px)
+  - Containers are responsible for:
+    - Applying max-widths at specific breakpoints.
+    - Handling page gutters and horizontal padding.
+  - Media queries in SCSS should live with container/layout code, not with leaf components.
+
+- **Breakpoints**
+  - Use a small, explicit set of min-width breakpoints (e.g. `sm`, `md`, `lg`, `xl`) for layout only.
+  - Keep breakpoint logic centralized (e.g. in a SCSS partial) rather than re-declaring values per component.
+
+- **Container queries for component size**
+  - Size-aware components (buttons, cards, media blocks, typography scales, etc.) must use **container queries** to switch between small / medium / large, based on their container’s width.
+  - Avoid tying component size to the viewport; components should behave correctly when reused inside any container context.
+
+- **General guidance**
+  - When you find yourself adding a viewport media query inside a component, ask whether it should instead be a container-aware rule or belong in a layout/container SCSS file.
+  - Keep layout responsibilities (page structure, container widths, grids) clearly separated from component responsibilities (local styling, variants, tokens).
+

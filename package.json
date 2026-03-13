@@ -17,6 +17,7 @@
     "dev:backend": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "dev:all": "pnpm -r --parallel --filter . --filter @rocketship/frontend dev",
     "dev:frontend": "pnpm --filter @rocketship/frontend dev",
+    "env:payload-secret": "node scripts/env-payload-secret.mjs",
     "devsafe": "rm -rf .next && rm -rf .open-next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "pnpm run generate:types:cloudflare && pnpm run generate:types:payload",

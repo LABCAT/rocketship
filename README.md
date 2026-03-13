@@ -10,15 +10,26 @@ This repository is a pnpm workspace that hosts both the Payload CMS backend and 
 ## Monorepo quick start
 
 ```bash
-nvm use              # install/use Node 24
-pnpm install         # install workspace deps
+nvm use                  # install/use Node 24
+pnpm install             # install workspace deps (root + apps + packages)
 pnpm env:payload-secret  # generate/update PAYLOAD_SECRET in .env
-pnpm dev:backend     # start Payload/Next API + admin (http://localhost:3000)
-pnpm dev:frontend    # start Astro frontend (http://localhost:4321)
-pnpm dev:all         # start backend and frontend together (parallel)
+pnpm dev:backend         # Payload/Next API + admin (http://localhost:3000)
+pnpm dev:frontend        # Astro frontend (http://localhost:4321)
+pnpm dev:storybook       # Storybook for Rocketship components (http://localhost:6006)
+pnpm dev:all             # backend + frontend in parallel
 ```
 
-Set `PUBLIC_PAYLOAD_URL` (for example `http://localhost:3000`) when running the frontend so its links target the correct backend.
+Set `PUBLIC_PAYLOAD_URL` (e.g. `http://localhost:3000`) when running the frontend so its links target the correct backend.
+
+## Workspace layout
+
+- **Root:** Payload/Next backend and workspace config.
+- **`apps/`:** `frontend` (Astro), `storybook` (Storybook for Rocketship UI; see below).
+- **`packages/`:** `base` — `@rocketship/base`, minimal scaffold (package.json, tsconfig, SCSS entry at `src/styles/index.scss`). No components exported yet. Consume via `@rocketship/base/styles` or workspace dependency.
+
+## Storybook
+
+Storybook lives in `apps/storybook`, is wired to `@rocketship/base`, and is used to develop and document Rocketship components (HTML + SCSS). Run `pnpm dev:storybook` for dev (http://localhost:6006) or `pnpm build:storybook` for a static build. The app is scaffold-only for now; stories will be added as components land in the base package.
 
 ## Frontend: Astro 6
 

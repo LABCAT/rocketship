@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
-    "build": "STORYBOOK_DISABLE_TELEMETRY=1 CI=1 storybook build"
+    "dev": "cross-env STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
+    "build": "cross-env STORYBOOK_DISABLE_TELEMETRY=1 CI=1 storybook build"
   },
   "dependencies": {
     "@rocketship/base": "workspace:*"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "@storybook/addon-a11y": "^8.6.18",
     "@storybook/addon-essentials": "^8",
     "@storybook/html": "^8.6.18",

@@ -1,24 +1,38 @@
-# Payload Cloudflare Template
+# Rocketship Monorepo (Payload + Astro)
+
+This repository is a pnpm workspace that hosts both the Payload CMS backend and an Astro 6 frontend.
+
+- **Backend:** Next.js + Payload CMS (Cloudflare Worker build) in the repository root.
+- **Frontend:** Astro app in `apps/frontend`, pointed at the Payload backend via `PUBLIC_PAYLOAD_URL`.
+
+> Node 24 is required—`.nvmrc` is provided. Use `pnpm` for all commands.
+
+## Monorepo quick start
+
+```bash
+nvm use              # install/use Node 24
+pnpm install         # install workspace deps
+pnpm env:payload-secret  # generate/update PAYLOAD_SECRET in .env
+pnpm dev:backend     # start Payload/Next API + admin (http://localhost:3000)
+pnpm dev:frontend    # start Astro frontend (http://localhost:4321)
+pnpm dev:all         # start backend and frontend together (parallel)
+```
+
+Set `PUBLIC_PAYLOAD_URL` (for example `http://localhost:3000`) when running the frontend so its links target the correct backend.
+
+## Frontend: Astro 6
+
+The public site lives in `apps/frontend`. Run `pnpm dev:frontend` (optionally `--host --port 4321`) and set `PUBLIC_PAYLOAD_URL` to point at your running Payload instance. Build and preview with `pnpm run build:frontend` / `pnpm run preview:frontend`.
+
+## Backend: Payload Cloudflare Template
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/payloadcms/payload/tree/main/templates/with-cloudflare-d1)
 
 **This can only be deployed on Paid Workers right now due to size limits.** This template comes configured with the bare minimum to get started on anything you need.
 
-## Quick start
-
-This template can be deployed directly to Cloudflare Workers by clicking the button to take you to the setup screen.
-
-From there you can connect your code to a git provider such Github or Gitlab, name your Workers, D1 Database and R2 Bucket as well as attach any additional environment variables or services you need.
-
-## Quick Start - local setup
-
-To spin up this template locally, follow these steps:
-
-### Clone
-
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. Cloudflare will connect your app to a git provider such as Github and you can access your code from there.
-
 ### Local Development
+
+Use the monorepo quick start above; `pnpm dev:backend` runs the Payload/Next server locally while Wrangler provides local bindings for R2 and D1.
 
 ## How it works
 

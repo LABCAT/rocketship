@@ -12,10 +12,10 @@ This repository is a pnpm workspace that hosts both the Payload CMS backend and 
 ```bash
 nvm use              # install/use Node 24
 pnpm install         # install workspace deps
+pnpm env:payload-secret  # generate/update PAYLOAD_SECRET in .env
 pnpm dev:backend     # start Payload/Next API + admin (http://localhost:3000)
 pnpm dev:frontend    # start Astro frontend (http://localhost:4321)
 pnpm dev:all         # start backend and frontend together (parallel)
-pnpm env:payload-secret  # generate/update PAYLOAD_SECRET in .env
 ```
 
 Set `PUBLIC_PAYLOAD_URL` (for example `http://localhost:3000`) when running the frontend so its links target the correct backend.

@@ -1,0 +1,25 @@
+{
+  "name": "@rocketship/base",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Rocketship base package scaffold",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./styles": "./src/styles/index.scss"
+  },
+  "files": [
+    "dist",
+    "src/styles/index.scss"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

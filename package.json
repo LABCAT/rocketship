@@ -15,6 +15,7 @@
     "deploy:database": "cross-env NODE_ENV=production PAYLOAD_SECRET=ignore payload migrate && wrangler d1 execute D1 --command 'PRAGMA optimize' --env=$CLOUDFLARE_ENV --remote",
     "dev": "pnpm run dev:backend",
     "dev:backend": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "dev:all": "pnpm -r --parallel --filter . --filter @rocketship/frontend dev",
     "dev:frontend": "pnpm --filter @rocketship/frontend dev",
     "devsafe": "rm -rf .next && rm -rf .open-next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",

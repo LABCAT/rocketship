@@ -4,11 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "storybook dev -p 6006",
-    "build": "storybook build"
+    "dev": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
+    "build": "STORYBOOK_DISABLE_TELEMETRY=1 CI=1 storybook build"
   },
   "dependencies": {
     "@rocketship/base": "workspace:*"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8",
+    "@storybook/html": "^8.6.18",
+    "@storybook/html-vite": "^8.6.18",
+    "sass": "^1.98.0",
+    "storybook": "^8.6.18",
+    "vite": "^6.4.1"
   }
 }
-

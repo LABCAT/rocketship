@@ -1,4 +1,5 @@
 import '@rocketship/base/styles'
+import '../src/storybook.css'
 
 const preview = {
   parameters: {

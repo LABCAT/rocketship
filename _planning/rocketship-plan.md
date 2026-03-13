@@ -89,6 +89,28 @@ No new packages, Storybook app, or components in this phase.
 - Use `--rs-*` naming consistently.
 - Document new token layers (e.g. component-level tokens) here as they’re introduced.
 
+### Button token layer
+
+- Base button style tokens:
+  - `--rs-button-bg`, `--rs-button-color`, `--rs-button-border-color`
+  - `--rs-button-border-radius`, `--rs-button-font-size`, `--rs-button-min-height`
+  - `--rs-button-padding-inline`, `--rs-button-focus-ring-color`
+- Size behavior:
+  - Explicit modifiers: `.rs-button--small`, `.rs-button--medium`, `.rs-button--large`
+  - Container-aware sizing: `.rs-button--auto-size` using named container `rs-component`
+  - Container thresholds: `--rs-cq-sm`, `--rs-cq-md`
+
+### Link token layer
+
+- Base link style tokens:
+  - `--rs-link-color`, `--rs-link-hover-color`, `--rs-link-visited-color`
+  - `--rs-link-font-size`, `--rs-link-line-height`
+  - `--rs-link-underline-offset`, `--rs-link-underline-thickness`
+  - `--rs-link-focus-ring-color`
+- Size behavior:
+  - Explicit modifiers: `.rs-link--small`, `.rs-link--medium`, `.rs-link--large`
+  - Container-aware sizing: `.rs-link--auto-size` using named container `rs-component`
+
 ---
 
 ## Naming, BEM, and accessibility

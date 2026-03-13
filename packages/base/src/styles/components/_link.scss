@@ -1,0 +1,82 @@
+@use '../mixins/container-query' as cq;
+
+.rs-link {
+  --rs-link-color: var(--rs-color-link);
+  --rs-link-hover-color: var(--rs-color-link-hover);
+  --rs-link-visited-color: var(--rs-color-link-visited);
+  --rs-link-focus-ring-color: var(--rs-color-focus-ring);
+  --rs-link-font-size: var(--rs-font-size-sm);
+  --rs-link-line-height: var(--rs-line-height-base);
+  --rs-link-underline-offset: 0.16em;
+  --rs-link-underline-thickness: 0.08em;
+  color: var(--rs-link-color);
+  cursor: pointer;
+  font-family: var(--rs-font-family-sans);
+  font-size: var(--rs-link-font-size);
+  font-weight: var(--rs-font-weight-medium);
+  line-height: var(--rs-link-line-height);
+  text-decoration-color: currentcolor;
+  text-decoration-line: underline;
+  text-decoration-thickness: var(--rs-link-underline-thickness);
+  text-underline-offset: var(--rs-link-underline-offset);
+  transition:
+    color var(--rs-transition-fast) ease,
+    text-decoration-color var(--rs-transition-fast) ease,
+    text-decoration-thickness var(--rs-transition-fast) ease;
+}
+
+.rs-link:hover {
+  color: var(--rs-link-hover-color);
+  text-decoration-thickness: calc(var(--rs-link-underline-thickness) + 0.03em);
+}
+
+.rs-link:visited {
+  color: var(--rs-link-visited-color);
+}
+
+.rs-link:focus-visible {
+  border-radius: var(--rs-radius-sm);
+  outline: 2px solid var(--rs-link-focus-ring-color);
+  outline-offset: 3px;
+}
+
+.rs-link[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+.rs-link--muted {
+  --rs-link-color: var(--rs-color-muted);
+  --rs-link-hover-color: var(--rs-color-fg);
+  --rs-link-visited-color: color-mix(in oklab, var(--rs-color-muted) 85%, var(--rs-color-link-visited));
+}
+
+.rs-link--small {
+  --rs-link-font-size: var(--rs-font-size-sm);
+}
+
+.rs-link--medium {
+  --rs-link-font-size: var(--rs-font-size-md);
+}
+
+.rs-link--large {
+  --rs-link-font-size: var(--rs-font-size-lg);
+}
+
+.rs-link--auto-size {
+  @include cq.component-size-up(var(--rs-cq-sm)) {
+    --rs-link-font-size: var(--rs-font-size-md);
+  }
+
+  @include cq.component-size-up(var(--rs-cq-md)) {
+    --rs-link-font-size: var(--rs-font-size-lg);
+  }
+}
+
+.rs-link__icon {
+  display: inline-flex;
+  margin-inline-start: var(--rs-space-1);
+  vertical-align: middle;
+}

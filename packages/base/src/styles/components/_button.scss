@@ -1,0 +1,112 @@
+@use '../mixins/container-query' as cq;
+
+.rs-button {
+  --rs-button-bg: var(--rs-color-accent);
+  --rs-button-color: var(--rs-color-accent-contrast);
+  --rs-button-border-color: var(--rs-color-accent);
+  --rs-button-border-width: 1px;
+  --rs-button-border-radius: var(--rs-radius-pill);
+  --rs-button-font-size: var(--rs-font-size-sm);
+  --rs-button-font-weight: var(--rs-font-weight-semibold);
+  --rs-button-line-height: var(--rs-line-height-tight);
+  --rs-button-padding-inline: var(--rs-space-3);
+  --rs-button-min-height: 2.25rem;
+  --rs-button-gap: var(--rs-space-2);
+  --rs-button-hover-filter: brightness(1.08);
+  --rs-button-active-filter: brightness(0.94);
+  --rs-button-focus-ring-color: var(--rs-color-focus-ring);
+  align-items: center;
+  background: var(--rs-button-bg);
+  border: var(--rs-button-border-width) solid var(--rs-button-border-color);
+  border-radius: var(--rs-button-border-radius);
+  color: var(--rs-button-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--rs-font-family-sans);
+  font-size: var(--rs-button-font-size);
+  font-weight: var(--rs-button-font-weight);
+  gap: var(--rs-button-gap);
+  justify-content: center;
+  line-height: var(--rs-button-line-height);
+  min-height: var(--rs-button-min-height);
+  padding-block: var(--rs-space-2);
+  padding-inline: var(--rs-button-padding-inline);
+  text-decoration: none;
+  transition:
+    filter var(--rs-transition-fast) ease,
+    background-color var(--rs-transition-fast) ease,
+    border-color var(--rs-transition-fast) ease,
+    color var(--rs-transition-fast) ease,
+    opacity var(--rs-transition-fast) ease;
+  white-space: nowrap;
+}
+
+.rs-button:hover {
+  filter: var(--rs-button-hover-filter);
+}
+
+.rs-button:active {
+  filter: var(--rs-button-active-filter);
+}
+
+.rs-button:focus-visible {
+  outline: 2px solid var(--rs-button-focus-ring-color);
+  outline-offset: 2px;
+}
+
+.rs-button:disabled,
+.rs-button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.rs-button--secondary {
+  --rs-button-bg: var(--rs-color-surface);
+  --rs-button-border-color: var(--rs-color-border);
+  --rs-button-color: var(--rs-color-fg);
+}
+
+.rs-button--ghost {
+  --rs-button-bg: transparent;
+  --rs-button-border-color: color-mix(in oklab, var(--rs-color-fg) 35%, transparent);
+  --rs-button-color: var(--rs-color-fg);
+}
+
+.rs-button--small {
+  --rs-button-font-size: var(--rs-font-size-sm);
+  --rs-button-min-height: 2.25rem;
+  --rs-button-padding-inline: var(--rs-space-3);
+}
+
+.rs-button--medium {
+  --rs-button-font-size: var(--rs-font-size-md);
+  --rs-button-min-height: 2.5rem;
+  --rs-button-padding-inline: var(--rs-space-4);
+}
+
+.rs-button--large {
+  --rs-button-font-size: var(--rs-font-size-lg);
+  --rs-button-min-height: 2.75rem;
+  --rs-button-padding-inline: var(--rs-space-5);
+}
+
+.rs-button--auto-size {
+  @include cq.component-size-up(var(--rs-cq-sm)) {
+    --rs-button-font-size: var(--rs-font-size-md);
+    --rs-button-min-height: 2.5rem;
+    --rs-button-padding-inline: var(--rs-space-4);
+  }
+
+  @include cq.component-size-up(var(--rs-cq-md)) {
+    --rs-button-font-size: var(--rs-font-size-lg);
+    --rs-button-min-height: 2.75rem;
+    --rs-button-padding-inline: var(--rs-space-5);
+  }
+}
+
+.rs-button__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}

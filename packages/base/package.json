@@ -13,11 +13,14 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./styles": "./src/styles/index.scss"
+    "./styles": "./src/styles/index.scss",
+    "./components/Button": "./src/components/Button.astro",
+    "./components/Link": "./src/components/Link.astro"
   },
   "files": [
     "dist",
-    "src/styles/index.scss"
+    "src/styles",
+    "src/components"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"

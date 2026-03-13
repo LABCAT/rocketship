@@ -32,3 +32,44 @@
   border: 1px solid color-mix(in oklab, CanvasText 20%, transparent);
 }
 
+.rs-storybook-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.rs-storybook-size-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.rs-storybook-size-demo {
+  border: 1px solid color-mix(in oklab, CanvasText 20%, transparent);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.rs-storybook-size-demo--sm {
+  max-width: 16rem;
+}
+
+.rs-storybook-size-demo--md {
+  max-width: 30rem;
+}
+
+.rs-storybook-size-demo--lg {
+  max-width: 45rem;
+}
+
+.rs-storybook-size-caption {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.rs-storybook-copy {
+  max-width: 42rem;
+  display: grid;
+  gap: 10px;
+}
+

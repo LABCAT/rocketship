@@ -11,6 +11,7 @@ alwaysApply: false
 - **Media queries = layout only**
   - Use viewport media queries **only** for top-level layout and container components.
   - Follow a Bootstrap-style `media-breakpoint-up` pattern (min-width breakpoints, mobile-first).
+  - `media-breakpoint-up` is reserved for the Container/layout layer only; do not use it in typography or other leaf component sizing.
   - Do not sprinkle viewport media queries into individual components for sizing; use container queries instead.
 
 - **Container component**

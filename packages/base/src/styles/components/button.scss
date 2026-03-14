@@ -1,10 +1,13 @@
-@use '../mixins/container-query' as cq;
+.rs-size-context {
+  container-name: rs-component;
+  container-type: inline-size;
+}
 
 .rs-button {
   --rs-button-bg: var(--rs-color-accent);
   --rs-button-color: var(--rs-color-accent-contrast);
   --rs-button-border-color: var(--rs-color-accent);
-  --rs-button-border-width: 1px;
+  --rs-button-border-width: var(--rs-border-width);
   --rs-button-border-radius: var(--rs-radius-pill);
   --rs-button-font-size: var(--rs-font-size-sm);
   --rs-button-font-weight: var(--rs-font-weight-semibold);
@@ -92,13 +95,13 @@
 }
 
 .rs-button--auto-size {
-  @include cq.component-size-up(var(--rs-cq-sm)) {
+  @include container-query-up(var(--rs-cq-sm)) {
     --rs-button-font-size: var(--rs-font-size-md);
     --rs-button-min-height: 2.5rem;
     --rs-button-padding-inline: var(--rs-space-4);
   }
 
-  @include cq.component-size-up(var(--rs-cq-md)) {
+  @include container-query-up(var(--rs-cq-md)) {
     --rs-button-font-size: var(--rs-font-size-lg);
     --rs-button-min-height: 2.75rem;
     --rs-button-padding-inline: var(--rs-space-5);

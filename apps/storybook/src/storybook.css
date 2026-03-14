@@ -73,3 +73,8 @@
   gap: 10px;
 }
 
+.rs-storybook-demo-box {
+  border: 1px dashed color-mix(in oklab, CanvasText 20%, transparent);
+  padding: 12px;
+}
+

@@ -1,0 +1,18 @@
+$rs-breakpoints: (
+  sm: 36rem,
+  md: 48rem,
+  lg: 62rem,
+  xl: 75rem,
+);
+
+@mixin media-breakpoint-up($name) {
+  $min-width: map-get($rs-breakpoints, $name);
+
+  @if $min-width == null {
+    @error "Unknown breakpoint '#{$name}'.";
+  }
+
+  @media (min-width: $min-width) {
+    @content;
+  }
+}

@@ -15,7 +15,8 @@
     },
     "./styles": "./src/styles/index.scss",
     "./components/Button": "./src/components/Button.astro",
-    "./components/Link": "./src/components/Link.astro"
+    "./components/Container": "./src/components/Container.astro",
+    "./components/Typography": "./src/components/Typography.astro"
   },
   "files": [
     "dist",

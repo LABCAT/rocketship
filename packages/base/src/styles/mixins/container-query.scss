@@ -1,4 +1,4 @@
-@mixin component-size-up($min-width, $container-name: rs-component) {
+@mixin container-query-up($min-width, $container-name: rs-component) {
   @container #{$container-name} (min-width: #{$min-width}) {
     @content;
   }

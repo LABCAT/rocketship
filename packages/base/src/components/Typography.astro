@@ -1,0 +1,22 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  as?: 'div' | 'section' | 'article'
+  html?: string
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { as = 'div', html, class: className, ...attrs } = Astro.props as Props
+const Tag = as
+---
+
+{
+  html ? (
+    <Tag {...attrs} class:list={['rs-typography', className]} set:html={html} />
+  ) : (
+    <Tag {...attrs} class:list={['rs-typography', className]}>
+      <slot />
+    </Tag>
+  )
+}

@@ -1,0 +1,41 @@
+@mixin typography-p {
+  color: var(--rs-color-fg);
+  font-family: var(--rs-font-family-sans);
+  font-size: to-rem(16);
+  font-weight: var(--rs-font-weight-regular);
+  line-height: var(--rs-line-height-relaxed);
+  margin-bottom: var(--rs-text-spacing-bottom);
+  margin-top: 0;
+
+  @include media-breakpoint-up(md) {
+    font-size: to-rem(17);
+  }
+}
+
+@mixin typography-intro {
+  color: var(--rs-color-fg);
+  font-family: var(--rs-font-family-sans);
+  font-size: to-rem(19);
+  font-weight: var(--rs-font-weight-medium);
+  line-height: 1.55;
+  margin-bottom: var(--rs-text-spacing-bottom);
+  margin-top: 0;
+
+  @include media-breakpoint-up(md) {
+    font-size: to-rem(21);
+  }
+}
+
+@mixin typography-em {
+  font-style: italic;
+}
+
+@mixin typography-strong {
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+@mixin typography-hr {
+  border: 0;
+  border-top: var(--rs-border-width) solid var(--rs-color-border);
+  margin-block: var(--rs-space-6);
+}

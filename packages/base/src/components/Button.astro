@@ -3,10 +3,12 @@ import type { HTMLAttributes } from 'astro/types'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 export type ButtonSize = 'auto' | 'small' | 'medium' | 'large'
+export type ButtonTag = 'button' | 'a'
 
 type NativeButtonType = 'button' | 'submit' | 'reset'
 
 type Props = {
+  as?: ButtonTag
   href?: string
   variant?: ButtonVariant
   size?: ButtonSize
@@ -17,6 +19,7 @@ type Props = {
   HTMLAttributes<'a'>
 
 const {
+  as = 'button',
   href,
   variant = 'primary',
   size = 'auto',
@@ -32,15 +35,17 @@ const classes = [
   size === 'auto' ? 'rs-button--auto-size' : `rs-button--${size}`,
   className,
 ]
+
+const shouldRenderAsLink = as === 'a' || Boolean(href)
 ---
 
 {
-  href ? (
+  shouldRenderAsLink ? (
     <a
       {...attrs}
       aria-disabled={disabled || undefined}
       class:list={classes}
-      href={disabled ? undefined : href}
+      href={disabled ? undefined : href ?? '#'}
       role={disabled ? 'link' : undefined}
       tabindex={disabled ? -1 : undefined}
     >

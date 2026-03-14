@@ -1,0 +1,69 @@
+@mixin typography-list {
+  margin-block: 0 var(--rs-list-spacing-bottom);
+  padding-inline-start: var(--rs-space-6);
+}
+
+@mixin typography-li {
+  margin-block: var(--rs-space-2);
+  padding-inline-start: var(--rs-space-1);
+}
+
+@mixin typography-ul {
+  @include typography-list;
+  list-style: disc;
+}
+
+@mixin typography-ol {
+  @include typography-list;
+  counter-reset: level1;
+  list-style: none;
+  padding-inline-start: var(--rs-space-5);
+
+  > li {
+    counter-increment: level1;
+    list-style: none;
+    position: relative;
+  }
+
+  > li::before {
+    content: counter(level1) '.';
+    left: calc(-1 * var(--rs-space-5));
+    position: absolute;
+  }
+
+  > li > ol {
+    counter-reset: level2;
+    margin-top: var(--rs-space-2);
+    padding-inline-start: var(--rs-space-5);
+  }
+
+  > li > ol > li {
+    counter-increment: level2;
+    list-style: none;
+    position: relative;
+  }
+
+  > li > ol > li::before {
+    content: counter(level2, lower-alpha) '.';
+    left: calc(-1 * var(--rs-space-5));
+    position: absolute;
+  }
+
+  > li > ol > li > ol {
+    counter-reset: level3;
+    margin-top: var(--rs-space-2);
+    padding-inline-start: var(--rs-space-5);
+  }
+
+  > li > ol > li > ol > li {
+    counter-increment: level3;
+    list-style: none;
+    position: relative;
+  }
+
+  > li > ol > li > ol > li::before {
+    content: counter(level3, lower-roman) '.';
+    left: calc(-1 * var(--rs-space-5));
+    position: absolute;
+  }
+}

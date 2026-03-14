@@ -1,0 +1,27 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type ContainerSize = 'full' | 'wide' | 'content' | 'narrow'
+
+type Props = {
+  as?: 'div' | 'section' | 'main' | 'article'
+  size?: ContainerSize
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { as = 'div', size = 'wide', class: className, ...attrs } = Astro.props as Props
+
+const Tag = as
+const classes = [
+  'rs-container',
+  size === 'full' ? 'rs-container--full-width' : undefined,
+  size === 'wide' ? 'rs-container--wide' : undefined,
+  size === 'content' ? 'rs-container--content' : undefined,
+  size === 'narrow' ? 'rs-container--narrow' : undefined,
+  className,
+]
+---
+
+<Tag {...attrs} class:list={classes}>
+  <slot />
+</Tag>

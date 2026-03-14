@@ -1,0 +1,22 @@
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .rs-button {
+    border: 1px solid #000;
+    color: #000;
+  }
+}

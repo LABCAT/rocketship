@@ -1,0 +1,32 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--rs-color-bg);
+  color: var(--rs-color-fg);
+  font-family: var(--rs-font-family-sans);
+  font-size: var(--rs-font-size-md);
+  line-height: var(--rs-line-height-base);
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+}

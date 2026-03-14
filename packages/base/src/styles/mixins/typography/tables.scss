@@ -1,0 +1,20 @@
+@mixin typography-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: var(--rs-space-5);
+  min-width: min(100%, 36rem);
+  width: 100%;
+
+  th,
+  td {
+    border: var(--rs-border-width) solid var(--rs-color-border);
+    padding: var(--rs-space-2) var(--rs-space-3);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  thead th {
+    background: var(--rs-color-surface);
+    font-weight: var(--rs-font-weight-semibold);
+  }
+}

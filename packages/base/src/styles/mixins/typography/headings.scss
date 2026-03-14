@@ -9,27 +9,27 @@
 
 @mixin typography-h1 {
   @include typography-heading-base;
-  font-size: to-rem(32);
+  font-size: var(--rs-typography-h1-size, to-rem(32));
 
   @include media-breakpoint-up(sm) {
-    font-size: to-rem(36);
+    font-size: var(--rs-typography-h1-size-sm, to-rem(36));
   }
 
   @include media-breakpoint-up(lg) {
-    font-size: to-rem(44);
+    font-size: var(--rs-typography-h1-size-lg, to-rem(44));
   }
 }
 
 @mixin typography-h2 {
   @include typography-heading-base;
-  font-size: to-rem(28);
+  font-size: var(--rs-typography-h2-size, to-rem(28));
 
   @include media-breakpoint-up(sm) {
-    font-size: to-rem(32);
+    font-size: var(--rs-typography-h2-size-sm, to-rem(32));
   }
 
   @include media-breakpoint-up(lg) {
-    font-size: to-rem(38);
+    font-size: var(--rs-typography-h2-size-lg, to-rem(38));
   }
 }
 
@@ -41,34 +41,34 @@
 
 @mixin typography-h3 {
   @include typography-heading-base;
-  font-size: to-rem(24);
+  font-size: var(--rs-typography-h3-size, to-rem(24));
 
   @include media-breakpoint-up(sm) {
-    font-size: to-rem(28);
+    font-size: var(--rs-typography-h3-size-sm, to-rem(28));
   }
 
   @include media-breakpoint-up(lg) {
-    font-size: to-rem(32);
+    font-size: var(--rs-typography-h3-size-lg, to-rem(32));
   }
 }
 
 @mixin typography-h4 {
   @include typography-heading-base;
-  font-size: to-rem(21);
+  font-size: var(--rs-typography-h4-size, to-rem(21));
 
   @include media-breakpoint-up(md) {
-    font-size: to-rem(24);
+    font-size: var(--rs-typography-h4-size-md, to-rem(24));
   }
 }
 
 @mixin typography-h5 {
   @include typography-heading-base;
-  font-size: to-rem(18);
+  font-size: var(--rs-typography-h5-size, to-rem(18));
 }
 
 @mixin typography-h6 {
   @include typography-heading-base;
-  font-size: to-rem(16);
+  font-size: var(--rs-typography-h6-size, to-rem(16));
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }

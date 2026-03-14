@@ -48,16 +48,16 @@
 
   --rs-transition-fast: 140ms;
 
-  --rs-container-gutter: var(--rs-space-4);
+  --rs-container-gutter: var(--rs-space-4, 1rem);
   --rs-container-width-wide: 1200px;
   --rs-container-width-content-sm: 600px;
   --rs-container-width-content-lg: 800px;
   --rs-container-width-narrow-lg: 1000px;
 
-  --rs-heading-spacing-top: var(--rs-space-7);
-  --rs-heading-spacing-bottom: var(--rs-space-3);
-  --rs-text-spacing-bottom: var(--rs-space-4);
-  --rs-list-spacing-bottom: var(--rs-space-4);
+  --rs-heading-spacing-top: var(--rs-space-7, 2rem);
+  --rs-heading-spacing-bottom: var(--rs-space-3, 0.75rem);
+  --rs-text-spacing-bottom: var(--rs-space-4, 1rem);
+  --rs-list-spacing-bottom: var(--rs-space-4, 1rem);
 
   --rs-cq-sm: 20rem;
   --rs-cq-md: 32rem;

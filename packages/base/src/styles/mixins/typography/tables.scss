@@ -1,20 +1,20 @@
 @mixin typography-table {
   border-collapse: collapse;
   border-spacing: 0;
-  margin-bottom: var(--rs-space-5);
+  margin-bottom: var(--rs-space-5, 1.25rem);
   min-width: min(100%, 36rem);
   width: 100%;
 
   th,
   td {
-    border: var(--rs-border-width) solid var(--rs-color-border);
-    padding: var(--rs-space-2) var(--rs-space-3);
+    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #31416f);
+    padding: var(--rs-space-2, 0.5rem) var(--rs-space-3, 0.75rem);
     text-align: left;
     vertical-align: top;
   }
 
   thead th {
-    background: var(--rs-color-surface);
-    font-weight: var(--rs-font-weight-semibold);
+    background: var(--rs-color-surface, #101833);
+    font-weight: var(--rs-font-weight-semibold, 600);
   }
 }

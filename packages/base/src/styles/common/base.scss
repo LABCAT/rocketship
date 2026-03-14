@@ -11,11 +11,11 @@ body {
 }
 
 body {
-  background: var(--rs-color-bg);
-  color: var(--rs-color-fg);
-  font-family: var(--rs-font-family-sans);
-  font-size: var(--rs-font-size-md);
-  line-height: var(--rs-line-height-base);
+  background: var(--rs-color-bg, #060b18);
+  color: var(--rs-color-fg, #f6f7ff);
+  font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+  font-size: var(--rs-font-size-md, 1rem);
+  line-height: var(--rs-line-height-base, 1.45);
 }
 
 img,

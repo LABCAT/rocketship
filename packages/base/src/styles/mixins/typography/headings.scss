@@ -1,10 +1,10 @@
 @mixin typography-heading-base {
-  color: var(--rs-color-fg);
-  font-family: var(--rs-font-family-sans);
-  font-weight: var(--rs-font-weight-bold);
-  line-height: var(--rs-line-height-tight);
-  margin-bottom: var(--rs-heading-spacing-bottom);
-  margin-top: var(--rs-heading-spacing-top);
+  color: var(--rs-color-fg, #f6f7ff);
+  font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+  font-weight: var(--rs-font-weight-bold, 700);
+  line-height: var(--rs-line-height-tight, 1.2);
+  margin-bottom: var(--rs-heading-spacing-bottom, 0.75rem);
+  margin-top: var(--rs-heading-spacing-top, 2rem);
 }
 
 @mixin typography-h1 {
@@ -35,7 +35,7 @@
 
 @mixin typography-h2-alt {
   @include typography-h2;
-  font-weight: var(--rs-font-weight-semibold);
+  font-weight: var(--rs-font-weight-semibold, 600);
   letter-spacing: 0.01em;
 }
 

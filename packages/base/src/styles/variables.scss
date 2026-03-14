@@ -1,16 +1,17 @@
 :root {
-  --rs-color-bg: #060b18;
-  --rs-color-fg: #f6f7ff;
-  --rs-color-surface: #101833;
-  --rs-color-surface-elevated: #18244b;
-  --rs-color-border: #31416f;
-  --rs-color-accent: #4f89ff;
-  --rs-color-accent-contrast: #f8fbff;
-  --rs-color-link: #87b5ff;
-  --rs-color-link-hover: #accdff;
-  --rs-color-link-visited: #c1a4ff;
-  --rs-color-focus-ring: #7cc7ff;
-  --rs-color-muted: #c3cbea;
+  color-scheme: light;
+  --rs-color-bg: #f6f8ff;
+  --rs-color-fg: #131a2f;
+  --rs-color-surface: #ffffff;
+  --rs-color-surface-elevated: #eef2ff;
+  --rs-color-border: #c8d2eb;
+  --rs-color-accent: #2f5bdb;
+  --rs-color-accent-contrast: #ffffff;
+  --rs-color-link: #1f49c6;
+  --rs-color-link-hover: #173ea8;
+  --rs-color-link-visited: #6a3fc2;
+  --rs-color-focus-ring: #296dff;
+  --rs-color-muted: #4f5b7d;
 
   --rs-font-family-sans: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --rs-font-family-mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
@@ -62,4 +63,22 @@
   --rs-cq-sm: 320px;
   --rs-cq-md: 512px;
   --rs-cq-lg: 736px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --rs-color-bg: #060b18;
+    --rs-color-fg: #f6f7ff;
+    --rs-color-surface: #101833;
+    --rs-color-surface-elevated: #18244b;
+    --rs-color-border: #31416f;
+    --rs-color-accent: #4f89ff;
+    --rs-color-accent-contrast: #f8fbff;
+    --rs-color-link: #87b5ff;
+    --rs-color-link-hover: #accdff;
+    --rs-color-link-visited: #c1a4ff;
+    --rs-color-focus-ring: #7cc7ff;
+    --rs-color-muted: #c3cbea;
+  }
 }

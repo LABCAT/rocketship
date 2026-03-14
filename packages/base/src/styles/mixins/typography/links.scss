@@ -1,5 +1,5 @@
 @mixin typography-a {
-  color: var(--rs-color-link, #87b5ff);
+  color: var(--rs-color-link, #1f49c6);
   text-decoration: underline;
   text-decoration-color: currentcolor;
   text-underline-offset: var(--rs-typography-link-underline-offset, 3px);
@@ -9,17 +9,17 @@
     text-decoration-thickness var(--rs-transition-fast, 140ms) ease;
 
   &:hover {
-    color: var(--rs-color-link-hover, #accdff);
+    color: var(--rs-color-link-hover, #173ea8);
     text-decoration-thickness: var(--rs-typography-link-underline-thickness-hover, 2px);
   }
 
   &:visited {
-    color: var(--rs-color-link-visited, #c1a4ff);
+    color: var(--rs-color-link-visited, #6a3fc2);
   }
 
   &:focus-visible {
     border-radius: var(--rs-radius-sm, 6px);
-    outline: 2px solid var(--rs-color-focus-ring, #7cc7ff);
+    outline: 2px solid var(--rs-color-focus-ring, #296dff);
     outline-offset: 3px;
   }
 }

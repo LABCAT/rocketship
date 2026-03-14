@@ -1,5 +1,5 @@
 @mixin typography-p {
-  color: var(--rs-color-fg, #f6f7ff);
+  color: var(--rs-color-fg, #131a2f);
   font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
   font-size: var(--rs-typography-p-size, to-rem(16));
   font-weight: var(--rs-font-weight-regular, 400);
@@ -13,7 +13,7 @@
 }
 
 @mixin typography-intro {
-  color: var(--rs-color-fg, #f6f7ff);
+  color: var(--rs-color-fg, #131a2f);
   font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
   font-size: var(--rs-typography-intro-size, to-rem(19));
   font-weight: var(--rs-font-weight-medium, 500);
@@ -33,6 +33,6 @@
 
 @mixin typography-hr {
   border: 0;
-  border-top: var(--rs-border-width, 1px) solid var(--rs-color-border, #31416f);
+  border-top: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
   margin-block: var(--rs-space-6, 24px);
 }

@@ -7,14 +7,14 @@
 
   th,
   td {
-    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #31416f);
+    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
     padding: var(--rs-space-2, 8px) var(--rs-space-3, 12px);
     text-align: left;
     vertical-align: top;
   }
 
   thead th {
-    background: var(--rs-color-surface, #101833);
+    background: var(--rs-color-surface, #ffffff);
     font-weight: var(--rs-font-weight-semibold, 600);
   }
 }

@@ -56,10 +56,6 @@
   @include typography-ol;
 }
 
-.rs-typography:not(.video__transcript) table {
-  @include typography-table;
-}
-
 .rs-typography a:not(.button, .button-text) {
   @include typography-a;
 }

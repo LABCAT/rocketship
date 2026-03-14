@@ -24,8 +24,8 @@ alwaysApply: false
   - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
   - Keep SCSS files organized by component (e.g. `button.scss`, `container.scss`, `typography.scss`).
   - Component SCSS must be co-located with the Astro component and included from that component via a `<style lang="scss">` block.
-  - Use `rem` only for typography sizing and font-related scale values.
-  - Use `px` for spacing, radii, layout dimensions, container-query thresholds, and viewport breakpoints.
+  - Use `rem` only for `font-size` values.
+  - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
 
 - **CSS variable conventions**
   - All design tokens and component-level variables exposed to users should be named with the `--rs-*` prefix, for example:

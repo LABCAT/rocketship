@@ -2,15 +2,15 @@
   color: var(--rs-color-link, #87b5ff);
   text-decoration: underline;
   text-decoration-color: currentcolor;
-  text-underline-offset: 0.16em;
-  text-decoration-thickness: 0.08em;
+  text-underline-offset: var(--rs-typography-link-underline-offset, 3px);
+  text-decoration-thickness: var(--rs-typography-link-underline-thickness, 1px);
   transition:
     color var(--rs-transition-fast, 140ms) ease,
     text-decoration-thickness var(--rs-transition-fast, 140ms) ease;
 
   &:hover {
     color: var(--rs-color-link-hover, #accdff);
-    text-decoration-thickness: 0.11em;
+    text-decoration-thickness: var(--rs-typography-link-underline-thickness-hover, 2px);
   }
 
   &:visited {

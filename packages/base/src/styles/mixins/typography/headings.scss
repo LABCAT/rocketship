@@ -36,7 +36,7 @@
 @mixin typography-h2-alt {
   @include typography-h2;
   font-weight: var(--rs-font-weight-semibold, 600);
-  letter-spacing: 0.01em;
+  letter-spacing: var(--rs-typography-h2-alt-letter-spacing, 0.16px);
 }
 
 @mixin typography-h3 {
@@ -69,6 +69,6 @@
 @mixin typography-h6 {
   @include typography-heading-base;
   font-size: var(--rs-typography-h6-size, to-rem(16));
-  letter-spacing: 0.02em;
+  letter-spacing: var(--rs-typography-h6-letter-spacing, 0.32px);
   text-transform: uppercase;
 }

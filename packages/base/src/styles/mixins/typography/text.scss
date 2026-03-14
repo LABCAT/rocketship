@@ -21,9 +21,6 @@
   margin-bottom: var(--rs-text-spacing-bottom, 16px);
   margin-top: 0;
 
-  @include media-breakpoint-up(md) {
-    font-size: to-rem(21);
-  }
 }
 
 @mixin typography-em {

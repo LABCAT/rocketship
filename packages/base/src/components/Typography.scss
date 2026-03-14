@@ -57,10 +57,6 @@
     @include typography-ol;
   }
 
-  a:not(.button, .button-text) {
-    @include typography-a;
-  }
-
   > :first-child {
     margin-top: 0;
   }

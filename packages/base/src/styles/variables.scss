@@ -1,0 +1,84 @@
+:root {
+  color-scheme: light;
+  --rs-color-bg: #f6f8ff;
+  --rs-color-fg: #131a2f;
+  --rs-color-surface: #ffffff;
+  --rs-color-surface-elevated: #eef2ff;
+  --rs-color-border: #c8d2eb;
+  --rs-color-accent: #2f5bdb;
+  --rs-color-accent-contrast: #ffffff;
+  --rs-color-link: #1f49c6;
+  --rs-color-link-hover: #173ea8;
+  --rs-color-link-visited: #6a3fc2;
+  --rs-color-focus-ring: #296dff;
+  --rs-color-muted: #4f5b7d;
+
+  --rs-font-family-sans: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --rs-font-family-mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
+  --rs-font-size-xs: 0.75rem;
+  --rs-font-size-sm: 0.875rem;
+  --rs-font-size-md: 1rem;
+  --rs-font-size-lg: 1.125rem;
+  --rs-font-size-xl: 1.25rem;
+  --rs-font-size-2xl: 1.5rem;
+  --rs-font-size-3xl: 2rem;
+
+  --rs-font-weight-regular: 400;
+  --rs-font-weight-medium: 500;
+  --rs-font-weight-semibold: 600;
+  --rs-font-weight-bold: 700;
+
+  --rs-line-height-tight: 1.2;
+  --rs-line-height-base: 1.45;
+  --rs-line-height-relaxed: 1.7;
+
+  --rs-space-1: 4px;
+  --rs-space-2: 8px;
+  --rs-space-3: 12px;
+  --rs-space-4: 16px;
+  --rs-space-5: 20px;
+  --rs-space-6: 24px;
+  --rs-space-7: 32px;
+  --rs-space-8: 40px;
+
+  --rs-radius-sm: 6px;
+  --rs-radius-md: 10px;
+  --rs-radius-pill: 999px;
+  --rs-border-width: 1px;
+
+  --rs-transition-fast: 140ms;
+
+  --rs-container-gutter: var(--rs-space-4, 16px);
+  --rs-container-width-wide: 1200px;
+  --rs-container-width-content-sm: 600px;
+  --rs-container-width-content-lg: 800px;
+  --rs-container-width-narrow-lg: 1000px;
+
+  --rs-heading-spacing-top: var(--rs-space-7, 32px);
+  --rs-heading-spacing-bottom: var(--rs-space-3, 12px);
+  --rs-text-spacing-bottom: var(--rs-space-4, 16px);
+  --rs-list-spacing-bottom: var(--rs-space-4, 16px);
+
+  --rs-cq-sm: 320px;
+  --rs-cq-md: 512px;
+  --rs-cq-lg: 736px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --rs-color-bg: #060b18;
+    --rs-color-fg: #f6f7ff;
+    --rs-color-surface: #101833;
+    --rs-color-surface-elevated: #18244b;
+    --rs-color-border: #31416f;
+    --rs-color-accent: #4f89ff;
+    --rs-color-accent-contrast: #f8fbff;
+    --rs-color-link: #87b5ff;
+    --rs-color-link-hover: #accdff;
+    --rs-color-link-visited: #c1a4ff;
+    --rs-color-focus-ring: #7cc7ff;
+    --rs-color-muted: #c3cbea;
+  }
+}

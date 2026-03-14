@@ -1,8 +1,11 @@
 import '@rocketship/base/styles'
-import '../src/storybook.css'
 
 const preview = {
   parameters: {
+    darkMode: {
+      current: 'light',
+      stylePreview: true,
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,

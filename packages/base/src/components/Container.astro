@@ -2,9 +2,10 @@
 import type { HTMLAttributes } from 'astro/types'
 
 export type ContainerSize = 'full' | 'wide' | 'content' | 'narrow'
+export type ContainerTag = 'div' | 'section' | 'main' | 'article' | 'header' | 'footer' | 'nav' | 'aside'
 
 type Props = {
-  as?: 'div' | 'section' | 'main' | 'article'
+  as?: ContainerTag
   size?: ContainerSize
   class?: string
 } & HTMLAttributes<'div'>

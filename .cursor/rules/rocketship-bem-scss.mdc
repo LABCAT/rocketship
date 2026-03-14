@@ -19,10 +19,23 @@ alwaysApply: false
   - Elements are structural parts of a block (e.g. `rs-button__label`, `rs-card__media`).
   - Modifiers represent visual/behavioral variants (e.g. `rs-button--secondary`, `rs-button--outline`).
 
+- **Variables files (e.g. `variables.scss`)**
+  - Must **never** contain class selectors (or any selectors other than `:root` and `@media`).
+  - Only define CSS custom properties on `:root` and inside `@media (prefers-color-scheme: …)`. Component-specific tokens and class-based overrides belong in the component that owns them.
+
 - **SCSS usage**
   - Prefer SCSS for authoring styles; compile to CSS for consumers.
   - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
-  - Keep SCSS files organized by component (e.g. `button.scss`, `container.scss`, `typography.scss`).
+  - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
+  - Do not create separate component `.scss` files when the style belongs to a single component.
+  - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
+  - Use `rem` only for `font-size` values.
+  - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
+
+- **Declaration order (per rule block)**
+  - **CSS custom properties (`--rs-*`) always first** in the block.
+  - Then reset if needed (e.g. `all: unset` for buttons/controls), then `box-sizing` if you reset.
+ (the “API”   - Then all other properties (layout, appearance, etc.).
 
 - **CSS variable conventions**
   - All design tokens and component-level variables exposed to users should be named with the `--rs-*` prefix, for example:
@@ -39,4 +52,5 @@ alwaysApply: false
 - **Selector style**
   - Prefer class-based selectors; avoid element-tag or ID-based styling in reusable components.
   - Keep selector nesting shallow in SCSS; rely on BEM structure rather than deep descendant chains.
+  - Write BEM modifiers nested under their owning block or element selector using `&--modifier` (and `&__element` where appropriate).
 

@@ -11,13 +11,14 @@
     "@rocketship/base": "workspace:*"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
     "@storybook/addon-a11y": "^8.6.18",
     "@storybook/addon-essentials": "^8",
     "@storybook/html": "^8.6.18",
     "@storybook/html-vite": "^8.6.18",
+    "cross-env": "^10.1.0",
     "sass": "^1.98.0",
     "storybook": "^8.6.18",
+    "storybook-addon-render-modes": "^0.0.11",
     "vite": "^6.4.1"
   }
 }

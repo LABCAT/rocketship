@@ -1,8 +1,3 @@
-/**
- * Preview runs in the iframe where stories render.
- * Import your design system so it is the only theme for the canvas.
- * @see https://storybook.js.org/docs/configure/styling-and-css
- */
 import '@rocketship/base/styles'
 
 const preview = {

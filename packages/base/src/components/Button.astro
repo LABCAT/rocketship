@@ -59,5 +59,110 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
 }
 
 <style is:global lang="scss">
-  @import './Button';
+  .rs-size-context {
+    container-name: rs-component;
+    container-type: inline-size;
+  }
+
+  .rs-button {
+    --rs-button-bg: var(--rs-color-accent, #4f89ff);
+    --rs-button-color: var(--rs-color-accent-contrast, #f8fbff);
+    --rs-button-border-color: var(--rs-color-accent, #4f89ff);
+    --rs-button-border-width: var(--rs-border-width, 1px);
+    --rs-button-border-radius: var(--rs-radius-pill, 999px);
+    --rs-button-font-size: var(--rs-font-size-sm, 0.875rem);
+    --rs-button-font-weight: var(--rs-font-weight-semibold, 600);
+    --rs-button-line-height: var(--rs-line-height-tight, 1.2);
+    --rs-button-padding-inline: var(--rs-space-3, 12px);
+    --rs-button-min-height: 36px;
+    --rs-button-gap: var(--rs-space-2, 8px);
+    --rs-button-focus-ring-color: var(--rs-color-focus-ring, #7cc7ff);
+    align-items: center;
+    background: var(--rs-button-bg);
+    border: var(--rs-button-border-width) solid var(--rs-button-border-color);
+    border-radius: var(--rs-button-border-radius);
+    color: var(--rs-button-color);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-size: var(--rs-button-font-size);
+    font-weight: var(--rs-button-font-weight);
+    gap: var(--rs-button-gap);
+    justify-content: center;
+    line-height: var(--rs-button-line-height);
+    min-height: var(--rs-button-min-height);
+    padding-block: 8px;
+    padding-inline: var(--rs-button-padding-inline);
+    text-decoration: none;
+    transition:
+      background-color var(--rs-transition-fast, 140ms) ease,
+      border-color var(--rs-transition-fast, 140ms) ease,
+      color var(--rs-transition-fast, 140ms) ease,
+      opacity var(--rs-transition-fast, 140ms) ease;
+    white-space: nowrap;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
+    &:active {
+      filter: brightness(0.94);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--rs-button-focus-ring-color);
+      outline-offset: 2px;
+    }
+
+    &:disabled,
+    &[aria-disabled='true'] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    &--secondary {
+      --rs-button-bg: var(--rs-color-surface, #101833);
+      --rs-button-border-color: var(--rs-color-border, #31416f);
+      --rs-button-color: var(--rs-color-fg, #f6f7ff);
+    }
+
+    &--ghost {
+      --rs-button-bg: transparent;
+      --rs-button-border-color: var(--rs-color-border, #31416f);
+      --rs-button-color: var(--rs-color-fg, #f6f7ff);
+    }
+
+    &--small {
+      --rs-button-font-size: var(--rs-font-size-sm, 0.875rem);
+      --rs-button-min-height: 36px;
+      --rs-button-padding-inline: var(--rs-space-3, 12px);
+    }
+
+    &--medium {
+      --rs-button-font-size: var(--rs-font-size-md, 1rem);
+      --rs-button-min-height: 40px;
+      --rs-button-padding-inline: var(--rs-space-4, 16px);
+    }
+
+    &--large {
+      --rs-button-font-size: var(--rs-font-size-lg, 1.125rem);
+      --rs-button-min-height: 44px;
+      --rs-button-padding-inline: var(--rs-space-5, 20px);
+    }
+
+    &--auto-size {
+      @container rs-component (min-width: var(--rs-cq-sm, 320px)) {
+        --rs-button-font-size: var(--rs-font-size-md, 1rem);
+        --rs-button-min-height: 40px;
+        --rs-button-padding-inline: var(--rs-space-4, 16px);
+      }
+
+      @container rs-component (min-width: var(--rs-cq-md, 512px)) {
+        --rs-button-font-size: var(--rs-font-size-lg, 1.125rem);
+        --rs-button-min-height: 44px;
+        --rs-button-padding-inline: var(--rs-space-5, 20px);
+      }
+    }
+  }
 </style>

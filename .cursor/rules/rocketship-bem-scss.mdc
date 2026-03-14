@@ -22,8 +22,8 @@ alwaysApply: false
 - **SCSS usage**
   - Prefer SCSS for authoring styles; compile to CSS for consumers.
   - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
-  - Keep SCSS files organized by component (e.g. `button.scss`, `container.scss`, `typography.scss`).
-  - Component SCSS must be co-located with the Astro component and included from that component via a `<style lang="scss">` block.
+  - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
+  - Do not create separate component `.scss` files when the style belongs to a single component.
   - Use `rem` only for `font-size` values.
   - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
 

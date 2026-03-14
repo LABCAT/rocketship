@@ -18,7 +18,7 @@
   }
 
   &:focus-visible {
-    border-radius: var(--rs-radius-sm, 0.375rem);
+    border-radius: var(--rs-radius-sm, 6px);
     outline: 2px solid var(--rs-color-focus-ring, #7cc7ff);
     outline-offset: 3px;
   }

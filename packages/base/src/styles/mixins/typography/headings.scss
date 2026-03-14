@@ -3,8 +3,8 @@
   font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
   font-weight: var(--rs-font-weight-bold, 700);
   line-height: var(--rs-line-height-tight, 1.2);
-  margin-bottom: var(--rs-heading-spacing-bottom, 0.75rem);
-  margin-top: var(--rs-heading-spacing-top, 2rem);
+  margin-bottom: var(--rs-heading-spacing-bottom, 12px);
+  margin-top: var(--rs-heading-spacing-top, 32px);
 }
 
 @mixin typography-h1 {

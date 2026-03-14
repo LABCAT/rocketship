@@ -32,34 +32,34 @@
   --rs-line-height-base: 1.45;
   --rs-line-height-relaxed: 1.7;
 
-  --rs-space-1: 0.25rem;
-  --rs-space-2: 0.5rem;
-  --rs-space-3: 0.75rem;
-  --rs-space-4: 1rem;
-  --rs-space-5: 1.25rem;
-  --rs-space-6: 1.5rem;
-  --rs-space-7: 2rem;
-  --rs-space-8: 2.5rem;
+  --rs-space-1: 4px;
+  --rs-space-2: 8px;
+  --rs-space-3: 12px;
+  --rs-space-4: 16px;
+  --rs-space-5: 20px;
+  --rs-space-6: 24px;
+  --rs-space-7: 32px;
+  --rs-space-8: 40px;
 
-  --rs-radius-sm: 0.375rem;
-  --rs-radius-md: 0.625rem;
+  --rs-radius-sm: 6px;
+  --rs-radius-md: 10px;
   --rs-radius-pill: 999px;
   --rs-border-width: 1px;
 
   --rs-transition-fast: 140ms;
 
-  --rs-container-gutter: var(--rs-space-4, 1rem);
+  --rs-container-gutter: var(--rs-space-4, 16px);
   --rs-container-width-wide: 1200px;
   --rs-container-width-content-sm: 600px;
   --rs-container-width-content-lg: 800px;
   --rs-container-width-narrow-lg: 1000px;
 
-  --rs-heading-spacing-top: var(--rs-space-7, 2rem);
-  --rs-heading-spacing-bottom: var(--rs-space-3, 0.75rem);
-  --rs-text-spacing-bottom: var(--rs-space-4, 1rem);
-  --rs-list-spacing-bottom: var(--rs-space-4, 1rem);
+  --rs-heading-spacing-top: var(--rs-space-7, 32px);
+  --rs-heading-spacing-bottom: var(--rs-space-3, 12px);
+  --rs-text-spacing-bottom: var(--rs-space-4, 16px);
+  --rs-list-spacing-bottom: var(--rs-space-4, 16px);
 
-  --rs-cq-sm: 20rem;
-  --rs-cq-md: 32rem;
-  --rs-cq-lg: 46rem;
+  --rs-cq-sm: 320px;
+  --rs-cq-md: 512px;
+  --rs-cq-lg: 736px;
 }

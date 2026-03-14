@@ -1,14 +1,14 @@
 .rs-container {
   --rs-container-width: var(--rs-container-width-wide, 1200px);
-  --rs-container-gutter-left: max(env(safe-area-inset-left), var(--rs-container-gutter, 1rem));
-  --rs-container-gutter-right: max(env(safe-area-inset-right), var(--rs-container-gutter, 1rem));
+  --rs-container-gutter-left: max(env(safe-area-inset-left), var(--rs-container-gutter, 16px));
+  --rs-container-gutter-right: max(env(safe-area-inset-right), var(--rs-container-gutter, 16px));
   --rs-container-gutters: calc(
-    var(--rs-container-gutter-left, max(env(safe-area-inset-left), var(--rs-container-gutter, 1rem))) +
-      var(--rs-container-gutter-right, max(env(safe-area-inset-right), var(--rs-container-gutter, 1rem)))
+    var(--rs-container-gutter-left, max(env(safe-area-inset-left), var(--rs-container-gutter, 16px))) +
+      var(--rs-container-gutter-right, max(env(safe-area-inset-right), var(--rs-container-gutter, 16px)))
   );
   margin-inline: auto;
-  max-width: calc(var(--rs-container-width, 1200px) + var(--rs-container-gutters, 2rem));
-  padding-inline: var(--rs-container-gutter-left, 1rem) var(--rs-container-gutter-right, 1rem);
+  max-width: calc(var(--rs-container-width, 1200px) + var(--rs-container-gutters, 32px));
+  padding-inline: var(--rs-container-gutter-left, 16px) var(--rs-container-gutter-right, 16px);
   width: 100%;
 }
 

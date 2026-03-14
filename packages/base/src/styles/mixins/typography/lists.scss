@@ -1,11 +1,11 @@
 @mixin typography-list {
-  margin-block: 0 var(--rs-list-spacing-bottom, 1rem);
-  padding-inline-start: var(--rs-space-6, 1.5rem);
+  margin-block: 0 var(--rs-list-spacing-bottom, 16px);
+  padding-inline-start: var(--rs-space-6, 24px);
 }
 
 @mixin typography-li {
-  margin-block: var(--rs-space-2, 0.5rem);
-  padding-inline-start: var(--rs-space-1, 0.25rem);
+  margin-block: var(--rs-space-2, 8px);
+  padding-inline-start: var(--rs-space-1, 4px);
 }
 
 @mixin typography-ul {
@@ -17,7 +17,7 @@
   @include typography-list;
   counter-reset: level1;
   list-style: none;
-  padding-inline-start: var(--rs-space-5, 1.25rem);
+  padding-inline-start: var(--rs-space-5, 20px);
 
   > li {
     counter-increment: level1;
@@ -27,14 +27,14 @@
 
   > li::before {
     content: counter(level1) '.';
-    left: calc(-1 * var(--rs-space-5, 1.25rem));
+    left: calc(-1 * var(--rs-space-5, 20px));
     position: absolute;
   }
 
   > li > ol {
     counter-reset: level2;
-    margin-top: var(--rs-space-2, 0.5rem);
-    padding-inline-start: var(--rs-space-5, 1.25rem);
+    margin-top: var(--rs-space-2, 8px);
+    padding-inline-start: var(--rs-space-5, 20px);
   }
 
   > li > ol > li {
@@ -45,14 +45,14 @@
 
   > li > ol > li::before {
     content: counter(level2, lower-alpha) '.';
-    left: calc(-1 * var(--rs-space-5, 1.25rem));
+    left: calc(-1 * var(--rs-space-5, 20px));
     position: absolute;
   }
 
   > li > ol > li > ol {
     counter-reset: level3;
-    margin-top: var(--rs-space-2, 0.5rem);
-    padding-inline-start: var(--rs-space-5, 1.25rem);
+    margin-top: var(--rs-space-2, 8px);
+    padding-inline-start: var(--rs-space-5, 20px);
   }
 
   > li > ol > li > ol > li {
@@ -63,7 +63,7 @@
 
   > li > ol > li > ol > li::before {
     content: counter(level3, lower-roman) '.';
-    left: calc(-1 * var(--rs-space-5, 1.25rem));
+    left: calc(-1 * var(--rs-space-5, 20px));
     position: absolute;
   }
 }

@@ -23,6 +23,7 @@ alwaysApply: false
   - Prefer SCSS for authoring styles; compile to CSS for consumers.
   - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
   - Keep SCSS files organized by component (e.g. `button.scss`, `container.scss`, `typography.scss`).
+  - Component SCSS must be co-located with the Astro component and included from that component via a `<style lang="scss">` block.
   - Use `rem` only for typography sizing and font-related scale values.
   - Use `px` for spacing, radii, layout dimensions, container-query thresholds, and viewport breakpoints.
 
@@ -41,4 +42,5 @@ alwaysApply: false
 - **Selector style**
   - Prefer class-based selectors; avoid element-tag or ID-based styling in reusable components.
   - Keep selector nesting shallow in SCSS; rely on BEM structure rather than deep descendant chains.
+  - Write BEM modifiers nested under their owning block or element selector using `&--modifier` (and `&__element` where appropriate).
 

@@ -30,5 +30,5 @@ alwaysApply: false
 - **Docs and tooling**
   - `_planning/rocketship-plan.md` is the source of truth for project vision, decisions, and roadmap.
   - `_planning/tasks.md` holds the task list and acceptance criteria used by background agents.
-  - A dedicated **Storybook for Astro** app (e.g. `apps/storybook`) will be used for demos, visual regression, and a11y testing.
+  - **Storybook** runs inside the Astro frontend app (`apps/frontend`) via `@storybook-astro/framework` (Storybook 10). Stories render real Astro components from `@rocketship/base`. Run with `pnpm run dev:storybook` from the repo root.
 

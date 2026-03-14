@@ -25,6 +25,7 @@ alwaysApply: false
 
 - **Breakpoints**
   - Use a small, explicit set of min-width breakpoints (e.g. `sm`, `md`, `lg`, `xl`) for layout only.
+  - Define layout breakpoints in `px` (Bootstrap-style), not `rem`.
   - Keep breakpoint logic centralized (e.g. in a SCSS partial) rather than re-declaring values per component.
 
 - **Container queries for component size**

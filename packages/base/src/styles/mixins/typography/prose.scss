@@ -1,0 +1,159 @@
+@use '../functions' as *;
+
+@mixin typography-blockquote {
+  border-inline-start: 4px solid var(--rs-color-border, #c8d2eb);
+  color: var(--rs-color-muted, #4f5b7d);
+  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: var(--rs-space-5, 20px) 0;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin typography-blockquote-p {
+  margin-bottom: var(--rs-space-3, 12px);
+}
+
+@mixin typography-code-inline {
+  background: var(--rs-color-surface-elevated, #eef2ff);
+  border-radius: var(--rs-radius-sm, 6px);
+  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+  padding: 0.125em 0.35em;
+}
+
+@mixin typography-pre {
+  background: var(--rs-color-surface, #ffffff);
+  border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
+  border-radius: var(--rs-radius-md, 10px);
+  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  font-size: #{to-rem(14)};
+  line-height: var(--rs-line-height-relaxed, 1.7);
+  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  overflow-x: auto;
+  padding: var(--rs-space-4, 16px);
+  tab-size: 2;
+}
+
+@mixin typography-pre-code {
+  background: transparent;
+  border-radius: 0;
+  font-size: inherit;
+  padding: 0;
+}
+
+@mixin typography-kbd {
+  @include typography-code-inline;
+  border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
+  box-shadow: 0 1px 0 var(--rs-color-border, #c8d2eb);
+  font-weight: var(--rs-font-weight-medium, 500);
+}
+
+@mixin typography-samp {
+  @include typography-code-inline;
+}
+
+@mixin typography-caption {
+  caption-side: bottom;
+  color: var(--rs-color-muted, #4f5b7d);
+  font-size: var(--rs-font-size-sm, #{to-rem(14)});
+  line-height: var(--rs-line-height-base, 1.45);
+  margin-top: var(--rs-space-2, 8px);
+  text-align: start;
+}
+
+@mixin typography-dl {
+  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+}
+
+@mixin typography-dt {
+  font-weight: var(--rs-font-weight-semibold, 600);
+  margin-top: var(--rs-space-4, 16px);
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+@mixin typography-dd {
+  margin-inline-start: 0;
+  margin-top: var(--rs-space-2, 8px);
+  padding-inline-start: var(--rs-space-5, 20px);
+}
+
+@mixin typography-small {
+  font-size: var(--rs-font-size-sm, #{to-rem(14)});
+  line-height: var(--rs-line-height-base, 1.45);
+}
+
+@mixin typography-sub-sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+@mixin typography-sub {
+  @include typography-sub-sup;
+  bottom: -0.25em;
+}
+
+@mixin typography-sup {
+  @include typography-sub-sup;
+  top: -0.4em;
+}
+
+@mixin typography-mark {
+  background: color-mix(in srgb, var(--rs-color-accent, #2f5bdb) 22%, transparent);
+  border-radius: 2px;
+  color: var(--rs-color-fg, #131a2f);
+  padding: 0.05em 0.2em;
+}
+
+@mixin typography-abbr {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+@mixin typography-del {
+  color: var(--rs-color-muted, #4f5b7d);
+  text-decoration: line-through;
+}
+
+@mixin typography-ins {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+@mixin typography-address {
+  font-style: normal;
+  line-height: var(--rs-line-height-relaxed, 1.7);
+  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+}
+
+@mixin typography-dfn {
+  font-style: italic;
+  font-weight: var(--rs-font-weight-semibold, 600);
+}
+
+@mixin typography-cite {
+  font-style: italic;
+}
+
+@mixin typography-var {
+  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  font-style: italic;
+}
+
+@mixin typography-time {
+  font-variant-numeric: tabular-nums;
+}

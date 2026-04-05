@@ -29,13 +29,13 @@ alwaysApply: false
   - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
   - Do not create separate component `.scss` files when the style belongs to a single component.
   - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
-  - Use `rem` only for `font-size` values.
+  - Use `to-rem($px)` from `mixins/functions.scss` for every `font-size` authored in SCSS (design-token `--rs-font-size-*`, component fallbacks, body copy in `base.scss`, etc.), so sizes are defined from px and emitted as `rem`. Typography mixins already use `to-rem()`. Exception: print styles may use `pt` where appropriate.
   - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
 
 - **Declaration order (per rule block)**
   - **CSS custom properties (`--rs-*`) always first** in the block.
   - Then reset if needed (e.g. `all: unset` for buttons/controls), then `box-sizing` if you reset.
- (the “API”   - Then all other properties (layout, appearance, etc.).
+  - Then all other properties (layout, appearance, etc.).
 
 - **CSS variable conventions**
   - All design tokens and component-level variables exposed to users should be named with the `--rs-*` prefix, for example:

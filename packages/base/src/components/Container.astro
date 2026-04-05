@@ -1,16 +1,17 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 
-export type ContainerSize = 'full' | 'wide' | 'content' | 'narrow'
+export type ContainerSize = 'default' | 'full' | 'wide' | 'content'
 export type ContainerTag = 'div' | 'section' | 'main' | 'article' | 'header' | 'footer' | 'nav'
 
 type Props = {
   as?: ContainerTag
   size?: ContainerSize
+  padded?: boolean
   class?: string
 } & HTMLAttributes<'div'>
 
-const { as = 'div', size = 'wide', class: className, ...attrs } = Astro.props as Props
+const { as = 'div', size = 'default', padded = false, class: className, ...attrs } = Astro.props as Props
 
 const Tag = as
 const classes = [
@@ -18,7 +19,7 @@ const classes = [
   size === 'full' ? 'rs-container--full-width' : undefined,
   size === 'wide' ? 'rs-container--wide' : undefined,
   size === 'content' ? 'rs-container--content' : undefined,
-  size === 'narrow' ? 'rs-container--narrow' : undefined,
+  padded ? 'rs-container--padded' : undefined,
   className,
 ]
 ---
@@ -33,22 +34,26 @@ const classes = [
   .rs-container {
     container-type: inline-size;
     container-name: rs-component;
-    --rs-container-width: var(--rs-container-width-wide, 1200px);
+    --rs-container-width: var(--rs-container-width-default, 1000px);
     --rs-container-gutter-left: max(env(safe-area-inset-left), var(--rs-container-gutter, 16px));
     --rs-container-gutter-right: max(env(safe-area-inset-right), var(--rs-container-gutter, 16px));
     --rs-container-gutters: calc(
       var(--rs-container-gutter-left, max(env(safe-area-inset-left), var(--rs-container-gutter, 16px))) +
         var(--rs-container-gutter-right, max(env(safe-area-inset-right), var(--rs-container-gutter, 16px)))
     );
+    --rs-container-gutter-top: max(
+      env(safe-area-inset-top),
+      var(--rs-container-padding-block-start, 0px)
+    );
+    --rs-container-gutter-bottom: max(
+      env(safe-area-inset-bottom),
+      var(--rs-container-padding-block-end, 0px)
+    );
     margin-inline: auto;
     max-width: calc(var(--rs-container-width, 1200px) + var(--rs-container-gutters, 32px));
+    padding-block: var(--rs-container-gutter-top) var(--rs-container-gutter-bottom);
     padding-inline: var(--rs-container-gutter-left, 16px) var(--rs-container-gutter-right, 16px);
     width: 100%;
-
-    &--full-width {
-      --rs-container-width: 100%;
-      padding-inline: 0;
-    }
 
     &--content {
       --rs-container-width: var(--rs-container-width-content-sm, 600px);
@@ -58,14 +63,21 @@ const classes = [
       }
     }
 
-    &--narrow {
-      @include media-breakpoint-up(lg) {
-        --rs-container-width: var(--rs-container-width-narrow-lg, 1000px);
-      }
-    }
-
     &--wide {
       --rs-container-width: var(--rs-container-width-wide, 1200px);
     }
+
+    &--full-width {
+      --rs-container-width: 100%;
+    }
+
+    &--padded {
+      padding-block: var(--rs-container-padding-block);
+    }
+
+    &--no-gutters {
+      padding-inline: 0;
+    }
   }
 </style>
+

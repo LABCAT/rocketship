@@ -1,3 +1,7 @@
+$rs-cq-sm: 500px;
+$rs-cq-md: 700px;
+$rs-cq-lg: 900px;
+
 @mixin container-query-up($min-width, $container-name: rs-component) {
   @container #{$container-name} (min-width: #{$min-width}) {
     @content;

@@ -16,13 +16,16 @@ alwaysApply: false
 
 - **Container component**
   - Provide a dedicated Container layout block (e.g. `.rs-container`) with width modifiers:
+    - `default` (base max-width from `--rs-container-width-default`, no extra BEM modifier)
+    - `wide` (~1200px)
+    - `content` (~600px / ~800px at `lg`)
     - `full` (full width)
-    - `wide` (default ~1200px)
-    - `content` (default ~800px)
+  - Optional `.rs-container--padded` (prop `padded` on `<Container>`): uses `inherit` so `--rs-container-padding-block` comes from `:root` (20px / 30px / 40px at base / `md` / `lg`, defined in `variables.scss`). Default `.rs-container` sets `--rs-container-padding-block: 0` so unpadded containers stay flush vertically.
   - Containers are responsible for:
     - Applying max-widths at specific breakpoints.
-    - Handling page gutters and horizontal padding.
-  - Media queries in SCSS should live with container/layout code, not with leaf components.
+    - Handling page gutters and horizontal padding (`--rs-container-gutter`, `--rs-container-gutter-left` / `-right`).
+    - Optional vertical inset via `--rs-container-padding-block` (symmetric), or `--rs-container-padding-block-start` / `-end`; resolved with safe-area into `--rs-container-gutter-top` / `-bottom`. The responsive `:root` values for `--rs-container-padding-block` (padded scale) are defined in `variables.scss` with `media-breakpoint-up`.
+  - Media queries in SCSS should live with container/layout code or shared layout tokens (`variables.scss` for `:root` container spacing), not with leaf components.
 
 - **Breakpoints**
   - Use a small, explicit set of min-width breakpoints (e.g. `sm`, `md`, `lg`, `xl`) for layout only.

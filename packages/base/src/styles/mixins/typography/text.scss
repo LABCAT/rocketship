@@ -10,7 +10,7 @@
   margin-bottom: var(--rs-text-spacing-bottom, 16px);
   margin-top: 0;
 
-  @include container-query-up(var(--rs-cq-md, 512px)) {
+  @include container-query-up($rs-cq-md) {
     font-size: var(--rs-typography-p-size-md, to-rem(17));
   }
 }

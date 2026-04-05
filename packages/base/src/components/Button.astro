@@ -59,20 +59,23 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
 }
 
 <style is:global lang="scss">
+  @use '../styles/mixins/functions' as *;
+  @use '../styles/mixins/container-query' as *;
+
   .rs-button {
+    all: unset;
     --rs-button-bg: var(--rs-color-accent, #2f5bdb);
     --rs-button-color: var(--rs-color-accent-contrast, #ffffff);
     --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
     --rs-button-border-width: var(--rs-border-width, 1px);
     --rs-button-border-radius: var(--rs-radius-pill, 999px);
-    --rs-button-font-size: var(--rs-button-font-size, var(--rs-font-size-sm, 0.875rem));
+    --rs-button-font-size: var(--rs-font-size-sm, #{to-rem(14)});
     --rs-button-font-weight: var(--rs-font-weight-semibold, 600);
     --rs-button-line-height: var(--rs-line-height-tight, 1.2);
-    --rs-button-padding-inline: var(--rs-button-padding-inline, var(--rs-space-3, 12px));
-    --rs-button-min-height: var(--rs-button-min-height, 36px);
+    --rs-button-padding-inline: var(--rs-space-3, 12px);
+    --rs-button-min-height: 36px;
     --rs-button-gap: var(--rs-space-2, 8px);
     --rs-button-focus-ring-color: var(--rs-color-focus-ring, #296dff);
-    all: unset;
     box-sizing: border-box;
     align-items: center;
     background: var(--rs-button-bg);
@@ -145,21 +148,33 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
     }
 
     &--small {
-      --rs-button-font-size: var(--rs-font-size-sm, 0.875rem);
-      --rs-button-min-height: 36px;
-      --rs-button-padding-inline: var(--rs-space-3, 12px);
+      --rs-button-font-size: var(--rs-button-font-size-sm);
+      --rs-button-min-height: var(--rs-button-min-height-sm);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-sm);
     }
 
     &--medium {
-      --rs-button-font-size: var(--rs-font-size-md, 1rem);
-      --rs-button-min-height: 40px;
-      --rs-button-padding-inline: var(--rs-space-4, 16px);
+      --rs-button-font-size: var(--rs-button-font-size-md);
+      --rs-button-min-height: var(--rs-button-min-height-md);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-md);
     }
 
     &--large {
-      --rs-button-font-size: var(--rs-font-size-lg, 1.125rem);
-      --rs-button-min-height: 44px;
-      --rs-button-padding-inline: var(--rs-space-5, 20px);
+      --rs-button-font-size: var(--rs-button-font-size-lg);
+      --rs-button-min-height: var(--rs-button-min-height-lg);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-lg);
+    }
+
+    @include container-query-up($rs-cq-sm) {
+      --rs-button-font-size-sm: var(--rs-button-font-size-sm-cq);
+      --rs-button-font-size-md: var(--rs-button-font-size-md-cq);
+      --rs-button-font-size-lg: var(--rs-button-font-size-lg-cq);
+      --rs-button-min-height-sm: var(--rs-button-min-height-sm-cq);
+      --rs-button-min-height-md: var(--rs-button-min-height-md-cq);
+      --rs-button-min-height-lg: var(--rs-button-min-height-lg-cq);
+      --rs-button-padding-inline-sm: var(--rs-button-padding-inline-sm-cq);
+      --rs-button-padding-inline-md: var(--rs-button-padding-inline-md-cq);
+      --rs-button-padding-inline-lg: var(--rs-button-padding-inline-lg-cq);
     }
   }
 </style>

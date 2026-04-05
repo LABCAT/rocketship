@@ -53,6 +53,10 @@ const Tag = as
       @include typography-p;
     }
 
+    a {
+      @include typography-a;
+    }
+
     .intro-text {
       @include typography-intro;
     }
@@ -81,6 +85,104 @@ const Tag = as
 
     ol {
       @include typography-ol;
+    }
+
+    @include typography-list-bridges;
+
+    pre {
+      @include typography-pre;
+    }
+
+    pre code {
+      @include typography-pre-code;
+    }
+
+    code {
+      @include typography-code-inline;
+    }
+
+    kbd {
+      @include typography-kbd;
+    }
+
+    samp {
+      @include typography-samp;
+    }
+
+    blockquote {
+      @include typography-blockquote;
+    }
+
+    blockquote p {
+      @include typography-blockquote-p;
+    }
+
+    table {
+      @include typography-table;
+    }
+
+    caption {
+      @include typography-caption;
+    }
+
+    dl {
+      @include typography-dl;
+    }
+
+    dt {
+      @include typography-dt;
+    }
+
+    dd {
+      @include typography-dd;
+    }
+
+    small {
+      @include typography-small;
+    }
+
+    sub {
+      @include typography-sub;
+    }
+
+    sup {
+      @include typography-sup;
+    }
+
+    mark {
+      @include typography-mark;
+    }
+
+    abbr[title] {
+      @include typography-abbr;
+    }
+
+    del {
+      @include typography-del;
+    }
+
+    ins {
+      @include typography-ins;
+    }
+
+    address {
+      @include typography-address;
+    }
+
+    dfn {
+      @include typography-dfn;
+    }
+
+    cite {
+      @include typography-cite;
+    }
+
+    var {
+      @include typography-var;
+    }
+
+    time {
+      @include typography-time;
     }
 
     > :first-child {

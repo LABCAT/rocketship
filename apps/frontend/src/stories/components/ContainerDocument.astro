@@ -1,0 +1,47 @@
+---
+import Container from '@rocketship/base/components/Container'
+import Typography from '@rocketship/base/components/Typography'
+
+type ContainerSize = 'default' | 'full' | 'wide' | 'content'
+
+const { containerSize = 'content' } = Astro.props as { containerSize?: ContainerSize }
+---
+
+<Container size={containerSize} padded>
+  <Typography as="article">
+    <h1>Short form notice</h1>
+    <p>
+      <em>Last updated: <time datetime="2026-04-05">5 April 2026</time>.</em> This mirrors the typography
+      story in a smaller slice: headings, lists, links, and block-level prose inside a content-width
+      container.
+    </p>
+    <p class="intro-text">
+      Use this story to check gutters, max-width, and how nested typography sits within the container
+      query context.
+    </p>
+    <hr />
+    <h2>What you need to know</h2>
+    <ol>
+      <li>The Service is provided for demonstration and review only.</li>
+      <li>
+        Do not rely on this text as legal advice; consult the full
+        <a href="https://example.com/terms">terms</a> or an external reference such as the
+        <a href="https://www.w3.org/">W3C</a>.
+      </li>
+    </ol>
+    <ul>
+      <li>Respect rate limits and acceptable use rules.</li>
+      <li>
+        Questions?
+        <a href="mailto:legal@example.com">legal@example.com</a>
+      </li>
+    </ul>
+    <blockquote>
+      <p>Block quotations and body copy should read clearly at the content column measure.</p>
+    </blockquote>
+    <address>
+      Rocketship Demo Ltd<br />
+      London, United Kingdom
+    </address>
+  </Typography>
+</Container>

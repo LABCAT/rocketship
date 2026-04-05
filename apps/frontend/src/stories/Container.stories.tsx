@@ -1,41 +1,38 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import Container from '@rocketship/base/components/Container'
+import ContainerDocument from './components/ContainerDocument.astro'
+import '@rocketship/base/components/Container'
+import '@rocketship/base/components/Typography'
 
-const meta: Meta<typeof Container> = {
-  title: 'Rocketship/Container',
-  component: Container,
+const meta = {
+  title: 'Base/Container',
+  component: ContainerDocument,
   parameters: {
     a11y: { disable: false },
+    layout: 'fullscreen',
   },
-}
+  argTypes: {
+    containerSize: {
+      control: 'select',
+      options: ['default', 'content', 'wide', 'full'],
+    },
+  },
+} satisfies Meta<typeof ContainerDocument>
 
 export default meta
-type Story = StoryObj<typeof Container>
+type Story = StoryObj<typeof ContainerDocument>
 
-export const Wide: Story = {
-  args: {
-    size: 'wide',
-    slots: { default: '<p>Container content area</p>' },
-  },
-}
-
-export const FullWidth: Story = {
-  args: {
-    size: 'full',
-    slots: { default: '<p>Container content area</p>' },
-  },
+export const Default: Story = {
+  args: { containerSize: 'default' },
 }
 
 export const Content: Story = {
-  args: {
-    size: 'content',
-    slots: { default: '<p>Container content area</p>' },
-  },
+  args: { containerSize: 'content' },
 }
 
-export const Narrow: Story = {
-  args: {
-    size: 'narrow',
-    slots: { default: '<p>Container content area</p>' },
-  },
+export const Wide: Story = {
+  args: { containerSize: 'wide' },
+}
+
+export const FullWidth: Story = {
+  args: { containerSize: 'full' },
 }

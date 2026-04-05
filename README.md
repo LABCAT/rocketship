@@ -24,12 +24,12 @@ Set `PUBLIC_PAYLOAD_URL` (e.g. `http://localhost:3000`) when running the fronten
 ## Workspace layout
 
 - **Root:** Payload/Next backend and workspace config.
-- **`apps/`:** `frontend` (Astro), `storybook` (Storybook for Rocketship UI; see below).
+- **`apps/`:** `frontend` (Astro site + Storybook for Rocketship UI; see below).
 - **`packages/`:** `base` — `@rocketship/base`, minimal scaffold (package.json, tsconfig, SCSS entry at `src/styles/index.scss`). No components exported yet. Consume via `@rocketship/base/styles` or workspace dependency.
 
 ## Storybook
 
-Storybook lives in `apps/storybook`, is wired to `@rocketship/base`, and is used to develop and document Rocketship components (HTML + SCSS). Run `pnpm dev:storybook` for dev (http://localhost:6006) or `pnpm build:storybook` for a static build. The app is scaffold-only for now; stories will be added as components land in the base package.
+Storybook runs inside `apps/frontend` (Astro + `@storybook-astro/framework`), wired to `@rocketship/base` Astro components and styles. Run `pnpm dev:storybook` for dev (http://localhost:6006) or `pnpm build:storybook` for a static build (output: `apps/frontend/storybook-static`).
 
 ## Frontend: Astro 6
 

@@ -1,0 +1,55 @@
+---
+import Container from '@rocketship/base/components/Container'
+import Button from '@rocketship/base/components/Button'
+import Typography from '@rocketship/base/components/Typography'
+
+const rows = [
+  {
+    title: 'Small',
+    description: 'Compact height and label size',
+    size: 'small' as const,
+  },
+  {
+    title: 'Medium',
+    description: 'Default size for most actions',
+    size: 'medium' as const,
+  },
+  {
+    title: 'Large',
+    description: 'Emphasis and touch-friendly targets',
+    size: 'large' as const,
+  },
+]
+
+const variants = [
+  { variant: 'primary' as const, label: 'Primary' },
+  { variant: 'secondary' as const, label: 'Secondary' },
+  { variant: 'ghost' as const, label: 'Ghost' },
+]
+---
+
+{
+  rows.map((row) => (
+    <Container size="content" padded>
+      <Typography as="section">
+        <h3>{row.title} size</h3>
+        <p>{row.description}</p>
+      </Typography>
+    </Container>
+    <Container size="content">
+      {variants.map((v, i) => (
+            <>
+              {i > 0 ? ' ' : null}
+              <Button
+                size={row.size}
+                variant={v.variant}
+                aria-label={`${v.label}, ${row.title.toLowerCase()} size`}
+              >
+                {v.label} ({row.title.toLowerCase()})
+              </Button>
+            </>
+          ))}
+      
+    </Container>
+  ))
+}

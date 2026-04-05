@@ -16,6 +16,7 @@ alwaysApply: false
   - Prefer **SCSS/CSS over JavaScript**; MVP must be complete with CSS-only components and themes before any JS-required components are added.
   - Components are styled via **CSS custom properties** (`--rs-*`) with sensible fallback values.
   - Use **BEM with `rs` prefix** for all blocks (e.g. `.rs-button`, `.rs-button__icon`, `.rs-button--primary`).
+  - **Design tokens** for colors, type, spacing, and component scales live in **`packages/base/src/styles/variables.scss`** on `:root` as `--rs-*` (no class selectors there). **Container-query widths** are Sass-only **`$rs-cq-sm` / `$rs-cq-md` / `$rs-cq-lg`** in `packages/base/src/styles/mixins/container-query.scss` so `@container` conditions get real lengths. Use `@include container-query-up($rs-cq-sm)` (etc.) in component or mixin SCSS; map size modifiers to the right `--rs-*` tokens inside those blocks.
 
 - **Monorepo / packaging strategy**
   - Base package (e.g. `@rocketship/base`) exports primitives, design tokens, default theme, and core components.
@@ -30,5 +31,5 @@ alwaysApply: false
 - **Docs and tooling**
   - `_planning/rocketship-plan.md` is the source of truth for project vision, decisions, and roadmap.
   - `_planning/tasks.md` holds the task list and acceptance criteria used by background agents.
-  - A dedicated **Storybook for Astro** app (e.g. `apps/storybook`) will be used for demos, visual regression, and a11y testing.
+  - **Storybook** runs inside the Astro frontend app (`apps/frontend`) via `@storybook-astro/framework` (Storybook 10). Stories render real Astro components from `@rocketship/base`. Run with `pnpm run dev:storybook` from the repo root. Stories use library components from `@rocketship/base` only. When storybook-astro’s one-component-per-story limit requires showing multiple components in one story, **Storybook-only wrapper components** (e.g. ButtonVariants, ButtonSizes) may be added under `apps/frontend/src/stories/components/`; they must only compose `@rocketship/base` components. Do not add Storybook wrapper components to the base package — the base package is for the published library only.
 

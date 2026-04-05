@@ -17,7 +17,7 @@
 /out/
 /apps/frontend/dist
 /apps/frontend/.astro
-/apps/storybook/storybook-static
+/apps/frontend/storybook-static
 
 # production
 /build

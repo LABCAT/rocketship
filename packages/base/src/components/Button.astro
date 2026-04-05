@@ -1,0 +1,180 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+export type ButtonSize = 'small' | 'medium' | 'large'
+export type ButtonTag = 'button' | 'a'
+
+type NativeButtonType = 'button' | 'submit' | 'reset'
+
+type Props = {
+  as?: ButtonTag
+  href?: string
+  variant?: ButtonVariant
+  size?: ButtonSize
+  disabled?: boolean
+  type?: NativeButtonType
+  class?: string
+} & HTMLAttributes<'button'> &
+  HTMLAttributes<'a'>
+
+const {
+  as = 'button',
+  href,
+  variant = 'primary',
+  size = 'medium',
+  disabled = false,
+  type = 'button',
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const classes = [
+  'rs-button',
+  `rs-button--${variant}`,
+  `rs-button--${size}`,
+  className,
+]
+
+const shouldRenderAsLink = as === 'a' || Boolean(href)
+---
+
+{
+  shouldRenderAsLink ? (
+    <a
+      {...attrs}
+      aria-disabled={disabled || undefined}
+      class:list={classes}
+      href={disabled ? undefined : href ?? '#'}
+      role={disabled ? 'link' : undefined}
+      tabindex={disabled ? -1 : undefined}
+    >
+      <slot />
+    </a>
+  ) : (
+    <button {...attrs} class:list={classes} disabled={disabled} type={type}>
+      <slot />
+    </button>
+  )
+}
+
+<style is:global lang="scss">
+  @use '../styles/mixins/functions' as *;
+  @use '../styles/mixins/container-query' as *;
+
+  .rs-button {
+    all: unset;
+    --rs-button-bg: var(--rs-color-accent, #2f5bdb);
+    --rs-button-color: var(--rs-color-accent-contrast, #ffffff);
+    --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
+    --rs-button-border-width: var(--rs-border-width, 1px);
+    --rs-button-border-radius: var(--rs-radius-pill, 999px);
+    --rs-button-font-size: var(--rs-font-size-sm, #{to-rem(14)});
+    --rs-button-font-weight: var(--rs-font-weight-semibold, 600);
+    --rs-button-line-height: var(--rs-line-height-tight, 1.2);
+    --rs-button-padding-inline: var(--rs-space-3, 12px);
+    --rs-button-min-height: 36px;
+    --rs-button-gap: var(--rs-space-2, 8px);
+    --rs-button-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+    box-sizing: border-box;
+    align-items: center;
+    background: var(--rs-button-bg);
+    border: var(--rs-button-border-width) solid var(--rs-button-border-color);
+    border-radius: var(--rs-button-border-radius);
+    color: var(--rs-button-color);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-size: var(--rs-button-font-size);
+    font-weight: var(--rs-button-font-weight);
+    gap: var(--rs-button-gap);
+    justify-content: center;
+    line-height: var(--rs-button-line-height);
+    min-height: var(--rs-button-min-height);
+    padding-block: 8px;
+    padding-inline: var(--rs-button-padding-inline);
+    text-decoration: none;
+    transition:
+      background-color var(--rs-transition-fast, 140ms) ease,
+      border-color var(--rs-transition-fast, 140ms) ease,
+      color var(--rs-transition-fast, 140ms) ease,
+      opacity var(--rs-transition-fast, 140ms) ease;
+    white-space: nowrap;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
+    &:active {
+      filter: brightness(0.94);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--rs-button-focus-ring-color);
+      outline-offset: 2px;
+    }
+
+    &:disabled,
+    &[aria-disabled='true'] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    &--secondary {
+      --rs-button-bg: var(--rs-color-surface, #ffffff);
+      --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
+      --rs-button-border-width: 2px;
+      --rs-button-color: var(--rs-color-accent, #2f5bdb);
+
+      &:hover {
+        filter: none;
+        --rs-button-bg: var(--rs-color-surface-elevated, #eef2ff);
+        --rs-button-border-color: var(--rs-color-link-hover, #173ea8);
+        --rs-button-color: var(--rs-color-link-hover, #173ea8);
+      }
+    }
+
+    &--ghost {
+      --rs-button-bg: transparent;
+      --rs-button-border-color: transparent;
+      --rs-button-border-width: 2px;
+      --rs-button-color: var(--rs-color-accent, #2f5bdb);
+
+      &:hover {
+        filter: none;
+        --rs-button-bg: var(--rs-color-surface-elevated, #eef2ff);
+      }
+    }
+
+    &--small {
+      --rs-button-font-size: var(--rs-button-font-size-sm);
+      --rs-button-min-height: var(--rs-button-min-height-sm);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-sm);
+    }
+
+    &--medium {
+      --rs-button-font-size: var(--rs-button-font-size-md);
+      --rs-button-min-height: var(--rs-button-min-height-md);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-md);
+    }
+
+    &--large {
+      --rs-button-font-size: var(--rs-button-font-size-lg);
+      --rs-button-min-height: var(--rs-button-min-height-lg);
+      --rs-button-padding-inline: var(--rs-button-padding-inline-lg);
+    }
+
+    @include container-query-up($rs-cq-sm) {
+      --rs-button-font-size-sm: var(--rs-button-font-size-sm-cq);
+      --rs-button-font-size-md: var(--rs-button-font-size-md-cq);
+      --rs-button-font-size-lg: var(--rs-button-font-size-lg-cq);
+      --rs-button-min-height-sm: var(--rs-button-min-height-sm-cq);
+      --rs-button-min-height-md: var(--rs-button-min-height-md-cq);
+      --rs-button-min-height-lg: var(--rs-button-min-height-lg-cq);
+      --rs-button-padding-inline-sm: var(--rs-button-padding-inline-sm-cq);
+      --rs-button-padding-inline-md: var(--rs-button-padding-inline-md-cq);
+      --rs-button-padding-inline-lg: var(--rs-button-padding-inline-lg-cq);
+    }
+  }
+</style>

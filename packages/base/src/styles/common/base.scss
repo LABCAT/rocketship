@@ -1,0 +1,32 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--rs-color-bg, #f6f8ff);
+  color: var(--rs-color-fg, #131a2f);
+  font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+  font-size: var(--rs-font-size-md, 1rem);
+  line-height: var(--rs-line-height-base, 1.45);
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+}

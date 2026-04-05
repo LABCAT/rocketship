@@ -89,6 +89,57 @@ No new packages, Storybook app, or components in this phase.
 - Use `--rs-*` naming consistently.
 - Document new token layers (e.g. component-level tokens) here as they’re introduced.
 
+### Default token set
+
+- Color tokens:
+  - `--rs-color-bg`, `--rs-color-fg`, `--rs-color-surface`, `--rs-color-surface-elevated`
+  - `--rs-color-border`, `--rs-color-accent`, `--rs-color-accent-contrast`
+  - `--rs-color-link`, `--rs-color-link-hover`, `--rs-color-link-visited`
+  - `--rs-color-focus-ring`, `--rs-color-muted`
+- Typography tokens:
+  - `--rs-font-family-sans`, `--rs-font-family-mono`
+  - `--rs-font-size-xs` through `--rs-font-size-3xl`
+  - `--rs-font-weight-regular` through `--rs-font-weight-bold`
+  - `--rs-line-height-tight`, `--rs-line-height-base`, `--rs-line-height-relaxed`
+- Spacing and layout tokens:
+  - `--rs-space-1` through `--rs-space-8`
+  - `--rs-container-gutter`
+  - `--rs-container-width-wide`, `--rs-container-width-content-sm`, `--rs-container-width-content-lg`, `--rs-container-width-narrow-lg`
+- Typography spacing tokens:
+  - `--rs-heading-spacing-top`, `--rs-heading-spacing-bottom`
+  - `--rs-text-spacing-bottom`, `--rs-list-spacing-bottom`
+
+### Container component usage and breakpoints
+
+- Astro API: `<Container size="full|wide|content|narrow" />` with default `wide`.
+- BEM classes:
+  - `.rs-container`
+  - `.rs-container--full-width`
+  - `.rs-container--wide`
+  - `.rs-container--content`
+  - `.rs-container--narrow`
+- Breakpoints use `media-breakpoint-up` only:
+  - `sm: 36rem`
+  - `md: 48rem`
+  - `lg: 62rem`
+  - `xl: 75rem`
+- Width behavior:
+  - `wide`: `1200px`
+  - `content`: `600px`, then `800px` at `lg`
+  - `narrow`: `1000px` at `lg`
+  - `full-width`: `100%` with zero horizontal padding
+
+### Typography token-to-scale mapping
+
+- `h1`: `to-rem(32)` -> `to-rem(36)` at `sm` -> `to-rem(44)` at `lg`
+- `h2`: `to-rem(28)` -> `to-rem(32)` at `sm` -> `to-rem(38)` at `lg`
+- `h3`: `to-rem(24)` -> `to-rem(28)` at `sm` -> `to-rem(32)` at `lg`
+- `h4`: `to-rem(21)` -> `to-rem(24)` at `md`
+- `h5`: `to-rem(18)`
+- `h6`: `to-rem(16)` uppercase
+- Body paragraph (`typography-p`): `to-rem(16)` -> `to-rem(17)` at `md`
+- Intro text (`typography-intro`): `to-rem(19)` -> `to-rem(21)` at `md`
+
 ---
 
 ## Naming, BEM, and accessibility

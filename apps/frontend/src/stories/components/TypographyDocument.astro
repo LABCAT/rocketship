@@ -5,24 +5,25 @@ import Typography from '@rocketship/base/components/Typography'
 
 <Container size="content" padded>
   <Typography as="article">
-    <h1>Terms of Service</h1>
+    <h1>h1 Terms of Service</h1>
     <p>
       <em>Last updated: <time datetime="2026-04-05">5 April 2026</time>.</em> These terms apply to your
-      use of the Rocketship demonstration environment and any related documentation or sample content.
-      They are provided for layout and typography review only and do not constitute legal advice.
+      use of the <b>Rocketship</b> demonstration environment and any related documentation or sample
+      content. They are provided for layout and typography review only and <i>do not</i> constitute legal
+      advice.
     </p>
 
     <p class="intro-text">
       By accessing or using the service, you agree to be bound by these terms. If you do not agree,
-      you must not use the service. We may update these terms from time to time; the date above
-      indicates when this version was published. References to an
+      you must <strong>not</strong> use the service. We may update these terms from time to time; the
+      date above indicates when this version was published. References to an
       <abbr title="Application Programming Interface">API</abbr> mean our documented programmatic
       interfaces only.
     </p>
 
     <hr />
 
-    <h2>1. Definitions</h2>
+    <h2>h2 1. Definitions</h2>
     <dl>
       <dt>Service</dt>
       <dd>
@@ -41,20 +42,21 @@ import Typography from '@rocketship/base/components/Typography'
       </dd>
     </dl>
 
-    <h2>2. Eligibility and accounts</h2>
-    <h3>2.1 Eligibility</h3>
+    <h2>h2 2. Eligibility and accounts</h2>
+    <h3>h3 2.1 Eligibility</h3>
     <p>
       You represent that you are of legal age to form a binding contract in your jurisdiction and
       that your registration information is accurate. You are responsible for maintaining the
       confidentiality of your account credentials.
     </p>
-    <h3>2.2 Account security</h3>
+    <h3>h3 2.2 Account security</h3>
     <p>
-      You must notify us promptly of any unauthorised use of your account. We are not liable for
-      losses arising from your failure to safeguard login details, except where applicable law
-      requires otherwise.
+      You must notify us promptly of any unauthorised use of your account. If the interface shows
+      <q>Your session has expired</q> or a similar message, sign in again before continuing. We are
+      not liable for losses arising from your failure to safeguard login details, except where
+      applicable law requires otherwise.
     </p>
-    <h3>2.3 Registration</h3>
+    <h3>h3 2.3 Registration</h3>
     <p>When you create an account, you will typically complete the following steps in order:</p>
     <ol>
       <li>Provide accurate contact details and accept these terms;</li>
@@ -63,7 +65,26 @@ import Typography from '@rocketship/base/components/Typography'
       <li>Finish any organisation or billing profile required for your plan.</li>
     </ol>
 
-    <h2>3. Acceptable use</h2>
+    <h4>h4 2.3.1 Verification requirements</h4>
+    <p>
+      We may request additional evidence of identity when required for fraud prevention or regulatory
+      reasons. You agree to provide accurate information when asked.
+    </p>
+    <h5>h5 Optional organisation details</h5>
+    <p>
+      Company name, VAT number, and billing address are optional unless your plan requires invoicing
+      or tax reporting in your jurisdiction.
+    </p>
+    <h6>h6 Demo environment</h6>
+    <p>
+      In the Rocketship demonstration environment, some verification steps may be skipped or
+      simulated; production deployments may enforce stricter checks. Mixed-direction fixtures may use
+      labels containing
+      <bdo dir="rtl" lang="ar" translate="no">اتجاه النص من اليمين إلى اليسار</bdo>
+      (Arabic, forced RTL) solely to exercise bidirectional layout.
+    </p>
+
+    <h2>h2 3. Acceptable use</h2>
     <p>You agree that you will not, and will not permit others to:</p>
     <ul>
       <li>
@@ -100,7 +121,7 @@ import Typography from '@rocketship/base/components/Typography'
       with <kbd>Ctrl</kbd> + <kbd>S</kbd> where your browser supports it.
     </p>
 
-    <h2>4. Intellectual property</h2>
+    <h2>h2 4. Intellectual property</h2>
     <p>
       The Service, including its design, text, and software, is owned by us or our licensors and is
       protected by copyright and other intellectual property laws. Subject to these terms, we grant
@@ -116,7 +137,7 @@ Content-Type: application/json
 
 &#123; "tenant_id": "…", "action": "ping" &#125;</code></pre>
 
-    <h2>5. Third-party services and links</h2>
+    <h2>h2 5. Third-party services and links</h2>
     <p>
       The Service may contain links to third-party websites or integrations. We do not control those
       services and are not responsible for their content or practices. For general context on how
@@ -126,7 +147,7 @@ Content-Type: application/json
       connection with the Service.
     </p>
 
-    <h2>6. Disclaimers</h2>
+    <h2>h2 6. Disclaimers</h2>
     <blockquote cite="https://example.com/legal-summary">
       <p>
         The Service is provided <strong>“as is”</strong> and <strong>“as available.”</strong> We do
@@ -143,7 +164,7 @@ Content-Type: application/json
       <mark>consumer protection</mark> law.
     </p>
 
-    <h2>7. Limitation of liability</h2>
+    <h2>h2 7. Limitation of liability</h2>
     <p>To the maximum extent permitted by applicable law:</p>
     <table>
       <caption>Illustrative liability caps (demonstration only)</caption>
@@ -187,7 +208,7 @@ Content-Type: application/json
       limited to the fullest extent permitted by law.
     </p>
 
-    <h2>8. Termination</h2>
+    <h2>h2 8. Termination</h2>
     <p>
       We may suspend or terminate your access to the Service if you materially breach these terms or
       if we are required to do so by law. You may stop using the Service at any time. Where we
@@ -201,7 +222,7 @@ Content-Type: application/json
       and shown only as a superscript/subscript example (E = mc<sup>2</sup>).
     </p>
 
-    <h2>9. Governing law</h2>
+    <h2>h2 9. Governing law</h2>
     <p>
       These terms are governed by the laws of England and Wales, without regard to conflict-of-law
       principles. The courts of London shall have exclusive jurisdiction, except where mandatory
@@ -216,7 +237,7 @@ Content-Type: application/json
 
     <hr />
 
-    <h2>10. Contact</h2>
+    <h2>h2 10. Contact</h2>
     <p>Questions about these terms should be sent by email or post:</p>
     <p><a href="mailto:legal@example.com">legal@example.com</a></p>
     <address>

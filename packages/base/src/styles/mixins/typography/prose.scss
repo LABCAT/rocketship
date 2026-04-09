@@ -21,6 +21,11 @@
   margin-bottom: var(--rs-space-3, 12px);
 }
 
+@mixin typography-q {
+  color: var(--rs-color-muted, #4f5b7d);
+  font-style: italic;
+}
+
 @mixin typography-code-inline {
   background: var(--rs-color-surface-elevated, #eef2ff);
   border-radius: var(--rs-radius-sm, 6px);

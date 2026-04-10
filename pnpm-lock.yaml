@@ -7,6 +7,12 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
+
+  apps/backend:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: ^1.17.1
@@ -17,6 +23,9 @@ importers:
       '@payloadcms/next':
         specifier: 3.79.0
         version: 3.79.0(@types/react@19.2.14)(graphql@16.13.1)(monaco-editor@0.55.1)(next@15.4.11(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      '@payloadcms/plugin-nested-docs':
+        specifier: 3.79.0
+        version: 3.79.0(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))
       '@payloadcms/richtext-lexical':
         specifier: 3.79.0
         version: 3.79.0(@faceless-ui/modal@3.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@faceless-ui/scroll-info@2.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@payloadcms/next@3.79.0(@types/react@19.2.14)(graphql@16.13.1)(monaco-editor@0.55.1)(next@15.4.11(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(@types/react@19.2.14)(monaco-editor@0.55.1)(next@15.4.11(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(yjs@13.6.29)
@@ -81,9 +90,6 @@ importers:
       jsdom:
         specifier: 28.1.0
         version: 28.1.0(@noble/hashes@1.8.0)
-      prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -128,7 +134,11 @@ importers:
         specifier: ^10.0.0
         version: 10.2.19(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  packages/base: {}
+  packages/base:
+    devDependencies:
+      astro:
+        specifier: ^6.0.4
+        version: 6.0.4(@types/node@25.4.0)(aws4fetch@1.0.20)(lightningcss@1.32.0)(rollup@4.59.0)(sass@1.98.0)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
 
 packages:
 
@@ -2011,6 +2021,11 @@ packages:
       payload: 3.79.0
       react: ^19.0.1 || ^19.1.2 || ^19.2.1
       react-dom: ^19.0.1 || ^19.1.2 || ^19.2.1
+
+  '@payloadcms/plugin-nested-docs@3.79.0':
+    resolution: {integrity: sha512-Cy4EdpOhhnkqiC0mqG4Q+Rtn+/1wQBBOb/rPphozFL5kH1Tqna+gZX8EHU23X5XA5dwuowHLP8rxliy1KOLpcA==}
+    peerDependencies:
+      payload: 3.79.0
 
   '@payloadcms/richtext-lexical@3.79.0':
     resolution: {integrity: sha512-SPoF44Lf3SwuQtWn51VsqHHSteIoymeANF+T+iGk6g9ji2QoVMWaYu8g6lp8TjNtGd0oLvYhAuTBnKXMIpCavA==}
@@ -8748,6 +8763,10 @@ snapshots:
       - next
       - supports-color
       - typescript
+
+  '@payloadcms/plugin-nested-docs@3.79.0(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))':
+    dependencies:
+      payload: 3.79.0(graphql@16.13.1)(typescript@5.9.3)
 
   '@payloadcms/richtext-lexical@3.79.0(@faceless-ui/modal@3.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@faceless-ui/scroll-info@2.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@payloadcms/next@3.79.0(@types/react@19.2.14)(graphql@16.13.1)(monaco-editor@0.55.1)(next@15.4.11(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(@types/react@19.2.14)(monaco-editor@0.55.1)(next@15.4.11(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(payload@3.79.0(graphql@16.13.1)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(yjs@13.6.29)':
     dependencies:

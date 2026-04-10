@@ -14,8 +14,12 @@
       "default": "./dist/index.js"
     },
     "./styles": "./src/styles/index.scss",
+    "./components/BlockTitle": "./src/components/BlockTitle.astro",
     "./components/Button": "./src/components/Button.astro",
     "./components/Container": "./src/components/Container.astro",
+    "./components/ContentBlock": "./src/components/ContentBlock.astro",
+    "./components/PageHeader": "./src/components/PageHeader.astro",
+    "./components/QuoteBlock": "./src/components/QuoteBlock.astro",
     "./components/Typography": "./src/components/Typography.astro"
   },
   "files": [
@@ -24,6 +28,9 @@
     "src/components"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "astro": "^6.0.4"
   }
 }

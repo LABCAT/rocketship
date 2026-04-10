@@ -1,0 +1,17 @@
+---
+import BlockTitle from './BlockTitle.astro'
+import Container from './Container.astro'
+import Typography from './Typography.astro'
+
+type Props = {
+  title: string
+  html: string
+}
+
+const { title, html } = Astro.props as Props
+---
+
+<Container as="section" size="content" padded>
+  <BlockTitle title={title} />
+  <Typography html={html} />
+</Container>

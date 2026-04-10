@@ -1,0 +1,21 @@
+---
+type Props = {
+  title: string
+}
+
+const { title } = Astro.props as Props
+---
+
+<h2 class="rs-block-title">{title}</h2>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-block-title {
+    --rs-block-title-spacing-bottom: var(--rs-space-3, 12px);
+    --rs-heading-spacing-top: 0;
+    --rs-heading-spacing-bottom: var(--rs-block-title-spacing-bottom);
+
+    @include typography-h2;
+  }
+</style>

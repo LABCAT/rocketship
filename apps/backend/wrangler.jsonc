@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "14d8c89e88840609947f32032c9dc0a4",
   "main": ".open-next/worker.js",
   "name": "rocketship",
   "compatibility_date": "2025-08-15",

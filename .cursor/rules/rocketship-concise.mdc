@@ -1,0 +1,11 @@
+---
+description: Assistant replies must be as short as possible.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Concision (non-negotiable)
+
+- **Be maximally concise:** short answers, minimal preamble, no filler, no repeated apologies, no “here’s what I did” essays unless the user asked for a summary.
+- Prefer bullets or a few sentences over paragraphs. Skip optional follow-ups unless necessary.

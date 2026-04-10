@@ -1,0 +1,14 @@
+---
+description: Prefer arrow functions for functions and methods in application code.
+globs:
+  - "apps/**/*.{ts,tsx,mjs}"
+  - "packages/**/*.{ts,tsx,mjs}"
+  - "scripts/**/*.mjs"
+alwaysApply: false
+---
+
+# JavaScript / TypeScript style (Rocketship)
+
+- Prefer **arrow functions** for locals, helpers, hooks, and any function that does not require `function` hoisting.
+- Use `function` only when necessary (e.g. generator functions, or when a stack trace must show a named `function`).
+- **`const` arrows are not hoisted:** define them **above** the first line that calls them (avoid temporal dead zone errors).

@@ -1,0 +1,89 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+import Container from './Container.astro'
+
+type Props = {
+  quoteHtml: string
+  attribution?: string
+  roleOrSource?: string
+  class?: string
+} & HTMLAttributes<'figure'>
+
+const { quoteHtml, attribution, roleOrSource, class: className, ...attrs } = Astro.props as Props
+const showCaption = Boolean(attribution || roleOrSource)
+---
+
+<Container {...attrs} as="figure" class:list={['rs-quote-block', className]} padded size="content">
+  <blockquote class="rs-quote-block__body" set:html={quoteHtml} />
+  {
+    showCaption ? (
+      <figcaption class="rs-quote-block__caption">
+        {attribution ? <cite class="rs-quote-block__cite">{attribution}</cite> : null}
+        {roleOrSource ? <span class="rs-quote-block__role">{roleOrSource}</span> : null}
+      </figcaption>
+    ) : null
+  }
+</Container>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-quote-block {
+    --rs-quote-block-spacing-bottom: var(--rs-space-6, 24px);
+
+    margin-block: 0 var(--rs-quote-block-spacing-bottom);
+    margin-inline: 0;
+
+    &__body {
+      --rs-quote-block-quote-to-caption: var(--rs-space-3, 12px);
+
+      @include typography-blockquote;
+      margin-bottom: var(--rs-quote-block-quote-to-caption);
+
+      p {
+        @include typography-p;
+      }
+
+      b,
+      strong {
+        @include typography-strong;
+      }
+
+      i,
+      em {
+        @include typography-em;
+      }
+
+      u {
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+      }
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    &__caption {
+      color: var(--rs-color-muted, #4f5b7d);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+      font-size: var(--rs-font-size-sm, #{to-rem(14)});
+      gap: var(--rs-space-1, 4px);
+      line-height: var(--rs-line-height-base, 1.45);
+      margin: 0;
+      padding-inline-start: var(--rs-space-5, 20px);
+    }
+
+    &__cite {
+      font-style: normal;
+      font-weight: var(--rs-font-weight-medium, 500);
+    }
+
+    &__role {
+      color: var(--rs-color-muted, #4f5b7d);
+    }
+  }
+</style>

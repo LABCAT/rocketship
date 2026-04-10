@@ -1,13 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": false,
-    "rootDir": "./src",
-    "outDir": "./dist"
+    "noEmit": true,
+    "rootDir": "src",
+    "baseUrl": "."
   },
-  "include": ["src/**/*.ts"],
+  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.astro"],
   "exclude": ["dist", "node_modules"]
 }

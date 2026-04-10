@@ -14,7 +14,9 @@
 
 # next.js
 /.next/
+**/.next/
 /out/
+**/.open-next/
 /apps/frontend/dist
 /apps/frontend/.astro
 /apps/frontend/storybook-static
@@ -52,6 +54,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 
-# OpenNext
+# OpenNext / Wrangler (any package)
 .open-next
+**/.open-next
 .wrangler
+**/.wrangler

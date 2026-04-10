@@ -2,7 +2,7 @@
 
 This repository is a pnpm workspace that hosts both the Payload CMS backend and an Astro 6 frontend.
 
-- **Backend:** Next.js + Payload CMS (Cloudflare Worker build) in the repository root.
+- **Backend:** Next.js + Payload CMS (Cloudflare Worker build) in `apps/backend` (`@rocketship/backend`).
 - **Frontend:** Astro app in `apps/frontend`, pointed at the Payload backend via `PUBLIC_PAYLOAD_URL`.
 
 > Node 24 is required—`.nvmrc` is provided. Use `pnpm` for all commands.
@@ -11,8 +11,8 @@ This repository is a pnpm workspace that hosts both the Payload CMS backend and 
 
 ```bash
 nvm use                  # install/use Node 24
-pnpm install             # install workspace deps (root + apps + packages)
-pnpm env:payload-secret  # generate/update PAYLOAD_SECRET in .env
+pnpm install
+pnpm run setup           # apps/backend/.env, secret, wrangler login (skipped when CI=1)
 pnpm dev:backend         # Payload/Next API + admin (http://localhost:3000)
 pnpm dev:frontend        # Astro frontend (http://localhost:4321)
 pnpm dev:storybook       # Storybook for Rocketship components (http://localhost:6006)
@@ -23,9 +23,10 @@ Set `PUBLIC_PAYLOAD_URL` (e.g. `http://localhost:3000`) when running the fronten
 
 ## Workspace layout
 
-- **Root:** Payload/Next backend and workspace config.
-- **`apps/`:** `frontend` (Astro site + Storybook for Rocketship UI; see below).
-- **`packages/`:** `base` — `@rocketship/base`, minimal scaffold (package.json, tsconfig, SCSS entry at `src/styles/index.scss`). No components exported yet. Consume via `@rocketship/base/styles` or workspace dependency.
+- **Root:** Workspace `package.json`, `pnpm-workspace.yaml`, shared scripts (e.g. `scripts/setup.mjs`), and tooling config.
+- **`apps/backend`:** Payload + Next (`@rocketship/backend`) — `src/`, `wrangler.jsonc`, OpenNext/Cloudflare deploy.
+- **`apps/frontend`:** Astro site + Storybook for Rocketship UI.
+- **`packages/base`:** `@rocketship/base` — SCSS entry at `packages/base/src/styles/index.scss`, Astro components. Consume via `@rocketship/base/styles` or workspace dependency.
 
 ## Storybook
 
@@ -43,7 +44,7 @@ The public site lives in `apps/frontend`. Run `pnpm dev:frontend` (optionally `-
 
 ### Local Development
 
-Use the monorepo quick start above; `pnpm dev:backend` runs the Payload/Next server locally while Wrangler provides local bindings for R2 and D1.
+Use the monorepo quick start above; `pnpm dev:backend` runs the Payload/Next server locally while Wrangler provides local bindings for R2 and D1. Backend env vars (including `PAYLOAD_SECRET`) belong in `apps/backend/.env`—`pnpm run setup` creates that file from `apps/backend/.env.example`. If you still have a repo-root `.env` from an older layout, move it to `apps/backend/.env`.
 
 ## How it works
 
@@ -77,15 +78,9 @@ You can enable read replicas by adding `readReplicas: 'first-primary'` in the DB
 
 ## Working with Cloudflare
 
-Firstly, after installing dependencies locally you need to authenticate with Wrangler by running:
+`pnpm run setup` runs `pnpm --filter @rocketship/backend exec wrangler login` for you (browser flow). To log in again later, run `pnpm --filter @rocketship/backend exec wrangler login`. Run Wrangler from the backend app directory (or via that filter) so it picks up `apps/backend/wrangler.jsonc`.
 
-```bash
-pnpm wrangler login
-```
-
-This will take you to Cloudflare to login and then you can use the Wrangler CLI locally for anything, use `pnpm wrangler help` to see all available options.
-
-Wrangler is pretty smart so it will automatically bind your services for local development just by running `pnpm dev`.
+Wrangler binds D1/R2 for local development when you run `pnpm dev:backend`.
 
 ## Deployments
 
@@ -113,7 +108,7 @@ By default logs are not enabled for your API, we've made this decision because i
 
 This template includes a custom console-based logger compatible with Cloudflare Workers. Payload's default logger uses `pino-pretty`, which relies on Node.js APIs not available in Workers and would cause `fs.write is not implemented` errors.
 
-The custom logger in `payload.config.ts`:
+The custom logger in `apps/backend/src/payload.config.ts`:
 
 - Routes logs through `console.*` methods which Workers handles correctly
 - Outputs JSON-formatted logs for Cloudflare observability

@@ -1,0 +1,13 @@
+---
+description: Payload blocks — one block config per file under apps/backend/src/blocks.
+globs:
+  - "apps/backend/src/blocks/**"
+  - "apps/backend/src/collections/**"
+alwaysApply: false
+---
+
+# Payload blocks (Rocketship)
+
+- Define each **`blocks`-field block type** in **its own file** under [C:\Users\PC\Documents\WWW\payload\rocketship\apps\backend\src\blocks](C:\Users\PC\Documents\WWW\payload\rocketship\apps\backend\src\blocks) (e.g. `content.ts`, `quote.ts`), exporting a single `Block` (e.g. `contentBlock`, `quoteBlock`).
+- Collections **import each block from its module** (e.g. `../blocks/content`, `../blocks/quote`) and pass **`blocks: [contentBlock, quoteBlock, …]`** on the field—**no** shared `pagesBlocks` (or similar) barrel array in `index.ts`.
+- **Do not** inline multiple block definitions inside a collection file; add a new file when adding a new block type.

@@ -1,0 +1,42 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+import Container from './Container.astro'
+
+type Props = {
+  title: string
+  intro?: string
+  class?: string
+} & HTMLAttributes<'header'>
+
+const { title, intro, class: className, ...attrs } = Astro.props as Props
+---
+
+<Container {...attrs} as="header" class:list={['rs-page-header', className]} padded >
+  <h1 class="rs-page-header__title">{title}</h1>
+  {intro ? <p class="rs-page-header__intro">{intro}</p> : null}
+</Container>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-page-header {
+    --rs-page-header-spacing-bottom: var(--rs-space-6, 24px);
+
+    margin-bottom: var(--rs-page-header-spacing-bottom);
+
+    &__title {
+      @include typography-h1;
+      margin-top: 0;
+    }
+
+    &__intro {
+      @include typography-intro;
+      margin-bottom: 0;
+      max-width: var(
+        --rs-page-header-intro-max-width,
+        var(--rs-container-width-content-lg, 800px)
+      );
+    }
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+description: Payload + D1 migrations; agent must not run migrate/wipe without explicit user request; local vs remote.
+globs:
+  - "apps/backend/src/migrations/**"
+  - "apps/backend/src/payload.config.ts"
+  - "apps/backend/wrangler.jsonc"
+  - "scripts/sql/**"
+alwaysApply: true
+---
+
+# Payload + D1
+
+## Agent (mandatory)
+
+- **Do not run** unless the user **explicitly asked** for that step: `pnpm payload migrate`, `pnpm payload migrate:create`, `wrangler d1 execute` (especially wipe/DDL), or deleting `.wrangler/state/v3/d1`. Do not “help” by migrating or wiping on your own.
+- If they **do** ask: state clearly whether the command targets **local** or **remote** D1 (Wrangler defaults/local flags vs `--remote`). Do not assume they meant the other environment.
+- Before **wipe** or **deleting** `.wrangler/state/v3/d1`: remind them to **stop dev servers** (Node holds the DB open on Windows).
+
+## Workflow
+
+- **Do not mix** on the same D1 database: (A) **schema from `payload migrate`** vs (B) **dev auto-push** (`batch = -1`). Pick one; if both happened, reset DB or baseline—ledger and reality must match.
+- **First / new schema:** empty D1 → `pnpm payload migrate:create` (generates the file; register it in `apps/backend/src/migrations/index.ts` if the CLI doesn’t) → `pnpm payload migrate`. Later changes: same `migrate:create` then `migrate`.
+- **Clean slate:** new empty D1 (or wipe) → run full migration chain once → then only migrate for changes.

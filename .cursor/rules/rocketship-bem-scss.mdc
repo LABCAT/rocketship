@@ -25,7 +25,8 @@ alwaysApply: false
 
 - **SCSS usage**
   - Prefer SCSS for authoring styles; compile to CSS for consumers.
-  - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
+  - **Use SCSS nesting** under the block: express BEM with `&__element` and `&--modifier` nested inside `.rs-block { ... }` instead of repeating full class names or writing flat unrelated selectors. Keep depth shallow (block → elements/modifiers only; avoid long descendant chains).
+  - Use mixins and SCSS variables as needed, but **CSS custom properties** remain the public API for theming.
   - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
   - Do not create separate component `.scss` files when the style belongs to a single component.
   - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
@@ -44,6 +45,7 @@ alwaysApply: false
     - `--rs-font-family-sans`, `--rs-font-size-md`
     - `--rs-space-sm`, `--rs-radius-md`
   - Component-specific variables should still follow the `--rs-*` prefix and clearly indicate scope (e.g. `--rs-button-bg`, `--rs-button-border-radius`).
+  - **Prefer chaining variables over repeating properties after mixins:** typography heading mixins use `--rs-heading-spacing-top` and `--rs-heading-spacing-bottom` (see `mixins/typography/headings.scss`). In a component, set those tokens—or define a component token (e.g. `--rs-block-title-spacing-bottom`) and assign it **into** the mixin’s inputs (`--rs-heading-spacing-bottom: var(--rs-block-title-spacing-bottom)`)—instead of `@include typography-h2` plus separate `margin-top` / `margin-bottom` declarations that duplicate what the mixin already drives from variables.
 
 - **No inline styles for design**
   - Do not use inline `style="..."` attributes for anything related to design or theming.
@@ -51,6 +53,5 @@ alwaysApply: false
 
 - **Selector style**
   - Prefer class-based selectors; avoid element-tag or ID-based styling in reusable components.
-  - Keep selector nesting shallow in SCSS; rely on BEM structure rather than deep descendant chains.
-  - Write BEM modifiers nested under their owning block or element selector using `&--modifier` (and `&__element` where appropriate).
+  - Rely on BEM + SCSS nesting (`&__` / `&--`) rather than deep ad hoc descendant selectors.
 

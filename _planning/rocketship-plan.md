@@ -26,7 +26,7 @@ No new packages, Storybook app, or components in this phase.
 - **Stack:**
   - Astro component library (BEM + SCSS)
   - CSS custom properties (`--rs-*`) as the primary styling API
-  - pnpm monorepo (this repo already hosts backend + Astro frontend; Rocketship will live as packages/apps inside it)
+  - pnpm monorepo (`packages/*` for libraries, `apps/*` for demo/Storybook and future apps)
 - **No JS components** until MVP is complete.
 
 ---
@@ -168,4 +168,3 @@ See `_planning/tasks.md` for the canonical list. High level:
 - Exact default content width (currently 800px assumed) and wide width (1200px assumed).
 - Theme delivery (per-theme file vs single switchable file with `[data-theme="planet"]`).
 - Final MVP token set breakdown beyond colors / typography / spacing.
-

@@ -1,17 +1,12 @@
-# Rocketship Astro Frontend
+# Rocketship Storybook host
 
-Astro 6 frontend that links to the Payload CMS backend in this monorepo.
+Astro 6 app that exists to run Storybook for `@rocketship/base`.
 
 ## Commands
 
-Run commands from the repository root so pnpm uses the workspace:
+Run from the repository root:
 
-| Command | Action |
-| --- | --- |
-| `pnpm dev:frontend` | Start the Astro dev server (defaults to `http://localhost:4321`) |
-| `pnpm --filter @rocketship/frontend build` | Build the static site to `apps/frontend/dist` |
-| `pnpm --filter @rocketship/frontend preview` | Preview the production build locally |
-
-## Backend connection
-
-Set `PUBLIC_PAYLOAD_URL` to the base URL of the Payload backend (for example `http://localhost:3000`). The landing page uses this to link to the admin UI and API.
+| Command                | Action                                              |
+| ---------------------- | --------------------------------------------------- |
+| `pnpm dev`             | Start Storybook (`http://localhost:6006`)           |
+| `pnpm build:storybook` | Build Storybook to `apps/frontend/storybook-static` |

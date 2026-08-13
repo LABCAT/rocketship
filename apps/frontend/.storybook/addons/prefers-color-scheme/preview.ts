@@ -23,15 +23,20 @@ function apply(scheme: 'light' | 'dark') {
   try {
     for (const sheet of Array.from(document.styleSheets)) {
       try {
-        if (sheet.cssRules) walkRules(sheet.cssRules, (rule) => {
-          const text = getOriginal(rule)
-          if (!text.includes('prefers-color-scheme')) return
-          const next =
-            scheme === 'dark'
-              ? text.replace(/\(prefers-color-scheme:\s*dark\)/g, 'all').replace(/\(prefers-color-scheme:\s*light\)/g, 'not all')
-              : text.replace(/\(prefers-color-scheme:\s*light\)/g, 'all').replace(/\(prefers-color-scheme:\s*dark\)/g, 'not all')
-          if (next !== rule.media.mediaText) rule.media.mediaText = next
-        })
+        if (sheet.cssRules)
+          walkRules(sheet.cssRules, (rule) => {
+            const text = getOriginal(rule)
+            if (!text.includes('prefers-color-scheme')) return
+            const next =
+              scheme === 'dark'
+                ? text
+                    .replace(/\(prefers-color-scheme:\s*dark\)/g, 'all')
+                    .replace(/\(prefers-color-scheme:\s*light\)/g, 'not all')
+                : text
+                    .replace(/\(prefers-color-scheme:\s*light\)/g, 'all')
+                    .replace(/\(prefers-color-scheme:\s*dark\)/g, 'not all')
+            if (next !== rule.media.mediaText) rule.media.mediaText = next
+          })
       } catch {
         /* CORS */
       }
@@ -61,7 +66,9 @@ export const initialGlobals = { [KEY]: 'light' }
 export const decorators = [
   (Story: () => unknown, context: { globals: Record<string, string> }) => {
     const scheme = (context.globals[KEY] || 'light') as 'light' | 'dark'
-    ;(typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : (f: () => void) => setTimeout(f, 0))(() => apply(scheme))
+    ;(typeof requestAnimationFrame !== 'undefined'
+      ? requestAnimationFrame
+      : (f: () => void) => setTimeout(f, 0))(() => apply(scheme))
     return Story()
   },
 ]

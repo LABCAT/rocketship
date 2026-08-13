@@ -3,16 +3,14 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "Astro 6 frontend for the Rocketship monorepo",
+  "description": "Storybook host for Rocketship",
   "engines": {
-    "node": ">=24.0.0"
+    "node": "^24.0.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro",
+    "dev": "storybook dev -p 6006",
     "storybook": "storybook dev -p 6006",
+    "build": "storybook build",
     "build-storybook": "storybook build"
   },
   "dependencies": {

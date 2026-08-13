@@ -29,12 +29,7 @@ const {
   ...attrs
 } = Astro.props as Props
 
-const classes = [
-  'rs-button',
-  `rs-button--${variant}`,
-  `rs-button--${size}`,
-  className,
-]
+const classes = ['rs-button', `rs-button--${variant}`, `rs-button--${size}`, className]
 
 const shouldRenderAsLink = as === 'a' || Boolean(href)
 ---
@@ -45,7 +40,7 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
       {...attrs}
       aria-disabled={disabled || undefined}
       class:list={classes}
-      href={disabled ? undefined : href ?? '#'}
+      href={disabled ? undefined : (href ?? '#')}
       role={disabled ? 'link' : undefined}
       tabindex={disabled ? -1 : undefined}
     >
@@ -84,7 +79,15 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
     color: var(--rs-button-color);
     cursor: pointer;
     display: inline-flex;
-    font-family: var(--rs-font-family-sans, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
     font-size: var(--rs-button-font-size);
     font-weight: var(--rs-button-font-weight);
     gap: var(--rs-button-gap);

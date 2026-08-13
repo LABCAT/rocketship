@@ -11,7 +11,13 @@ type Props = {
   class?: string
 } & HTMLAttributes<'div'>
 
-const { as = 'div', size = 'default', padded = false, class: className, ...attrs } = Astro.props as Props
+const {
+  as = 'div',
+  size = 'default',
+  padded = false,
+  class: className,
+  ...attrs
+} = Astro.props as Props
 
 const Tag = as
 const classes = [
@@ -38,8 +44,14 @@ const classes = [
     --rs-container-gutter-left: max(env(safe-area-inset-left), var(--rs-container-gutter, 16px));
     --rs-container-gutter-right: max(env(safe-area-inset-right), var(--rs-container-gutter, 16px));
     --rs-container-gutters: calc(
-      var(--rs-container-gutter-left, max(env(safe-area-inset-left), var(--rs-container-gutter, 16px))) +
-        var(--rs-container-gutter-right, max(env(safe-area-inset-right), var(--rs-container-gutter, 16px)))
+      var(
+          --rs-container-gutter-left,
+          max(env(safe-area-inset-left), var(--rs-container-gutter, 16px))
+        ) +
+        var(
+          --rs-container-gutter-right,
+          max(env(safe-area-inset-right), var(--rs-container-gutter, 16px))
+        )
     );
     --rs-container-gutter-top: max(
       env(safe-area-inset-top),
@@ -80,4 +92,3 @@ const classes = [
     }
   }
 </style>
-

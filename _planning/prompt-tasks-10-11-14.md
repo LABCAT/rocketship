@@ -6,12 +6,12 @@
 
 ## Scope of this MR
 
-| Task | What to deliver |
-|------|-----------------|
-| **10** | Design tokens + default theme: minimal `--rs-*` tokens (colors, typography, spacing), default theme in base package, document tokens in `_planning/rocketship-plan.md`. |
-| **11** | Container component: Astro `<Container>` + SCSS; modifiers `full`, `wide`, `content` (and `narrow` as in spec); layout via `media-breakpoint-up` only. Document usage and breakpoints. |
-| **14** | Typography components/utilities: typography mixins (headings, text, tables, lists), `<Typography>` Astro component + SCSS that applies those mixins. Document token-to-visual mapping. |
-| **Stories** | Storybook stories for Container and Typography in `apps/storybook`, with the a11y addon used where relevant. |
+| Task        | What to deliver                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **10**      | Design tokens + default theme: minimal `--rs-*` tokens (colors, typography, spacing), default theme in base package, document tokens in `_planning/rocketship-plan.md`.                |
+| **11**      | Container component: Astro `<Container>` + SCSS; modifiers `full`, `wide`, `content` (and `narrow` as in spec); layout via `media-breakpoint-up` only. Document usage and breakpoints. |
+| **14**      | Typography components/utilities: typography mixins (headings, text, tables, lists), `<Typography>` Astro component + SCSS that applies those mixins. Document token-to-visual mapping. |
+| **Stories** | Storybook stories for Container and Typography in `apps/storybook`, with the a11y addon used where relevant.                                                                           |
 
 If you only implement one of the three tasks (10, 11, 14), the MR is incomplete. Stories are required as part of this MR.
 
@@ -133,24 +133,62 @@ scss/
 - **Typography component SCSS:** A file (e.g. `typography.scss`) that applies the mixins to `.rs-typography` descendants:
 
 ```scss
-.rs-typography h1 { @include typography-h1; }
-.rs-typography h2 { @include typography-h2; }
-.rs-typography h3 { @include typography-h3; }
-.rs-typography h4 { @include typography-h4; }
-.rs-typography h5 { @include typography-h5; }
-.rs-typography h6 { @include typography-h6; }
-.rs-typography p { @include typography-p; }
-.rs-typography .intro-text { @include typography-intro; }
-.rs-typography i, .rs-typography em { @include typography-em; }
-.rs-typography b, .rs-typography strong { @include typography-strong; }
-.rs-typography hr { @include typography-hr; }
-.rs-typography li { @include typography-li; }
-.rs-typography ul { @include typography-ul; }
-.rs-typography ol { @include typography-ol; }
-.rs-typography:not(.video__transcript) table { @include typography-table; }
-.rs-typography a:not(.button, .button-text) { @include typography-a; }
-.rs-typography > :first-child { margin-top: 0; }
-.rs-typography > :last-child { margin-bottom: 0; }
+.rs-typography h1 {
+  @include typography-h1;
+}
+.rs-typography h2 {
+  @include typography-h2;
+}
+.rs-typography h3 {
+  @include typography-h3;
+}
+.rs-typography h4 {
+  @include typography-h4;
+}
+.rs-typography h5 {
+  @include typography-h5;
+}
+.rs-typography h6 {
+  @include typography-h6;
+}
+.rs-typography p {
+  @include typography-p;
+}
+.rs-typography .intro-text {
+  @include typography-intro;
+}
+.rs-typography i,
+.rs-typography em {
+  @include typography-em;
+}
+.rs-typography b,
+.rs-typography strong {
+  @include typography-strong;
+}
+.rs-typography hr {
+  @include typography-hr;
+}
+.rs-typography li {
+  @include typography-li;
+}
+.rs-typography ul {
+  @include typography-ul;
+}
+.rs-typography ol {
+  @include typography-ol;
+}
+.rs-typography:not(.video__transcript) table {
+  @include typography-table;
+}
+.rs-typography a:not(.button, .button-text) {
+  @include typography-a;
+}
+.rs-typography > :first-child {
+  margin-top: 0;
+}
+.rs-typography > :last-child {
+  margin-bottom: 0;
+}
 ```
 
 - **Astro:** Export a `<Typography>` component that renders a wrapper (e.g. `<div class="rs-typography" set:html={...}>` or a slot for content) so consumers can wrap rich content and get the above styles.
@@ -191,7 +229,7 @@ No need to implement real font files in this MR; the structure is enough.
 - [ ] **Task 11:** Astro `<Container>` exists with modifiers full/wide/content/narrow; SCSS uses only `media-breakpoint-up` and `--rs-container-*` variables; usage/breakpoints documented.
 - [ ] **Task 14:** All typography mixins (headings, text, lists, tables, links) exist; `.rs-typography` SCSS applies them; Astro `<Typography>` component exists; token-to-visual mapping documented; typography variables use `--rs-*`.
 - [ ] **Stories:** Storybook stories for Container and Typography in `apps/storybook`, with a11y addon used; stories import base package styles.
-- [ ] SCSS structure matches the specified layout (common/base, common/print, mixins/breakpoints, mixins/container-query, mixins/typography/*, mixins.scss, styles.scss).
+- [ ] SCSS structure matches the specified layout (common/base, common/print, mixins/breakpoints, mixins/container-query, mixins/typography/\*, mixins.scss, styles.scss).
 - [ ] Main SCSS entry imports variables, mixins, common/base, common/print, and component SCSS. Package export for styles points at that entry.
 - [ ] **Variables:** All design tokens and component variables use the `--rs-*` prefix (e.g. `--rs-container-width`, `--rs-heading-spacing-top`, not `--container-width` or `--base-heading-spacing-top`).
 - [ ] BEM: all public classes use `rs-` prefix (`.rs-container`, `.rs-typography`, etc.).

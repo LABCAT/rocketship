@@ -1,9 +1,5 @@
 import '@rocketship/base/styles'
-import {
-  globalTypes,
-  initialGlobals,
-  decorators,
-} from './addons/prefers-color-scheme/preview'
+import { globalTypes, initialGlobals, decorators } from './addons/prefers-color-scheme/preview'
 
 export default {
   globalTypes,

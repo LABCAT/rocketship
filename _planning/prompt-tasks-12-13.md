@@ -6,11 +6,11 @@
 
 ## Scope of this MR
 
-| Task | What to deliver |
-|------|-----------------|
-| **12** | Button component: `.rs-button` with BEM, `--rs-*` CSS variables, and container-query-based small/medium/large sizes. Astro `<Button>` (or equivalent). Stories cover primary variants and size behavior. |
-| **13** | Link component: `.rs-link` with BEM, `--rs-*` CSS variables, and size variants; accessible focus and visited states. Astro `<Link>` (or equivalent). Stories show link in typical contexts. |
-| **Stories** | Storybook stories for Button and Link in `apps/storybook`, with the a11y addon used. |
+| Task        | What to deliver                                                                                                                                                                                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **12**      | Button component: `.rs-button` with BEM, `--rs-*` CSS variables, and container-query-based small/medium/large sizes. Astro `<Button>` (or equivalent). Stories cover primary variants and size behavior. |
+| **13**      | Link component: `.rs-link` with BEM, `--rs-*` CSS variables, and size variants; accessible focus and visited states. Astro `<Link>` (or equivalent). Stories show link in typical contexts.              |
+| **Stories** | Storybook stories for Button and Link in `apps/storybook`, with the a11y addon used.                                                                                                                     |
 
 If you only implement 12 or only 13, the MR is incomplete. Stories for both components are required.
 

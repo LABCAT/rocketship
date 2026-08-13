@@ -30,26 +30,27 @@ const variants = [
 
 {
   rows.map((row) => (
-    <Container size="content" padded>
-      <Typography as="section">
-        <h3>{row.title} size</h3>
-        <p>{row.description}</p>
-      </Typography>
-    </Container>
-    <Container size="content">
-      {variants.map((v, i) => (
-            <>
-              {i > 0 ? ' ' : null}
-              <Button
-                size={row.size}
-                variant={v.variant}
-                aria-label={`${v.label}, ${row.title.toLowerCase()} size`}
-              >
-                {v.label} ({row.title.toLowerCase()})
-              </Button>
-            </>
-          ))}
-      
-    </Container>
+    <>
+      <Container size="content" padded>
+        <Typography as="section">
+          <h3>{row.title} size</h3>
+          <p>{row.description}</p>
+        </Typography>
+      </Container>
+      <Container size="content">
+        {variants.map((v, i) => (
+          <>
+            {i > 0 ? ' ' : null}
+            <Button
+              size={row.size}
+              variant={v.variant}
+              aria-label={`${v.label}, ${row.title.toLowerCase()} size`}
+            >
+              {v.label} ({row.title.toLowerCase()})
+            </Button>
+          </>
+        ))}
+      </Container>
+    </>
   ))
 }

@@ -1,5 +1,5 @@
 import '@labcat/rocketship/styles'
-import { globalTypes, initialGlobals, decorators } from './addons/prefers-color-scheme/preview'
+import { globalTypes, initialGlobals, decorators } from './addons/prefers-color-scheme/preview.ts'
 
 export default {
   globalTypes,

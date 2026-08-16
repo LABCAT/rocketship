@@ -13,7 +13,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./styles": "./src/styles/index.scss",
+    "./styles": {
+      "types": "./src/styles/css.d.ts",
+      "import": "./src/styles/index.scss",
+      "default": "./src/styles/index.scss"
+    },
     "./components/Button": "./src/components/Button.astro",
     "./components/Container": "./src/components/Container.astro",
     "./components/Typography": "./src/components/Typography.astro"

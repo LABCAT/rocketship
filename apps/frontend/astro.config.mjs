@@ -1,5 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config'
 
-// https://astro.build/config
+/** Storybook host only — not a public Astro site. Required by @storybook-astro/framework. */
 export default defineConfig({})

@@ -2,10 +2,10 @@
 
 Astro-focused, CSS-first component library monorepo.
 
-- **`packages/base`:** `@rocketship/base` — design tokens, default theme, and core Astro components
+- **`packages/base`:** `@labcat/rocketship` — design tokens, default theme, and core Astro components
 - **`apps/frontend`:** Storybook host (Astro app only exists so Storybook can run)
 
-> Node 24 is required (`package.json` `engines.node` — used by fnm). Use `pnpm` for all commands.
+> Node 26 is required (`package.json` `engines.node` — used by fnm). Use `pnpm` for all commands.
 
 ## Quick start
 
@@ -19,7 +19,7 @@ pnpm dev           # Storybook (http://localhost:6006)
 
 | Path         | Purpose                                                      |
 | ------------ | ------------------------------------------------------------ |
-| `packages/`  | Publishable library packages (start with `@rocketship/base`) |
+| `packages/`  | Publishable library packages (start with `@labcat/rocketship`) |
 | `apps/`      | Internal apps (Storybook host today; room for more later)    |
 | `_planning/` | Vision, roadmap, and task list                               |
 
@@ -32,6 +32,7 @@ Root `package.json` only orchestrates workspace scripts and shared tooling (Pret
 | `pnpm dev` / `pnpm storybook` | Start Storybook                                           |
 | `pnpm build`                  | Build packages, then Storybook                            |
 | `pnpm build:storybook`        | Build static Storybook (`apps/frontend/storybook-static`) |
+| `pnpm preview`                | Serve the static Storybook build                          |
 | `pnpm format`                 | Format the repo with Prettier (includes `.astro`)         |
 | `pnpm format:check`           | Check formatting without writing                          |
 

@@ -19,7 +19,7 @@ alwaysApply: false
   - **Design tokens** for colors, type, spacing, and component scales live in **`packages/base/src/styles/variables.scss`** on `:root` as `--rs-*` (no class selectors there). **Container-query widths** are Sass-only **`$rs-cq-sm` / `$rs-cq-md` / `$rs-cq-lg`** in `packages/base/src/styles/mixins/container-query.scss` so `@container` conditions get real lengths. Use `@include container-query-up($rs-cq-sm)` (etc.) in component or mixin SCSS; map size modifiers to the right `--rs-*` tokens inside those blocks.
 
 - **Monorepo / packaging strategy**
-  - Base package (e.g. `@rocketship/base`) exports primitives, design tokens, default theme, and core components.
+  - Base package (e.g. `@labcat/rocketship`) exports primitives, design tokens, default theme, and core components.
   - Add-on packages (forms, layout, ecommerce, etc.) extend the system without breaking the base.
   - All packages are intended to be consumable via npm; internal apps (Storybook host today) depend on them via workspace references.
 
@@ -31,6 +31,6 @@ alwaysApply: false
 - **Docs and tooling**
   - `_planning/rocketship-plan.md` is the source of truth for project vision, decisions, and roadmap.
   - `_planning/tasks.md` holds the task list and acceptance criteria used by background agents.
-  - **Storybook** runs inside `apps/frontend` (Astro host only — not a product app) via `@storybook-astro/framework` (Storybook 10). Stories render real Astro components from `@rocketship/base`. Run with `pnpm dev` / `pnpm storybook` from the repo root. Stories use library components from `@rocketship/base` only. When storybook-astro’s one-component-per-story limit requires showing multiple components in one story, **Storybook-only wrapper components** (e.g. ButtonVariants, ButtonSizes) may be added under `apps/frontend/src/stories/components/`; they must only compose `@rocketship/base` components. Do not add Storybook wrapper components to the base package — the base package is for the published library only.
-  - **No custom styles in stories:** Do not add `<style>` blocks, scoped component CSS, or story-only classes used purely for decoration in `apps/frontend/src/stories/**` or Storybook-only Astro wrappers. If something needs a visual treatment for real content, implement it in `@rocketship/base` (component or typography SCSS) so stories reflect what consumers get.
+  - **Storybook** runs inside `apps/frontend` (Astro host only — not a product app) via `@storybook-astro/framework` (Storybook 10). Stories render real Astro components from `@labcat/rocketship`. Run with `pnpm dev` / `pnpm storybook` from the repo root. Stories use library components from `@labcat/rocketship` only. When storybook-astro’s one-component-per-story limit requires showing multiple components in one story, **Storybook-only wrapper components** (e.g. ButtonVariants, ButtonSizes) may be added under `apps/frontend/src/stories/components/`; they must only compose `@labcat/rocketship` components. Do not add Storybook wrapper components to the base package — the base package is for the published library only.
+  - **No custom styles in stories:** Do not add `<style>` blocks, scoped component CSS, or story-only classes used purely for decoration in `apps/frontend/src/stories/**` or Storybook-only Astro wrappers. If something needs a visual treatment for real content, implement it in `@labcat/rocketship` (component or typography SCSS) so stories reflect what consumers get.
 

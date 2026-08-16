@@ -5,23 +5,26 @@
   "private": true,
   "description": "Storybook host for Rocketship",
   "engines": {
-    "node": "^24.0.0"
+    "node": "^26.0.0"
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
     "storybook": "storybook dev -p 6006",
     "build": "storybook build",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "preview": "vite preview --outDir storybook-static --port 6006 --strictPort"
   },
   "dependencies": {
-    "@rocketship/base": "workspace:*",
-    "astro": "^6.0.4"
+    "@labcat/rocketship": "workspace:*",
+    "astro": "^7.2.2"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.0.0",
-    "@storybook/builder-vite": "^10.0.0",
-    "@storybook-astro/framework": "^0.1.0-beta.13",
-    "@storybook-astro/renderer": "^0.1.0-beta.13",
-    "storybook": "^10.0.0"
+    "@storybook/addon-a11y": "^10.5.8",
+    "@storybook/builder-vite": "^10.5.8",
+    "@storybook-astro/framework": "^1.10.0",
+    "@storybook-astro/renderer": "^1.10.0",
+    "sass": "^1.98.0",
+    "storybook": "^10.5.8",
+    "vite": "^8.2.1"
   }
 }

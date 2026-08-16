@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import ContainerDocument from './components/ContainerDocument.astro'
-import '@rocketship/base/components/Container'
-import '@rocketship/base/components/Typography'
+import '@labcat/rocketship/components/Container'
+import '@labcat/rocketship/components/Typography'
 
 const meta = {
   title: 'Base/Container',

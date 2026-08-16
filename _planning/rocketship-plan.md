@@ -34,7 +34,7 @@ No new packages, Storybook app, or components in this phase.
 ## Package architecture (future-facing)
 
 - **Library shape:**
-  - Base package providing primitives, tokens, default theme, and core components (e.g. `@rocketship/base`).
+  - Base package providing primitives, tokens, default theme, and core components (e.g. `@labcat/rocketship`).
   - Add-on packages for specific domains (forms, layout, ecommerce, etc.).
   - All packages designed to be publishable to npm.
 - **Default theme:**

@@ -10,7 +10,7 @@ alwaysApply: false
 
 - **Default theme**
   - Implement a “rocketship / space-station” visual identity as the default theme.
-  - Default theme lives in the base package (e.g. `@rocketship/base`) and provides fallback values for all `--rs-*` variables.
+  - Default theme lives in the base package (e.g. `@labcat/rocketship`) and provides fallback values for all `--rs-*` variables.
   - Components should look good and be accessible using only the default theme values.
 
 - **Planet themes**

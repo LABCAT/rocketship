@@ -1,5 +1,6 @@
 import type { StorybookConfig } from '@storybook-astro/framework'
 import { pathToFileURL } from 'node:url'
+import { compileAstroScssPlugin } from './compile-astro-scss'
 
 function fixWindowsAstroComponentPathPlugin() {
   return {
@@ -32,7 +33,7 @@ const config: StorybookConfig & {
   },
   viteFinal(config) {
     config.plugins = config.plugins || []
-    config.plugins.push(fixWindowsAstroComponentPathPlugin())
+    config.plugins.push(fixWindowsAstroComponentPathPlugin(), compileAstroScssPlugin())
     return config
   },
 }

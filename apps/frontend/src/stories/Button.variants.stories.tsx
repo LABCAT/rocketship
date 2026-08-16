@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import ButtonVariants from './components/ButtonVariants.astro'
-import '@rocketship/base/components/Button'
-import '@rocketship/base/components/Container'
+import '@labcat/rocketship/components/Button'
+import '@labcat/rocketship/components/Container'
 
 const meta: Meta<typeof ButtonVariants> = {
   title: 'Base/Button',

@@ -5,29 +5,24 @@
   "description": "Rocketship Astro component library monorepo",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "build": "pnpm run build:packages && pnpm run build:storybook",
-    "build:packages": "pnpm --filter @rocketship/base build",
+    "build:packages": "pnpm --filter @labcat/rocketship build",
     "build:storybook": "pnpm --filter @rocketship/frontend build-storybook",
     "dev": "pnpm run storybook",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "preview": "pnpm --filter @rocketship/frontend preview",
     "storybook": "pnpm --filter @rocketship/frontend storybook"
   },
   "devDependencies": {
-    "prettier": "^3.8.1",
+    "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "5.9.3"
   },
   "engines": {
-    "node": "^24.0.0",
-    "pnpm": ">=9.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ]
+    "node": "^26.0.0",
+    "pnpm": ">=11.22.0"
   }
 }

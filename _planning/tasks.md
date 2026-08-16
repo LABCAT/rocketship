@@ -36,7 +36,7 @@
    - No new code beyond minimal scaffolding.
 
 9. **Base package scaffold**
-   - Create `@rocketship/base` with package.json, tsconfig, and minimal SCSS entry point; hook into workspace.
+   - Create `@labcat/rocketship` with package.json, tsconfig, and minimal SCSS entry point; hook into workspace.
    - No components exported yet.
 
 10. **Design tokens + default theme**
@@ -63,7 +63,7 @@
     - **Combined MR:** Same as tasks 10 and 11 (see `_planning/prompt-tasks-10-11-14.md`); **all three tasks required in one MR.**
 
 15. **Storybook app**
-    - Add `apps/storybook` with Storybook for Astro, wired to `@rocketship/base`.
+    - Add `apps/storybook` with Storybook for Astro, wired to `@labcat/rocketship`.
     - Add stories for Container, Button, Link, Typography + a11y addon.
 
 16. **First planet theme package**

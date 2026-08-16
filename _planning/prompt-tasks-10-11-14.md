@@ -204,7 +204,7 @@ In `apps/storybook`:
 - **Container:** Stories that render `<Container>` with each modifier (full, wide, content, narrow) and enough content to show layout. Use the a11y addon.
 - **Typography:** Stories that render `<Typography>` with sample content covering h1–h6, paragraphs, intro text, lists (ul/ol), a table, and links. Use the a11y addon.
 
-Stories must import and apply the base package styles (e.g. `@rocketship/base/styles`) so the components render correctly.
+Stories must import and apply the base package styles (e.g. `@labcat/rocketship/styles`) so the components render correctly.
 
 ---
 

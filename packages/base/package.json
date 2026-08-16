@@ -1,5 +1,5 @@
 {
-  "name": "@rocketship/base",
+  "name": "@labcat/rocketship",
   "version": "0.0.1",
   "private": true,
   "type": "module",

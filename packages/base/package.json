@@ -19,7 +19,9 @@
       "default": "./src/styles/index.scss"
     },
     "./components/Button": "./src/components/Button.astro",
+    "./components/Card": "./src/components/Card.astro",
     "./components/Container": "./src/components/Container.astro",
+    "./components/Grid": "./src/components/Grid.astro",
     "./components/Typography": "./src/components/Typography.astro"
   },
   "files": [

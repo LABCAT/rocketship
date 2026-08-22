@@ -1,0 +1,131 @@
+---
+import Card from '@labcat/rocketship/components/Card'
+import Container from '@labcat/rocketship/components/Container'
+import Grid from '@labcat/rocketship/components/Grid'
+import Typography from '@labcat/rocketship/components/Typography'
+
+const lightDarkExample = `:root {
+  --rs-color-surface: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rs-color-surface: #101833;
+  }
+}`
+
+const consumeExample = `.rs-card {
+  background: var(--rs-color-surface);
+}`
+---
+
+<Container padded>
+  <Typography as="article">
+    <h1>Colors</h1>
+    <p>
+      Colour in Rocketship is a token API: <code>--rs-color-*</code> custom properties on
+      <code>:root</code>. Components never hard-code palette values, so you theme the library by
+      overriding those variables.
+    </p>
+    <p>Light and dark reuse the same names and only change the values.</p>
+    <pre><code>{lightDarkExample}</code></pre>
+    <p>Components keep using the same variable:</p>
+    <pre><code>{consumeExample}</code></pre>
+    <p>The tokens below are grouped by role.</p>
+  </Typography>
+</Container>
+
+<Container>
+  <Typography as="article">
+    <h2>Surfaces</h2>
+    <p>The page, the panels that sit on it, and the lines that separate them.</p>
+  </Typography>
+</Container>
+<Container padded> 
+  <Grid as="ul" columns={3}>
+    <Card as="li" media="bg">
+      <p class="rs-card__title">Background</p>
+      <p class="rs-card__description">The page itself</p>
+      <span slot="meta" class="rs-card__token">--rs-color-bg</span>
+    </Card>
+    <Card as="li" media="surface">
+      <p class="rs-card__title">Surface</p>
+      <p class="rs-card__description">Cards and panels</p>
+      <span slot="meta" class="rs-card__token">--rs-color-surface</span>
+    </Card>
+    <Card as="li" media="surface-elevated">
+      <p class="rs-card__title">Elevated surface</p>
+      <p class="rs-card__description">A step up from surface</p>
+      <span slot="meta" class="rs-card__token">--rs-color-surface-elevated</span>
+    </Card>
+    <Card as="li" media="border">
+      <p class="rs-card__title">Border</p>
+      <p class="rs-card__description">Hairlines and dividers</p>
+      <span slot="meta" class="rs-card__token">--rs-color-border</span>
+    </Card>
+  </Grid>
+</Container>
+
+<Container>
+  <Typography as="article">
+    <h2>Text</h2>
+    <p>What you read. Foreground for body copy, muted for labels and supporting text.</p>
+  </Typography>
+</Container>
+<Container padded> 
+  <Grid as="ul" columns={3}>
+    <Card as="li" media="fg">
+      <p class="rs-card__title">Foreground</p>
+      <p class="rs-card__description">Body text</p>
+      <span slot="meta" class="rs-card__token">--rs-color-fg</span>
+    </Card>
+    <Card as="li" media="muted">
+      <p class="rs-card__title">Muted</p>
+      <p class="rs-card__description">Labels and captions</p>
+      <span slot="meta" class="rs-card__token">--rs-color-muted</span>
+    </Card>
+  </Grid>
+</Container>
+
+<Container>
+  <Typography as="article">
+    <h2>Interactive</h2>
+    <p>
+      Buttons, links, and keyboard focus. Accent contrast is only for text that sits on accent.
+    </p>
+  </Typography>
+</Container>
+<Container padded> 
+  <Grid as="ul" columns={3}>
+    <Card as="li" media="accent">
+      <p class="rs-card__title">Accent</p>
+      <p class="rs-card__description">Primary actions</p>
+      <span slot="meta" class="rs-card__token">--rs-color-accent</span>
+    </Card>
+    <Card as="li" media="accent-contrast">
+      <p class="rs-card__title">Accent contrast</p>
+      <p class="rs-card__description">Text on accent</p>
+      <span slot="meta" class="rs-card__token">--rs-color-accent-contrast</span>
+    </Card>
+    <Card as="li" media="link">
+      <p class="rs-card__title">Link</p>
+      <p class="rs-card__description">Unvisited links</p>
+      <span slot="meta" class="rs-card__token">--rs-color-link</span>
+    </Card>
+    <Card as="li" media="link-hover">
+      <p class="rs-card__title">Link hover</p>
+      <p class="rs-card__description">Link at hover</p>
+      <span slot="meta" class="rs-card__token">--rs-color-link-hover</span>
+    </Card>
+    <Card as="li" media="link-visited">
+      <p class="rs-card__title">Link visited</p>
+      <p class="rs-card__description">Visited links</p>
+      <span slot="meta" class="rs-card__token">--rs-color-link-visited</span>
+    </Card>
+    <Card as="li" media="focus-ring">
+      <p class="rs-card__title">Focus ring</p>
+      <p class="rs-card__description">Keyboard focus</p>
+      <span slot="meta" class="rs-card__token">--rs-color-focus-ring</span>
+    </Card>
+  </Grid>
+</Container>

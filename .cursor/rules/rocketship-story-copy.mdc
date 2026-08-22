@@ -1,0 +1,16 @@
+---
+description: Voice and content rules for Storybook docs and foundation stories.
+globs:
+  - apps/frontend/src/stories/**
+alwaysApply: false
+---
+
+# Story copy
+
+Write Storybook docs as a published docs site, not a lab notebook or roadmap.
+
+- **Present tense only.** Describe how the library works today.
+- **No future asides.** Do not mention later, for now, coming soon, planet themes later, or internal planning.
+- **Adopter voice.** Direct, useful, human. No agent commentary and no “we will…”.
+- **Show, then tell.** When a mechanism matters (tokens, theming, layout), follow it with a short real example using actual names and values from the library.
+- **Explain the contract**, not the backlog. Token names staying the same across light and dark is docs; eight planet packages is not, until they ship.

@@ -1,0 +1,185 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type CardTag = 'article' | 'section' | 'div' | 'li'
+export type CardMediaTone =
+  | 'bg'
+  | 'fg'
+  | 'surface'
+  | 'surface-elevated'
+  | 'border'
+  | 'accent'
+  | 'accent-contrast'
+  | 'link'
+  | 'link-hover'
+  | 'link-visited'
+  | 'focus-ring'
+  | 'muted'
+
+type Props = {
+  as?: CardTag
+  media?: CardMediaTone
+  class?: string
+} & HTMLAttributes<'article'>
+
+const { as = 'article', media, class: className, ...attrs } = Astro.props as Props
+const Tag = as
+const showMedia = Boolean(media) || Astro.slots.has('media')
+---
+
+<Tag {...attrs} class:list={['rs-card', className]}>
+  {
+    showMedia ? (
+      <div
+        class:list={['rs-card__media', media ? `rs-card__media--${media}` : undefined]}
+        aria-hidden={Astro.slots.has('media') ? undefined : true}
+      >
+        <slot name="media" />
+      </div>
+    ) : null
+  }
+  <div class="rs-card__body">
+    <div class="rs-card__content">
+      <slot />
+    </div>
+    {
+      Astro.slots.has('meta') ? (
+        <div class="rs-card__meta">
+          <slot name="meta" />
+        </div>
+      ) : null
+    }
+  </div>
+</Tag>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-card {
+    --rs-card-media-bg: var(--rs-color-surface-elevated, #eef2ff);
+    background: var(--rs-color-surface, #ffffff);
+    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
+    border-radius: var(--rs-radius-md, 10px);
+    overflow: hidden;
+
+    &__media {
+      background: var(--rs-card-media-bg);
+      min-height: 96px;
+
+      &--bg {
+        --rs-card-media-bg: var(--rs-color-bg, #f6f8ff);
+      }
+
+      &--fg {
+        --rs-card-media-bg: var(--rs-color-fg, #131a2f);
+      }
+
+      &--surface {
+        --rs-card-media-bg: var(--rs-color-surface, #ffffff);
+      }
+
+      &--surface-elevated {
+        --rs-card-media-bg: var(--rs-color-surface-elevated, #eef2ff);
+      }
+
+      &--border {
+        --rs-card-media-bg: var(--rs-color-border, #c8d2eb);
+      }
+
+      &--accent {
+        --rs-card-media-bg: var(--rs-color-accent, #2f5bdb);
+      }
+
+      &--accent-contrast {
+        --rs-card-media-bg: var(--rs-color-accent-contrast, #ffffff);
+      }
+
+      &--link {
+        --rs-card-media-bg: var(--rs-color-link, #1f49c6);
+      }
+
+      &--link-hover {
+        --rs-card-media-bg: var(--rs-color-link-hover, #173ea8);
+      }
+
+      &--link-visited {
+        --rs-card-media-bg: var(--rs-color-link-visited, #6a3fc2);
+      }
+
+      &--focus-ring {
+        --rs-card-media-bg: var(--rs-color-focus-ring, #296dff);
+      }
+
+      &--muted {
+        --rs-card-media-bg: var(--rs-color-muted, #4f5b7d);
+      }
+    }
+
+    &__body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--rs-space-3, 12px);
+      padding: var(--rs-space-4, 16px);
+    }
+
+    &__content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--rs-space-1, 4px);
+      min-width: 0;
+    }
+
+    &__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--rs-space-2, 8px);
+      min-width: 0;
+    }
+
+    &__title {
+      color: var(--rs-color-fg, #131a2f);
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-font-size-lg, #{to-rem(18)});
+      font-weight: var(--rs-font-weight-semibold, 600);
+      line-height: var(--rs-line-height-tight, 1.2);
+      margin: 0;
+    }
+
+    &__description {
+      color: var(--rs-color-muted, #4f5b7d);
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-font-size-md, #{to-rem(16)});
+      line-height: var(--rs-line-height-base, 1.45);
+      margin: 0;
+    }
+
+    &__token {
+      background: var(--rs-color-surface-elevated, #eef2ff);
+      border-radius: var(--rs-radius-sm, 6px);
+      color: var(--rs-color-muted, #4f5b7d);
+      display: inline-block;
+      font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+      font-size: var(--rs-font-size-sm, #{to-rem(14)});
+      line-height: var(--rs-line-height-base, 1.45);
+      overflow-wrap: anywhere;
+      padding-block: 2px;
+      padding-inline: var(--rs-space-2, 8px);
+    }
+  }
+</style>

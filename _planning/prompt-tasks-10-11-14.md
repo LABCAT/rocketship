@@ -19,8 +19,8 @@ If you only implement one of the three tasks (10, 11, 14), the MR is incomplete.
 
 ## Conventions (read first)
 
-- **BEM:** Block prefix is `rs`. Use `.rs-container`, `.rs-container--full-width`, `.rs-typography`, etc. See `.cursor/rules/rocketship-bem-scss.mdc`.
-- **Layout:** Viewport media queries only for layout/container; use `media-breakpoint-up` (min-width). Component sizing uses container queries. See `.cursor/rules/rocketship-layout-responsive.mdc`.
+- **BEM:** Block prefix is `rs`. Use `.rs-container`, `.rs-container--full-width`, `.rs-typography`, etc. See `.agents/rules/rocketship-bem-scss.mdc`.
+- **Layout:** Viewport media queries only for layout/container; use `media-breakpoint-up` (min-width). Component sizing uses container queries. See `.agents/rules/rocketship-layout-responsive.mdc`.
 - **Tokens:** All design tokens and theme variables use the `--rs-*` prefix. Component-level CSS custom properties (e.g. container width, gutters, heading spacing) must also use `--rs-*`, e.g. `--rs-container-width`, `--rs-container-gutter-left`, `--rs-heading-spacing-top`, not `--container-width` or `--base-heading-spacing-top`.
 
 ---

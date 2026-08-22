@@ -18,8 +18,8 @@ If you only implement 12 or only 13, the MR is incomplete. Stories for both comp
 
 ## Conventions (read first)
 
-- **BEM:** Block prefix `rs`. `.rs-button`, `.rs-button--primary`, `.rs-button__icon`; `.rs-link`, `.rs-link--muted`. See `.cursor/rules/rocketship-bem-scss.mdc`.
-- **Sizing:** Use **container queries** for component size (small/medium/large), not viewport media queries. See `.cursor/rules/rocketship-layout-responsive.mdc`.
+- **BEM:** Block prefix `rs`. `.rs-button`, `.rs-button--primary`, `.rs-button__icon`; `.rs-link`, `.rs-link--muted`. See `.agents/rules/rocketship-bem-scss.mdc`.
+- **Sizing:** Use **container queries** for component size (small/medium/large), not viewport media queries. See `.agents/rules/rocketship-layout-responsive.mdc`.
 - **Variables:** All design tokens and component variables use the `--rs-*` prefix (e.g. `--rs-button-bg`, `--rs-link-color`).
 
 ---

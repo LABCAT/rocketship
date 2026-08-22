@@ -1,0 +1,40 @@
+---
+description: TypeScript functions use arrow syntax and documentation blocks.
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: false
+---
+
+# TypeScript functions
+
+- Declare functions as **arrow functions** (`const name = () => {}`), including exported factories and Vite/Storybook plugin callbacks. Do not use `function` declarations.
+- Object methods that are functions (e.g. `transform`) must be **arrow properties** (`transform: (code, id) => {}`), not `transform(code, id) {}`.
+- Every function gets a **documentation block** (`/** ... */`) immediately above it. Describe purpose, not a restatement of the identifier.
+- Prefer documentation blocks over inline comments for function-level intent.
+
+```typescript
+// ❌ BAD
+function astroFilePath(id: string): string {
+  return id.split('?')[0] ?? id
+}
+
+export function compileAstroScssPlugin(): Plugin {
+  return {
+    transform(code, id) {
+      return null
+    },
+  }
+}
+
+// ✅ GOOD
+/** Strips Vite query suffixes so the module id maps to a real `.astro` path. */
+const astroFilePath = (id: string): string => id.split('?')[0] ?? id
+
+/**
+ * Vite plugin that compiles `<style lang="scss">` for Storybook.
+ */
+export const compileAstroScssPlugin = (): Plugin => ({
+  transform: (code, id) => null,
+})
+```

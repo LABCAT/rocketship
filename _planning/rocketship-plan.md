@@ -1,4 +1,4 @@
-# Rocketship: Planning Folder and Cursor Rules
+# Rocketship: Planning Folder and Agent Rules
 
 ## Phase 1: Planning only
 
@@ -6,7 +6,7 @@ We are not building anything yet. Phase 1 is only about planning artifacts and r
 
 1. Create the `_planning` folder.
 2. Add this master plan document (vision, decisions, open questions, and the task list below).
-3. Create five Cursor rules in `.cursor/rules`: `rocketship-overview.mdc`, `rocketship-bem-scss.mdc`, `rocketship-layout-responsive.mdc`, `rocketship-themes.mdc`, `rocketship-a11y.mdc`.
+3. Create five agent rules in `.agents/rules`: `rocketship-overview.mdc`, `rocketship-bem-scss.mdc`, `rocketship-layout-responsive.mdc`, `rocketship-themes.mdc`, `rocketship-a11y.mdc`.
 
 No new packages, Storybook app, or components in this phase.
 

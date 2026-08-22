@@ -8,7 +8,7 @@
 
 2. **Rule: `rocketship-overview.mdc`**
    - Add high-level Rocketship overview (what the project is, CSS-first, package suite, Storybook, theming, container queries).
-   - Done when: file exists in `.cursor/rules/` with frontmatter + concise bullets and points to `_planning/rocketship-plan.md`.
+   - Done when: file exists in `.agents/rules/` with frontmatter + concise bullets and points to `_planning/rocketship-plan.md`.
 
 3. **Rule: `rocketship-bem-scss.mdc`**
    - Capture BEM (`rs`), SCSS usage, and `--rs-*` variable conventions.

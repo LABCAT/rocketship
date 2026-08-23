@@ -58,8 +58,10 @@ const showMedia = Boolean(media) || Astro.slots.has('media')
   .rs-card {
     --rs-card-media-bg: var(--rs-color-surface-elevated, #eef2ff);
     background: var(--rs-color-surface, #ffffff);
-    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
-    border-radius: var(--rs-radius-md, 10px);
+    border: var(--rs-card-border-width, var(--rs-border-width-sm, 1px)) solid
+      var(--rs-card-border-color, var(--rs-color-border, #c8d2eb));
+    border-radius: var(--rs-card-border-radius, var(--rs-radius-md, 10px));
+    box-shadow: var(--rs-card-shadow, none);
     overflow: hidden;
 
     &__media {

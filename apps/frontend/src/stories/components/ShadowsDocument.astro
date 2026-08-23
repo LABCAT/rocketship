@@ -1,0 +1,66 @@
+---
+import Card from '@labcat/rocketship/components/Card'
+import Container from '@labcat/rocketship/components/Container'
+import Grid from '@labcat/rocketship/components/Grid'
+import Typography from '@labcat/rocketship/components/Typography'
+
+const shadows = [
+  { name: 'sm', title: 'Small', description: 'Subtle lift — inputs, quiet cards', token: '--rs-shadow-sm' },
+  { name: 'md', title: 'Medium', description: 'Dropdowns, popovers, raised cards', token: '--rs-shadow-md' },
+  { name: 'lg', title: 'Large', description: 'Modals and overlays', token: '--rs-shadow-lg' },
+]
+
+const overrideExample = `:root {
+  --rs-shadow-md: 0 4px 12px rgb(0 0 0 / 0.2);
+}`
+
+const consumeExample = `.rs-card {
+  box-shadow: var(--rs-shadow-md);
+}`
+
+const instanceOverrideExample = `/* your-theme.scss */
+:root {
+  --rs-card-shadow: var(--rs-shadow-md);
+}`
+---
+
+<Container padded>
+  <Typography as="article">
+    <h1>Shadows</h1>
+    <p>
+      Elevation in Rocketship is a token API: <code>--rs-shadow-*</code> custom properties on
+      <code>:root</code>. Components never hard-code shadows, so you retune depth across the whole
+      library by overriding those variables.
+    </p>
+    <p>The scale has three steps, from a subtle lift to a full overlay.</p>
+    <pre><code>{overrideExample}</code></pre>
+    <p>Components keep using the same variable:</p>
+    <pre><code>{consumeExample}</code></pre>
+    <p>
+      Components also expose opt-in override hooks named
+      <code>--rs-&lt;component&gt;-&lt;part&gt;-&lt;property&gt;</code>. These are never defined by the
+      library — set them anywhere in your own stylesheet, even on <code>:root</code>, and every
+      component picks them up:
+    </p>
+    <pre><code>{instanceOverrideExample}</code></pre>
+    <p>The tokens below are shown on real cards.</p>
+  </Typography>
+</Container>
+
+<Container>
+  <Typography as="article">
+    <h2>Elevation scale</h2>
+    <p>Each card below is lifted by a different shadow, from subtle to strong.</p>
+  </Typography>
+</Container>
+<Container padded>
+  <Grid as="ul" columns={3}>
+    {shadows.map((shadow) => (
+      <Card as="li" style={`--rs-card-shadow: var(--rs-shadow-${shadow.name});`}>
+        <p class="rs-card__title">{shadow.title}</p>
+        <p class="rs-card__description">{shadow.description}</p>
+        <span slot="meta" class="rs-card__token">{shadow.token}</span>
+      </Card>
+    ))}
+  </Grid>
+</Container>

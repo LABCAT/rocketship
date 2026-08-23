@@ -126,7 +126,7 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
     &--secondary {
       --rs-button-bg: var(--rs-color-surface, #ffffff);
       --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
-      --rs-button-border-width: 2px;
+      --rs-button-border-width: var(--rs-border-width-md, 2px);
       --rs-button-color: var(--rs-color-accent, #2f5bdb);
 
       &:hover {
@@ -140,7 +140,7 @@ const shouldRenderAsLink = as === 'a' || Boolean(href)
     &--ghost {
       --rs-button-bg: transparent;
       --rs-button-border-color: transparent;
-      --rs-button-border-width: 2px;
+      --rs-button-border-width: var(--rs-border-width-md, 2px);
       --rs-button-color: var(--rs-color-accent, #2f5bdb);
 
       &:hover {

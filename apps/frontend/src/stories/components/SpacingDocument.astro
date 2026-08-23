@@ -23,9 +23,10 @@ const consumeExample = `.rs-card__body {
   padding: var(--rs-space-4);
 }`
 
-const instanceOverrideExample = `<Card style="--rs-card-body-padding: var(--rs-space-6)">
-  ...
-</Card>`
+const instanceOverrideExample = `/* your-theme.scss */
+:root {
+  --rs-card-body-padding: var(--rs-space-6);
+}`
 ---
 
 <Container padded>
@@ -43,7 +44,8 @@ const instanceOverrideExample = `<Card style="--rs-card-body-padding: var(--rs-s
     <p>
       Components also expose opt-in override hooks named
       <code>--rs-&lt;component&gt;-&lt;part&gt;-&lt;property&gt;</code>. These are never defined by the
-      library — they exist only so you can restyle a single instance without touching the global scale:
+      library — set them anywhere in your own stylesheet, even on <code>:root</code>, and every
+      component picks them up:
     </p>
     <pre><code>{instanceOverrideExample}</code></pre>
     <p>The tokens below are shown at their actual size.</p>

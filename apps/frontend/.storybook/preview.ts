@@ -14,7 +14,7 @@ export default {
         includeNames: true,
         order: [
           'Foundations',
-          ['Colors'],
+          ['Colors', 'Spacing', 'BordersAndRadius', 'Shadows'],
           'Base',
           [
             'Container',

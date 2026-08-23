@@ -48,7 +48,15 @@
   --rs-radius-sm: 6px;
   --rs-radius-md: 10px;
   --rs-radius-pill: 999px;
-  --rs-border-width: 1px;
+
+  --rs-border-width-sm: 1px;
+  --rs-border-width-md: 2px;
+  --rs-border-width-lg: 4px;
+  --rs-border-width: var(--rs-border-width-sm);
+
+  --rs-shadow-sm: 0 1px 2px rgb(19 26 47 / 0.2);
+  --rs-shadow-md: 0 2px 8px rgb(19 26 47 / 0.4);
+  --rs-shadow-lg: 0 8px 24px rgb(19 26 47 / 0.6);
 
   --rs-transition-fast: 140ms;
 
@@ -111,5 +119,9 @@
     --rs-color-link-visited: #c1a4ff;
     --rs-color-focus-ring: #7cc7ff;
     --rs-color-muted: #c3cbea;
+
+    --rs-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.2);
+    --rs-shadow-md: 0 0 8px rgb(255 255 255 / 0.4);
+    --rs-shadow-lg: 0 0 16px rgb(255 255 255 / 0.6);
   }
 }

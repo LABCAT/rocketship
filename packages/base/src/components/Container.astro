@@ -44,14 +44,7 @@ const classes = [
     --rs-container-gutter-left: max(env(safe-area-inset-left), var(--rs-container-gutter, 16px));
     --rs-container-gutter-right: max(env(safe-area-inset-right), var(--rs-container-gutter, 16px));
     --rs-container-gutters: calc(
-      var(
-          --rs-container-gutter-left,
-          max(env(safe-area-inset-left), var(--rs-container-gutter, 16px))
-        ) +
-        var(
-          --rs-container-gutter-right,
-          max(env(safe-area-inset-right), var(--rs-container-gutter, 16px))
-        )
+      var(--rs-container-gutter-left) + var(--rs-container-gutter-right)
     );
     --rs-container-gutter-top: max(
       env(safe-area-inset-top),
@@ -62,9 +55,9 @@ const classes = [
       var(--rs-container-padding-block-end, 0px)
     );
     margin-inline: auto;
-    max-width: calc(var(--rs-container-width, 1200px) + var(--rs-container-gutters, 32px));
+    max-width: calc(var(--rs-container-width) + var(--rs-container-gutters));
     padding-block: var(--rs-container-gutter-top) var(--rs-container-gutter-bottom);
-    padding-inline: var(--rs-container-gutter-left, 16px) var(--rs-container-gutter-right, 16px);
+    padding-inline: var(--rs-container-gutter-left) var(--rs-container-gutter-right);
     width: 100%;
 
     &--content {
@@ -84,7 +77,7 @@ const classes = [
     }
 
     &--padded {
-      padding-block: var(--rs-container-padding-block);
+      padding-block: var(--rs-container-padding-block, 20px);
     }
 
     &--no-gutters {

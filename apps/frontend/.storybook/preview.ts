@@ -27,7 +27,12 @@ export default {
             ['Variants', 'Sizes'],
           ],
           'Components',
-          ['Card', ['Default']],
+          [
+            'Card',
+            ['Default'],
+            'Figure',
+            ['Default'],
+          ],
         ],
       },
     },

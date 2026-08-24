@@ -1,0 +1,54 @@
+@use '../functions' as *;
+@use '../container-query' as *;
+
+@mixin typography-figure {
+  --rs-figure-gap: var(--rs-space-3, 12px);
+  --rs-figure-border-radius: var(--rs-radius-md, 10px);
+  --rs-figure-border-width: var(--rs-border-width-sm, 1px);
+  --rs-figure-border-color: var(--rs-color-border, #c8d2eb);
+  --rs-figure-bg: var(--rs-color-surface, #ffffff);
+  --rs-figure-caption-color: var(--rs-color-muted, #4f5b7d);
+  --rs-figure-caption-font-size: var(--rs-font-size-sm, #{to-rem(14)});
+  --rs-figure-caption-line-height: var(--rs-line-height-base, 1.45);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-figure-gap);
+  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  margin-inline: 0;
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg,
+  table {
+    border-radius: var(--rs-figure-border-radius);
+    max-width: 100%;
+  }
+
+  img {
+    display: block;
+    height: auto;
+    width: 100%;
+  }
+}
+
+@mixin typography-figcaption {
+  color: var(--rs-figure-caption-color);
+  font-family: var(
+    --rs-font-family-sans,
+    'Inter',
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: var(--rs-figure-caption-font-size);
+  line-height: var(--rs-figure-caption-line-height);
+  text-align: start;
+
+  @include container-query-up($rs-cq-sm) {
+    font-size: var(--rs-figure-caption-font-size-sm, var(--rs-font-size-sm, #{to-rem(14)}));
+  }
+}

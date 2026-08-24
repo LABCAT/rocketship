@@ -1,0 +1,13 @@
+---
+description: Project rules and skills live in .agents. Read that folder; do not duplicate it here.
+alwaysApply: true
+---
+
+# Source of truth: `.agents`
+
+Keep `.cursor` empty of project conventions. Canonical agent files:
+
+- Rules: `.agents/rules/*.mdc`
+- Skills: `.agents/skills/`
+
+Read and follow those files. Honor each rule’s `globs` and `description`. Use a skill when the task matches its `description`. Never copy rules or skills into `.cursor`.

@@ -1,0 +1,103 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Figure from '@labcat/rocketship/components/Figure'
+import Typography from '@labcat/rocketship/components/Typography'
+---
+
+<Container size="content" padded>
+  <Typography as="article">
+    <h1>Figure</h1>
+    <p>
+      Figures group self-contained content with an optional caption. Use the <code>Figure</code>
+      component for images, diagrams, code, or tables that benefit from a semantic
+      <code>&lt;figure&gt;</code> and <code>&lt;figcaption&gt;</code>. The caption uses muted text and
+      adapts with container queries.
+    </p>
+
+    <h2>Figure with image and caption</h2>
+    <Figure caption="A raster image with a short descriptive caption.">
+      <img
+        alt="Abstract geometric pattern representing the Rocketship design system"
+        height="240"
+        src="https://picsum.photos/seed/rocketship-figure/800/400"
+        width="800"
+        loading="lazy"
+      />
+    </Figure>
+
+    <h2>Figure with image, no caption</h2>
+    <Figure>
+      <img
+        alt="Abstract geometric pattern representing the Rocketship design system"
+        height="240"
+        src="https://picsum.photos/seed/rocketship-figure-nocaption/800/400"
+        width="800"
+        loading="lazy"
+      />
+    </Figure>
+    <p>This figure has no caption. Use this form for purely decorative or unlabeled media.</p>
+
+    <h2>Figure with rich caption (slot)</h2>
+    <Figure>
+      <img
+        alt="Abstract geometric pattern representing the Rocketship design system"
+        height="240"
+        src="https://picsum.photos/seed/rocketship-figure-rich/800/400"
+        width="800"
+        loading="lazy"
+      />
+      <Fragment slot="caption">
+        Fig. 2 — A caption with <em>emphasis</em> and a <a href="https://example.com">link</a>.
+      </Fragment>
+    </Figure>
+
+    <h2>Figure with table</h2>
+    <Figure caption="Table 1 — Illustrative liability caps (demonstration only).">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Category</th>
+            <th scope="col">Cap (demo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Indirect or consequential loss</td>
+            <td>Excluded except where unlawful</td>
+          </tr>
+          <tr>
+            <td>Aggregate cap (commercial users)</td>
+            <td>£100 or fees paid in the prior 12 months</td>
+          </tr>
+        </tbody>
+      </table>
+    </Figure>
+
+    <h2>Figure inside Typography (prose-native)</h2>
+    <p>The same tokens apply when you author raw HTML inside Typography prose:</p>
+    <figure>
+      <img
+        alt="Abstract geometric pattern representing the Rocketship design system"
+        height="240"
+        src="https://picsum.photos/seed/rocketship-figure-prose/800/400"
+        width="800"
+        loading="lazy"
+      />
+      <figcaption>Prose-native figure — styled via the typography mixins.</figcaption>
+    </figure>
+
+    <h2>Using the SCSS mixins directly</h2>
+    <p>
+      Apply the mixins in your own SCSS when you need figure styling outside the component:
+    </p>
+    <pre><code>@use '@labcat/rocketship/styles/mixins' as *;
+
+.my-figure &#123;
+  @include typography-figure;
+&#125;
+
+.my-figure figcaption &#123;
+  @include typography-figcaption;
+&#125;</code></pre>
+  </Typography>
+</Container>

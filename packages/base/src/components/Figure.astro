@@ -1,0 +1,96 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type FigureTag = 'figure' | 'div'
+
+type Props = {
+  as?: FigureTag
+  caption?: string
+  class?: string
+} & HTMLAttributes<'figure'>
+
+const { as = 'figure', caption, class: className, ...attrs } = Astro.props as Props
+const Tag = as
+const hasCaption = Boolean(caption) || Astro.slots.has('caption')
+const isFigure = as === 'figure'
+---
+
+<Tag {...attrs} class:list={['rs-figure', className]}>
+  <div class="rs-figure__media">
+    <slot />
+  </div>
+  {
+    hasCaption ? (
+      isFigure ? (
+        <figcaption class="rs-figure__caption">
+          {caption ?? null}
+          <slot name="caption" />
+        </figcaption>
+      ) : (
+        <div class="rs-figure__caption" role="note">
+          {caption ?? null}
+          <slot name="caption" />
+        </div>
+      )
+    ) : null
+  }
+</Tag>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-figure {
+    --rs-figure-gap: var(--rs-space-3, 12px);
+    --rs-figure-caption-color: var(--rs-color-muted, #4f5b7d);
+    --rs-figure-caption-font-size: var(--rs-font-size-sm, #{to-rem(14)});
+    --rs-figure-caption-line-height: var(--rs-line-height-base, 1.45);
+    --rs-figure-media-radius: var(--rs-radius-md, 10px);
+    --rs-figure-media-border-width: var(--rs-border-width-sm, 1px);
+    --rs-figure-media-border-color: var(--rs-color-border, #c8d2eb);
+    container-name: rs-component;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-figure-gap);
+    margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+    margin-inline: 0;
+
+    &__media {
+      display: block;
+      overflow: hidden;
+      border-radius: var(--rs-figure-media-radius);
+
+      :is(img, picture, video, canvas, svg) {
+        display: block;
+        height: auto;
+        max-width: 100%;
+        width: 100%;
+      }
+
+      table {
+        margin-bottom: 0;
+        width: 100%;
+      }
+    }
+
+    &__caption {
+      color: var(--rs-figure-caption-color);
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-figure-caption-font-size);
+      line-height: var(--rs-figure-caption-line-height);
+      text-align: start;
+
+      @include container-query-up($rs-cq-sm) {
+        font-size: var(--rs-figure-caption-font-size-sm, var(--rs-font-size-sm, #{to-rem(14)}));
+      }
+    }
+  }
+</style>

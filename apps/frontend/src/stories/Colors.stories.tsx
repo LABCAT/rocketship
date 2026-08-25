@@ -6,7 +6,7 @@ import '@labcat/rocketship/components/Grid'
 import '@labcat/rocketship/components/Typography'
 
 const meta: Meta<typeof ColorsDocument> = {
-  title: 'Foundations',
+  title: 'Foundations/Colors',
   component: ColorsDocument,
   parameters: {
     a11y: { disable: false },

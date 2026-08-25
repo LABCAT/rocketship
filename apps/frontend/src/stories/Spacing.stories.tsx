@@ -6,7 +6,7 @@ import '@labcat/rocketship/components/Grid'
 import '@labcat/rocketship/components/Typography'
 
 const meta: Meta<typeof SpacingDocument> = {
-  title: 'Foundations',
+  title: 'Foundations/Spacing',
   component: SpacingDocument,
   parameters: {
     a11y: { disable: false },

@@ -15,4 +15,4 @@ const meta: Meta<typeof TypographyDocument> = {
 export default meta
 type Story = StoryObj<typeof TypographyDocument>
 
-export const TermsStyleDocument: Story = {}
+export const Default: Story = {}

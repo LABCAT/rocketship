@@ -1,0 +1,29 @@
+---
+import Alert from '@labcat/rocketship/components/Alert'
+import Container from '@labcat/rocketship/components/Container'
+import Grid from '@labcat/rocketship/components/Grid'
+---
+
+<Container size="content" padded>
+  <Grid>
+    <Alert variant="info" title="Heads up">
+      This change will take effect on your next deployment. Review the notes before you continue.
+    </Alert>
+    <Alert variant="success" title="Deployed">
+      Your site is live. The new theme is now serving traffic.
+    </Alert>
+    <Alert variant="warning" title="Check your quota">
+      You have used 85% of your build minutes. Upgrade or wait for the next cycle.
+    </Alert>
+    <Alert variant="error" title="Build failed">
+      The build stopped because a required token is missing. Add it and try again.
+    </Alert>
+    <Alert variant="info">
+      Without a title, the alert still conveys its message clearly.
+    </Alert>
+    <Alert variant="warning">
+      <span slot="title">Custom title slot</span>
+      Use the title slot when you need markup inside the heading.
+    </Alert>
+  </Grid>
+</Container>

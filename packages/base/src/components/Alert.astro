@@ -1,0 +1,169 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type AlertVariant = 'info' | 'success' | 'warning' | 'error'
+export type AlertTag = 'div' | 'section'
+
+type Props = {
+  as?: AlertTag
+  variant?: AlertVariant
+  title?: string
+  role?: 'alert' | 'status'
+  class?: string
+} & HTMLAttributes<'div'>
+
+const {
+  as = 'div',
+  variant = 'info',
+  title,
+  role: roleProp,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const Tag = as
+const role = roleProp ?? (variant === 'error' || variant === 'warning' ? 'alert' : 'status')
+const classes = ['rs-alert', `rs-alert--${variant}`, className]
+const hasTitleSlot = Astro.slots.has('title')
+---
+
+<Tag {...attrs} class:list={classes} role={role}>
+  {
+    title ? (
+      <p class="rs-alert__title">{title}</p>
+    ) : hasTitleSlot ? (
+      <div class="rs-alert__title">
+        <slot name="title" />
+      </div>
+    ) : null
+  }
+  <div class="rs-alert__body">
+    <slot />
+  </div>
+</Tag>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-alert {
+    --rs-alert-bg: var(--rs-color-surface-elevated, #eef2ff);
+    --rs-alert-color: var(--rs-color-fg, #131a2f);
+    --rs-alert-border-color: var(--rs-color-border, #c8d2eb);
+    --rs-alert-border-width: var(--rs-border-width-sm, 1px);
+    --rs-alert-border-radius: var(--rs-radius-md, 10px);
+    --rs-alert-padding-block: var(--rs-space-3, 12px);
+    --rs-alert-padding-inline: var(--rs-space-4, 16px);
+    --rs-alert-gap: var(--rs-space-2, 8px);
+    --rs-alert-accent-width: 4px;
+    --rs-alert-accent-color: var(--rs-color-accent, #2f5bdb);
+    --rs-alert-title-font-size: var(--rs-font-size-md, #{to-rem(16)});
+    --rs-alert-title-font-weight: var(--rs-font-weight-semibold, 600);
+    --rs-alert-title-line-height: var(--rs-line-height-tight, 1.2);
+    --rs-alert-body-font-size: var(--rs-font-size-sm, #{to-rem(14)});
+    --rs-alert-body-line-height: var(--rs-line-height-base, 1.45);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-alert-gap);
+    background: var(--rs-alert-bg);
+    border: var(--rs-alert-border-width) solid var(--rs-alert-border-color);
+    border-inline-start: var(--rs-alert-accent-width) solid var(--rs-alert-accent-color);
+    border-radius: var(--rs-alert-border-radius);
+    color: var(--rs-alert-color);
+    padding-block: var(--rs-alert-padding-block);
+    padding-inline: var(--rs-alert-padding-inline);
+
+    @include container-query-up($rs-cq-sm) {
+      --rs-alert-padding-block: var(--rs-space-4, 16px);
+      --rs-alert-padding-inline: var(--rs-space-5, 20px);
+      --rs-alert-gap: var(--rs-space-3, 12px);
+      --rs-alert-title-font-size: var(--rs-font-size-lg, #{to-rem(18)});
+      --rs-alert-body-font-size: var(--rs-font-size-md, #{to-rem(16)});
+    }
+
+    &--info {
+      --rs-alert-bg: var(--rs-color-surface-elevated, #eef2ff);
+      --rs-alert-border-color: var(--rs-color-border, #c8d2eb);
+      --rs-alert-accent-color: var(--rs-color-accent, #2f5bdb);
+      --rs-alert-color: var(--rs-color-fg, #131a2f);
+    }
+
+    &--success {
+      --rs-alert-bg: #e6f4ea;
+      --rs-alert-border-color: #a7d8b5;
+      --rs-alert-accent-color: #1a7a32;
+      --rs-alert-color: #0f2a18;
+    }
+
+    &--warning {
+      --rs-alert-bg: #fff8e1;
+      --rs-alert-border-color: #f0c36a;
+      --rs-alert-accent-color: #9a5d00;
+      --rs-alert-color: #3d2800;
+    }
+
+    &--error {
+      --rs-alert-bg: #ffeef0;
+      --rs-alert-border-color: #f0a8b0;
+      --rs-alert-accent-color: #c5221f;
+      --rs-alert-color: #3d0a08;
+    }
+
+    &__title {
+      color: var(--rs-alert-color);
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-alert-title-font-size);
+      font-weight: var(--rs-alert-title-font-weight);
+      line-height: var(--rs-alert-title-line-height);
+      margin: 0;
+    }
+
+    &__body {
+      color: var(--rs-alert-color);
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-alert-body-font-size);
+      line-height: var(--rs-alert-body-line-height);
+      margin: 0;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .rs-alert {
+      &--success {
+        --rs-alert-bg: #0f2a18;
+        --rs-alert-border-color: #2a5d3a;
+        --rs-alert-accent-color: #4caf6a;
+        --rs-alert-color: #d9f0df;
+      }
+
+      &--warning {
+        --rs-alert-bg: #2e2300;
+        --rs-alert-border-color: #8a6d1b;
+        --rs-alert-accent-color: #ffbf3d;
+        --rs-alert-color: #fff3cf;
+      }
+
+      &--error {
+        --rs-alert-bg: #2e0a0f;
+        --rs-alert-border-color: #8a2a30;
+        --rs-alert-accent-color: #ff6b6b;
+        --rs-alert-color: #ffe2e4;
+      }
+    }
+  }
+</style>

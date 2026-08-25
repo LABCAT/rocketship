@@ -2,38 +2,21 @@
 import type { HTMLAttributes } from 'astro/types'
 
 export type CardTag = 'article' | 'section' | 'div' | 'li'
-export type CardMediaTone =
-  | 'bg'
-  | 'fg'
-  | 'surface'
-  | 'surface-elevated'
-  | 'border'
-  | 'accent'
-  | 'accent-contrast'
-  | 'link'
-  | 'link-hover'
-  | 'link-visited'
-  | 'focus-ring'
-  | 'muted'
 
 type Props = {
   as?: CardTag
-  media?: CardMediaTone
   class?: string
 } & HTMLAttributes<'article'>
 
-const { as = 'article', media, class: className, ...attrs } = Astro.props as Props
+const { as = 'article', class: className, ...attrs } = Astro.props as Props
 const Tag = as
-const showMedia = Boolean(media) || Astro.slots.has('media')
+const showMedia = Astro.slots.has('media')
 ---
 
 <Tag {...attrs} class:list={['rs-card', className]}>
   {
     showMedia ? (
-      <div
-        class:list={['rs-card__media', media ? `rs-card__media--${media}` : undefined]}
-        aria-hidden={Astro.slots.has('media') ? undefined : true}
-      >
+      <div class="rs-card__media">
         <slot name="media" />
       </div>
     ) : null
@@ -67,54 +50,6 @@ const showMedia = Boolean(media) || Astro.slots.has('media')
     &__media {
       background: var(--rs-card-media-bg);
       min-height: var(--rs-card-media-min-height, 96px);
-
-      &--bg {
-        --rs-card-media-bg: var(--rs-color-bg, #f6f8ff);
-      }
-
-      &--fg {
-        --rs-card-media-bg: var(--rs-color-fg, #131a2f);
-      }
-
-      &--surface {
-        --rs-card-media-bg: var(--rs-color-surface, #ffffff);
-      }
-
-      &--surface-elevated {
-        --rs-card-media-bg: var(--rs-color-surface-elevated, #eef2ff);
-      }
-
-      &--border {
-        --rs-card-media-bg: var(--rs-color-border, #c8d2eb);
-      }
-
-      &--accent {
-        --rs-card-media-bg: var(--rs-color-accent, #2f5bdb);
-      }
-
-      &--accent-contrast {
-        --rs-card-media-bg: var(--rs-color-accent-contrast, #ffffff);
-      }
-
-      &--link {
-        --rs-card-media-bg: var(--rs-color-link, #1f49c6);
-      }
-
-      &--link-hover {
-        --rs-card-media-bg: var(--rs-color-link-hover, #173ea8);
-      }
-
-      &--link-visited {
-        --rs-card-media-bg: var(--rs-color-link-visited, #6a3fc2);
-      }
-
-      &--focus-ring {
-        --rs-card-media-bg: var(--rs-color-focus-ring, #296dff);
-      }
-
-      &--muted {
-        --rs-card-media-bg: var(--rs-color-muted, #4f5b7d);
-      }
     }
 
     &__body {

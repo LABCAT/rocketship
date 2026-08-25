@@ -6,7 +6,7 @@ import '@labcat/rocketship/components/Grid'
 import '@labcat/rocketship/components/Typography'
 
 const meta: Meta<typeof BordersDocument> = {
-  title: 'Foundations',
+  title: 'Foundations/BordersAndRadius',
   component: BordersDocument,
   parameters: {
     a11y: { disable: false },

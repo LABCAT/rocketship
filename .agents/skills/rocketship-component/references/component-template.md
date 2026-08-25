@@ -63,19 +63,19 @@ const classes = [
   @use '../styles/mixins' as *;
 
   .rs-name {
-    /* --- 1. component variables first (public theming API) --- */
+    /* --- 1. variant-owned locals only (when modifiers swap a set) --- */
     --rs-name-bg: var(--rs-color-surface, #ffffff);
-    --rs-name-gap: var(--rs-space-3, 12px);
 
     /* --- 2. reset + box-sizing (only if needed) --- */
     all: unset;
     box-sizing: border-box;
 
     /* --- 3. layout, then appearance --- */
+    /* Opt-in hooks: never assigned above — first fallback only */
     display: block;
     background: var(--rs-name-bg);
     border-radius: var(--rs-name-radius, var(--rs-radius-md, 10px));
-    gap: var(--rs-name-gap);
+    gap: var(--rs-name-gap, var(--rs-space-3, 12px));
     font-size: var(--rs-font-size-md, #{to-rem(16)});
 
     /* states nested under the block */
@@ -84,14 +84,15 @@ const classes = [
       outline-offset: 2px;
     }
 
-    /* modifiers nested with & */
+    /* modifiers reassign variant-owned locals */
     &--muted {
       --rs-name-bg: var(--rs-color-muted, #4f5b7d);
     }
 
-    /* container-query sizing (never media queries here) */
+    /* container-query: restate properties with a larger token fallback;
+       keep the same opt-in hook so :root overrides still win */
     @include container-query-up($rs-cq-sm) {
-      --rs-name-gap: var(--rs-space-4, 16px);
+      gap: var(--rs-name-gap, var(--rs-space-4, 16px));
     }
 
     /* BEM elements nested under the block */
@@ -105,12 +106,23 @@ const classes = [
 
 ### Token fallback depth
 
-Three levels deep is the house style:
+**Opt-in hooks** (spacing, radius, type, etc.) — three levels; the component API name is never assigned by the library:
 
 ```
-var(--rs-name-bg, var(--rs-color-surface, #ffffff))
-     └─ component API   └─ global token        └─ literal last resort
+var(--rs-name-radius, var(--rs-radius-md, 10px))
+     └─ opt-in API        └─ global token     └─ literal last resort
 ```
+
+Adopters set `--rs-name-radius` on `:root` or an ancestor.
+
+**Variant-owned locals** (status/interactive colors) — assign on the block, reassign in modifiers; properties read the local:
+
+```
+--rs-name-bg: var(--rs-color-surface, #ffffff);
+background: var(--rs-name-bg);
+```
+
+Override on `.rs-name` / the instance, not bare `:root`.
 
 The literal exists only so the component renders even if `variables.scss` wasn't imported. Keep literals in sync with the default theme values in `variables.scss`.
 

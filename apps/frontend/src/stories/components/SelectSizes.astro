@@ -1,0 +1,42 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Select from '@labcat/rocketship/components/Select'
+import Typography from '@labcat/rocketship/components/Typography'
+
+const rows = [
+  {
+    title: 'Small',
+    description: 'Compact control for dense forms',
+    size: 'small' as const,
+  },
+  {
+    title: 'Medium',
+    description: 'Default size for most forms',
+    size: 'medium' as const,
+  },
+  {
+    title: 'Large',
+    description: 'Emphasis and touch-friendly targets',
+    size: 'large' as const,
+  },
+]
+---
+
+{
+  rows.map((row) => (
+    <Container size="content" padded>
+      <Typography as="section">
+        <h3>{row.title} size</h3>
+        <p>{row.description}</p>
+      </Typography>
+      <label for={`rs-select-size-${row.size}`}>
+        Category
+        <Select id={`rs-select-size-${row.size}`} name={`category-${row.size}`} size={row.size}>
+          <option value="components">Components</option>
+          <option value="tokens">Design tokens</option>
+          <option value="patterns">Patterns</option>
+        </Select>
+      </label>
+    </Container>
+  ))
+}

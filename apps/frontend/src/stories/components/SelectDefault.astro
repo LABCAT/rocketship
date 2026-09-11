@@ -1,0 +1,25 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Select from '@labcat/rocketship/components/Select'
+---
+
+<Container size="content" padded>
+  <label for="rs-select-team">
+    Team
+    <Select id="rs-select-team" name="team">
+      <option value="" disabled selected> Choose a team </option>
+      <optgroup label="Design">
+        <option value="product">Product design</option>
+        <option value="brand">Brand and identity</option>
+      </optgroup>
+      <optgroup label="Engineering">
+        <option value="frontend">Frontend</option>
+        <option value="backend">Backend</option>
+      </optgroup>
+      <optgroup label="Operations">
+        <option value="platform">Platform</option>
+        <option value="security">Security</option>
+      </optgroup>
+    </Select>
+  </label>
+</Container>

@@ -1,0 +1,171 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  checked?: boolean
+  defaultChecked?: boolean
+  disabled?: boolean
+  invalid?: boolean
+  label?: string
+  name?: string
+  class?: string
+} & HTMLAttributes<'input'>
+
+const {
+  checked,
+  defaultChecked,
+  disabled = false,
+  invalid = false,
+  label,
+  name,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const showLabel = label !== undefined || Astro.slots.has('default')
+const classes = [
+  'rs-radio',
+  disabled ? 'rs-radio--disabled' : undefined,
+  invalid ? 'rs-radio--invalid' : undefined,
+  className,
+]
+---
+
+<label class:list={classes}>
+  <input
+    {...attrs}
+    aria-invalid={invalid || undefined}
+    checked={checked ?? defaultChecked}
+    class="rs-radio__input"
+    disabled={disabled}
+    name={name}
+    type="radio"
+  />
+  <span aria-hidden="true" class="rs-radio__control"></span>
+  {showLabel ? <span class="rs-radio__label">{label ?? <slot />}</span> : null}
+</label>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-radio {
+    --rs-radio-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    gap: var(--rs-radio-gap, var(--rs-space-3, 12px));
+    position: relative;
+
+    &__input {
+      block-size: 1px;
+      inline-size: 1px;
+      margin: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    &__control {
+      --rs-radio-control-bg: var(--rs-radio-bg, var(--rs-color-surface, #ffffff));
+      --rs-radio-control-border-color: var(
+        --rs-radio-border-color,
+        var(--rs-color-border, #c8d2eb)
+      );
+      background: var(--rs-radio-control-bg);
+      block-size: var(--rs-radio-size, 20px);
+      border: var(--rs-radio-border-width, var(--rs-border-width-md, 2px)) solid
+        var(--rs-radio-control-border-color);
+      border-radius: var(--rs-radio-radius, var(--rs-radius-pill, 999px));
+      flex: 0 0 auto;
+      inline-size: var(--rs-radio-size, 20px);
+      position: relative;
+      transition: border-color var(--rs-transition-fast, 140ms) ease;
+
+      &::after {
+        background: var(--rs-radio-dot-color, var(--rs-color-accent-contrast, #ffffff));
+        content: '';
+        inset: 0;
+        position: absolute;
+        opacity: 0;
+        transition: opacity var(--rs-transition-fast, 140ms) ease;
+        -webkit-mask-position: center;
+        mask-position: center;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 50%;
+        mask-size: 50%;
+      }
+    }
+
+    &__label {
+      color: var(--rs-radio-color, var(--rs-color-fg, #131a2f));
+      font-size: var(--rs-radio-font-size, var(--rs-font-size-md, #{to-rem(16)}));
+      line-height: var(--rs-radio-line-height, var(--rs-line-height-base, 1.45));
+    }
+
+    &__input:focus ~ &__control {
+      outline: 2px solid var(--rs-radio-focus-ring-color);
+      outline-offset: 2px;
+    }
+
+    &__input:checked ~ &__control {
+      --rs-radio-control-bg: var(--rs-radio-bg-checked, var(--rs-color-accent, #2f5bdb));
+      --rs-radio-control-border-color: var(
+        --rs-radio-border-color-checked,
+        var(--rs-color-accent, #2f5bdb)
+      );
+    }
+
+    &__input:checked ~ &__control::after {
+      opacity: 1;
+      -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5"/></svg>');
+      mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5"/></svg>');
+    }
+
+    &__input:disabled ~ &__control {
+      --rs-radio-control-bg: var(--rs-radio-bg-disabled, var(--rs-color-surface-elevated, #eef2ff));
+      --rs-radio-control-border-color: var(
+        --rs-radio-border-color-disabled,
+        var(--rs-color-border, #c8d2eb)
+      );
+    }
+
+    &__input:disabled ~ &__label {
+      color: var(--rs-radio-color-disabled, var(--rs-color-muted, #4f5b7d));
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+    }
+
+    &--invalid &__control {
+      --rs-radio-control-border-color: var(
+        --rs-radio-border-color-invalid,
+        var(--rs-color-danger-accent, #c5221f)
+      );
+    }
+
+    @include container-query-up($rs-cq-sm) {
+      gap: var(--rs-radio-gap, var(--rs-space-4, 16px));
+
+      &__control {
+        block-size: var(--rs-radio-size, 24px);
+        inline-size: var(--rs-radio-size, 24px);
+      }
+
+      &__label {
+        font-size: var(--rs-radio-font-size, var(--rs-font-size-lg, #{to-rem(18)}));
+      }
+    }
+  }
+</style>

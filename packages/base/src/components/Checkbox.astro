@@ -1,0 +1,182 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  checked?: boolean
+  defaultChecked?: boolean
+  disabled?: boolean
+  invalid?: boolean
+  indeterminate?: boolean
+  label?: string
+  class?: string
+} & HTMLAttributes<'input'>
+
+const {
+  checked,
+  defaultChecked,
+  disabled = false,
+  invalid = false,
+  indeterminate = false,
+  label,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const showLabel = label !== undefined || Astro.slots.has('default')
+const classes = [
+  'rs-checkbox',
+  disabled ? 'rs-checkbox--disabled' : undefined,
+  invalid ? 'rs-checkbox--invalid' : undefined,
+  indeterminate ? 'rs-checkbox--indeterminate' : undefined,
+  className,
+]
+---
+
+<label class:list={classes}>
+  <input
+    {...attrs}
+    aria-invalid={invalid || undefined}
+    checked={checked ?? defaultChecked}
+    class="rs-checkbox__input"
+    disabled={disabled}
+    type="checkbox"
+  />
+  <span aria-hidden="true" class="rs-checkbox__control"></span>
+  {showLabel ? <span class="rs-checkbox__label">{label ?? <slot />}</span> : null}
+</label>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-checkbox {
+    --rs-checkbox-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    gap: var(--rs-checkbox-gap, var(--rs-space-3, 12px));
+    position: relative;
+
+    &__input {
+      block-size: 1px;
+      inline-size: 1px;
+      margin: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    &__control {
+      --rs-checkbox-control-bg: var(--rs-checkbox-bg, var(--rs-color-surface, #ffffff));
+      --rs-checkbox-control-border-color: var(
+        --rs-checkbox-border-color,
+        var(--rs-color-border, #c8d2eb)
+      );
+      background: var(--rs-checkbox-control-bg);
+      block-size: var(--rs-checkbox-size, 20px);
+      border: var(--rs-checkbox-border-width, var(--rs-border-width-md, 2px)) solid
+        var(--rs-checkbox-control-border-color);
+      border-radius: var(--rs-checkbox-radius, var(--rs-radius-sm, 6px));
+      flex: 0 0 auto;
+      inline-size: var(--rs-checkbox-size, 20px);
+      position: relative;
+      transition: border-color var(--rs-transition-fast, 140ms) ease;
+
+      &::after {
+        background: var(--rs-checkbox-check-color, var(--rs-color-accent-contrast, #ffffff));
+        content: '';
+        inset: 0;
+        position: absolute;
+        opacity: 0;
+        transition: opacity var(--rs-transition-fast, 140ms) ease;
+        -webkit-mask-position: center;
+        mask-position: center;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 60%;
+        mask-size: 60%;
+      }
+    }
+
+    &__label {
+      color: var(--rs-checkbox-color, var(--rs-color-fg, #131a2f));
+      font-size: var(--rs-checkbox-font-size, var(--rs-font-size-md, #{to-rem(16)}));
+      line-height: var(--rs-checkbox-line-height, var(--rs-line-height-base, 1.45));
+    }
+
+    &__input:focus ~ &__control {
+      outline: 2px solid var(--rs-checkbox-focus-ring-color);
+      outline-offset: 2px;
+    }
+
+    &__input:checked ~ &__control {
+      --rs-checkbox-control-bg: var(--rs-checkbox-bg-checked, var(--rs-color-accent, #2f5bdb));
+      --rs-checkbox-control-border-color: var(
+        --rs-checkbox-border-color-checked,
+        var(--rs-color-accent, #2f5bdb)
+      );
+    }
+
+    &__input:checked ~ &__control::after {
+      opacity: 1;
+      -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><path d="M2.5 6.4 5 8.9 9.6 3.2" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>');
+      mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><path d="M2.5 6.4 5 8.9 9.6 3.2" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>');
+    }
+
+    &__input:indeterminate ~ &__control::after,
+    &--indeterminate &__input:not(:checked) ~ &__control::after {
+      background: var(--rs-checkbox-indeterminate-color, var(--rs-color-accent, #2f5bdb));
+      opacity: 1;
+      -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><path d="M2.5 6.5h7" fill="none" stroke="black" stroke-linecap="round" stroke-width="2"/></svg>');
+      mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><path d="M2.5 6.5h7" fill="none" stroke="black" stroke-linecap="round" stroke-width="2"/></svg>');
+    }
+
+    &__input:disabled ~ &__control {
+      --rs-checkbox-control-bg: var(
+        --rs-checkbox-bg-disabled,
+        var(--rs-color-surface-elevated, #eef2ff)
+      );
+      --rs-checkbox-control-border-color: var(
+        --rs-checkbox-border-color-disabled,
+        var(--rs-color-border, #c8d2eb)
+      );
+    }
+
+    &__input:disabled ~ &__label {
+      color: var(--rs-checkbox-color-disabled, var(--rs-color-muted, #4f5b7d));
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+    }
+
+    &--invalid &__control {
+      --rs-checkbox-control-border-color: var(
+        --rs-checkbox-border-color-invalid,
+        var(--rs-color-danger-accent, #c5221f)
+      );
+    }
+
+    @include container-query-up($rs-cq-sm) {
+      gap: var(--rs-checkbox-gap, var(--rs-space-4, 16px));
+
+      &__control {
+        block-size: var(--rs-checkbox-size, 24px);
+        inline-size: var(--rs-checkbox-size, 24px);
+      }
+
+      &__label {
+        font-size: var(--rs-checkbox-font-size, var(--rs-font-size-lg, #{to-rem(18)}));
+      }
+    }
+  }
+</style>

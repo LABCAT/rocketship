@@ -5,7 +5,7 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat/rocketship` following the exact patterns extracted from the five existing components (Button, Card, Container, Grid, Typography). **Card** (`packages/base/src/components/Card.astro`) is the gold-standard reference — copy its shape whenever unsure.
+Build a new component for `@labcat2020/rocketship` following the exact patterns extracted from the five existing components (Button, Card, Container, Grid, Typography). **Card** (`packages/base/src/components/Card.astro`) is the gold-standard reference — copy its shape whenever unsure.
 
 ## When to Use
 
@@ -66,8 +66,8 @@ Add `"./components/<Name>": "./src/components/<Name>.astro"` to `exports`.
 
 Two files, matching `Card.stories.tsx` / `components/CardDefault.astro`:
 
-- `<Name>.stories.tsx` — `Meta`/`StoryObj` from `@storybook/html`, import the wrapper Astro file plus each used library component's style side effects (`import '@labcat/rocketship/components/X'`), title `'Components/<Name>'`, `parameters: { a11y: { disable: false } }`, one default-exported story object. The `Base/` group is reserved for the existing primitive components (Button, Typography, Grid, Container) — no new components go there. Token documentation stories live in the `Foundations/` group (e.g. `'Foundations/Colors'`).
-- `components/<Name>Default.astro` (or `<Name><Aspect>.astro`) — frontmatter imports only `@labcat/rocketship` components; body composes them inside `<Container size="content" padded>`. **No `<style>` blocks, no story-only CSS, ever.**
+- `<Name>.stories.tsx` — `Meta`/`StoryObj` from `@storybook/html`, import the wrapper Astro file plus each used library component's style side effects (`import '@labcat2020/rocketship/components/X'`), title `'Components/<Name>'`, `parameters: { a11y: { disable: false } }`, one default-exported story object. The `Base/` group is reserved for the existing primitive components (Button, Typography, Grid, Container) — no new components go there. Token documentation stories live in the `Foundations/` group (e.g. `'Foundations/Colors'`).
+- `components/<Name>Default.astro` (or `<Name><Aspect>.astro`) — frontmatter imports only `@labcat2020/rocketship` components; body composes them inside `<Container size="content" padded>`. **No `<style>` blocks, no story-only CSS, ever.**
 - **Layout**: stack examples vertically inside the single `Container`. Do not reach for `Grid` or other layout components unless the story is specifically demonstrating composition with them.
 - **Scope**: show one aspect per story (e.g. four variants, or a default usage). If you need to demonstrate a secondary feature (slots, sizes), that is a separate story file — don't cram it into the same wrapper.
 - **Naming**: a single-story file exports `Default` (Storybook convention — the sidebar shows `Component > Default`); a multi-example comparison exports `Variants` (or `<Aspect>`). Only add extra stories when there is genuinely more than one aspect worth showing.

@@ -1,6 +1,6 @@
 # Rocketship Storybook host
 
-Astro 7 app that exists to run Storybook for `@labcat/rocketship`. There is no public Astro homepage; `src/pages` is kept only so Astro does not warn. Storybook is the only served UI.
+Astro 7 app that exists to run Storybook for `@labcat2020/rocketship`. There is no public Astro homepage; `src/pages` is kept only so Astro does not warn. Storybook is the only served UI.
 
 ## Commands
 

@@ -1,9 +1,15 @@
 {
-  "name": "@labcat/rocketship",
-  "version": "0.0.1",
-  "private": true,
+  "name": "@labcat2020/rocketship",
+  "version": "0.1.0",
+  "private": false,
   "type": "module",
-  "description": "Rocketship base package scaffold",
+  "description": "Rocketship — Astro-focused, CSS-first component library: design tokens, default theme, and core components",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LABCAT/rocketship.git",
+    "directory": "packages/base"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,8 +34,12 @@
   "files": [
     "dist",
     "src/styles",
-    "src/components"
+    "src/components",
+    "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   }

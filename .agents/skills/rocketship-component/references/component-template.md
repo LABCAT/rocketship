@@ -151,8 +151,8 @@ Everything else (spacing, radii, widths, cq thresholds) stays in `px`.
 ```tsx
 import type { Meta, StoryObj } from '@storybook/html'
 import NameDefault from './components/NameDefault.astro'
-import '@labcat/rocketship/components/Name'
-import '@labcat/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Name'
+import '@labcat2020/rocketship/components/Container'
 
 const meta: Meta<typeof NameDefault> = {
   title: 'Base/Name',
@@ -174,8 +174,8 @@ export const Default: Story = {}
 
 ```astro
 ---
-import Container from '@labcat/rocketship/components/Container'
-import Name from '@labcat/rocketship/components/Name'
+import Container from '@labcat2020/rocketship/components/Container'
+import Name from '@labcat2020/rocketship/components/Name'
 ---
 
 <Container size="content" padded>

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import CardDefault from './components/CardDefault.astro'
-import '@labcat/rocketship/components/Card'
-import '@labcat/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Card'
+import '@labcat2020/rocketship/components/Container'
 
 const meta: Meta<typeof CardDefault> = {
   title: 'Components/Card',

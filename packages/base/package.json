@@ -23,7 +23,9 @@
     "./components/Container": "./src/components/Container.astro",
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Typography": "./src/components/Typography.astro",
-    "./components/Alert": "./src/components/Alert.astro"
+    "./components/Alert": "./src/components/Alert.astro",
+    "./components/Field": "./src/components/Field.astro",
+    "./components/Label": "./src/components/Label.astro"
   },
   "files": [
     "dist",

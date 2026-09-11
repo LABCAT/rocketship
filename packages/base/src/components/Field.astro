@@ -1,0 +1,93 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type FieldTag = 'div' | 'section'
+
+type Props = {
+  as?: FieldTag
+  hintId?: string
+  errorId?: string
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { as = 'div', hintId, errorId, class: className, ...attrs } = Astro.props as Props
+
+const Tag = as
+const classes = ['rs-field', className]
+const hasLabel = Astro.slots.has('label')
+const hasHint = Astro.slots.has('hint')
+const hasError = Astro.slots.has('error')
+---
+
+<Tag {...attrs} class:list={classes}>
+  {
+    hasLabel ? (
+      <div class="rs-field__label">
+        <slot name="label" />
+      </div>
+    ) : null
+  }
+  <div class="rs-field__control">
+    <slot />
+  </div>
+  {
+    hasHint ? (
+      <div class="rs-field__hint" id={hintId || undefined}>
+        <slot name="hint" />
+      </div>
+    ) : null
+  }
+  {
+    hasError ? (
+      <div class="rs-field__error" id={errorId || undefined}>
+        <slot name="error" />
+      </div>
+    ) : null
+  }
+</Tag>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-field {
+    container-name: rs-component;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    gap: var(--rs-field-gap, var(--rs-space-2, 8px));
+    min-width: 0;
+
+    @include container-query-up($rs-cq-sm) {
+      gap: var(--rs-field-gap, var(--rs-space-3, 12px));
+    }
+
+    &__control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      min-width: 0;
+    }
+
+    &__hint {
+      color: var(--rs-field-hint-color, var(--rs-color-muted, #4f5b7d));
+      font-size: var(--rs-field-hint-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+      line-height: var(--rs-line-height-base, 1.45);
+      margin: 0;
+    }
+
+    &__error {
+      color: var(--rs-field-error-color, var(--rs-color-danger-fg, #3d0a08));
+      font-size: var(--rs-field-error-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+      line-height: var(--rs-line-height-base, 1.45);
+      margin: 0;
+    }
+  }
+</style>

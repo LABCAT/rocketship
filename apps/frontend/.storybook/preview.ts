@@ -1,4 +1,4 @@
-import '@labcat/rocketship/styles'
+import '@labcat2020/rocketship/styles'
 import { globalTypes, initialGlobals, decorators } from './addons/prefers-color-scheme/preview.ts'
 
 export default {

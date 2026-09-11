@@ -20,7 +20,7 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@labcat/rocketship':
+      '@labcat2020/rocketship':
         specifier: workspace:*
         version: link:../../packages/base
       astro:

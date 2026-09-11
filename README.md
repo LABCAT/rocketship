@@ -2,7 +2,7 @@
 
 Astro-focused, CSS-first component library monorepo.
 
-- **`packages/base`:** `@labcat/rocketship` — design tokens, default theme, and core Astro components
+- **`packages/base`:** `@labcat2020/rocketship` — design tokens, default theme, and core Astro components
 - **`apps/frontend`:** Storybook host (Astro app only exists so Storybook can run)
 
 > Node 26 is required (`package.json` `engines.node` — used by fnm). Use `pnpm` for all commands.
@@ -19,7 +19,7 @@ pnpm dev           # Storybook (http://localhost:6006)
 
 | Path         | Purpose                                                      |
 | ------------ | ------------------------------------------------------------ |
-| `packages/`  | Publishable library packages (start with `@labcat/rocketship`) |
+| `packages/`  | Publishable library packages (start with `@labcat2020/rocketship`) |
 | `apps/`      | Internal apps (Storybook host today; room for more later)    |
 | `_planning/` | Vision, roadmap, and task list                               |
 

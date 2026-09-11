@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import TypographyDocument from './components/TypographyDocument.astro'
-import '@labcat/rocketship/components/Typography'
-import '@labcat/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Typography'
+import '@labcat2020/rocketship/components/Container'
 
 const meta: Meta<typeof TypographyDocument> = {
   title: 'Base/Typography',

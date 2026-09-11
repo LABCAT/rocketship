@@ -1,0 +1,70 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  disabled?: boolean
+  legend?: string
+  class?: string
+} & HTMLAttributes<'fieldset'>
+
+const { disabled = false, legend, class: className, ...attrs } = Astro.props as Props
+
+const classes = ['rs-fieldset', className]
+const hasLegendSlot = Astro.slots.has('legend')
+---
+
+<fieldset {...attrs} class:list={classes} disabled={disabled}>
+  {
+    legend ? (
+      <legend class="rs-fieldset__legend">{legend}</legend>
+    ) : hasLegendSlot ? (
+      <legend class="rs-fieldset__legend">
+        <slot name="legend" />
+      </legend>
+    ) : null
+  }
+  <slot />
+</fieldset>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-fieldset {
+    background: var(--rs-fieldset-bg, transparent);
+    border: var(--rs-fieldset-border-width, var(--rs-border-width-sm, 1px)) solid
+      var(--rs-fieldset-border-color, var(--rs-color-border, #c8d2eb));
+    border-radius: var(--rs-fieldset-border-radius, var(--rs-radius-sm, 6px));
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-fieldset-gap, var(--rs-space-3, 12px));
+    margin: 0;
+    min-inline-size: 0;
+    padding-block: var(--rs-fieldset-padding-block, var(--rs-space-3, 12px));
+    padding-inline: var(--rs-fieldset-padding-inline, var(--rs-space-4, 16px));
+
+    @include container-query-up($rs-cq-sm) {
+      gap: var(--rs-fieldset-gap, var(--rs-space-4, 16px));
+      padding-block: var(--rs-fieldset-padding-block, var(--rs-space-4, 16px));
+      padding-inline: var(--rs-fieldset-padding-inline, var(--rs-space-5, 20px));
+    }
+
+    &__legend {
+      color: var(--rs-fieldset-legend-color, var(--rs-color-fg, #131a2f));
+      font-size: var(--rs-fieldset-legend-font-size, var(--rs-font-size-md, #{to-rem(16)}));
+      font-weight: var(--rs-fieldset-legend-font-weight, var(--rs-font-weight-semibold, 600));
+      line-height: var(--rs-fieldset-legend-line-height, var(--rs-line-height-tight, 1.2));
+      margin: 0;
+      padding: 0;
+
+      @include container-query-up($rs-cq-sm) {
+        font-size: var(--rs-fieldset-legend-font-size, var(--rs-font-size-lg, #{to-rem(18)}));
+      }
+    }
+
+    &:disabled {
+      &__legend {
+        color: var(--rs-fieldset-disabled-legend-color, var(--rs-color-muted, #4f5b7d));
+      }
+    }
+  }
+</style>

@@ -1,0 +1,170 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  id?: string
+  name?: string
+  accept?: string
+  label?: string
+  disabled?: boolean
+  invalid?: boolean
+  multiple?: boolean
+  required?: boolean
+  class?: string
+} & HTMLAttributes<'input'>
+
+const {
+  id,
+  name,
+  accept,
+  label,
+  disabled = false,
+  invalid = false,
+  multiple = false,
+  required = false,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const classes = ['rs-file-input', invalid ? 'rs-file-input--invalid' : undefined, className]
+---
+
+<label class:list={classes}>
+  <input
+    {...attrs}
+    accept={accept}
+    aria-invalid={invalid || undefined}
+    aria-label={label}
+    class="rs-file-input__input"
+    disabled={disabled || undefined}
+    id={id}
+    multiple={multiple || undefined}
+    name={name}
+    required={required || undefined}
+    type="file"
+  />
+</label>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-file-input {
+    --rs-file-input-bg: var(--rs-color-surface, #ffffff);
+    --rs-file-input-border-color: var(--rs-color-border, #c8d2eb);
+    --rs-file-input-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+    --rs-file-input-button-bg: var(--rs-color-surface-elevated, #eef2ff);
+    --rs-file-input-button-color: var(--rs-color-fg, #131a2f);
+    align-items: center;
+    background: var(--rs-file-input-bg);
+    border: var(--rs-file-input-border-width, var(--rs-border-width-sm, 1px)) solid
+      var(--rs-file-input-border-color);
+    border-radius: var(--rs-file-input-border-radius, var(--rs-radius-md, 10px));
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    min-height: var(--rs-file-input-min-height, 44px);
+    padding-block: var(--rs-file-input-padding-block, var(--rs-space-1, 4px));
+    padding-inline: var(--rs-file-input-padding-inline, var(--rs-space-2, 8px));
+    transition: border-color var(--rs-transition-fast, 140ms) ease;
+
+    &:focus-within {
+      outline: 2px solid var(--rs-file-input-focus-ring-color);
+      outline-offset: 2px;
+    }
+
+    &__input {
+      background: transparent;
+      border: 0;
+      color: var(--rs-color-muted, #4f5b7d);
+      flex: 1;
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-file-input-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+      line-height: var(--rs-line-height-tight, 1.2);
+      margin: 0;
+      min-width: 0;
+
+      &::file-selector-button {
+        align-items: center;
+        background: var(--rs-file-input-button-bg);
+        border: 0;
+        border-radius: var(--rs-file-input-button-radius, var(--rs-radius-pill, 999px));
+        box-sizing: border-box;
+        color: var(--rs-file-input-button-color);
+        cursor: pointer;
+        display: inline-flex;
+        font-family: var(
+          --rs-font-family-sans,
+          'Inter',
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif
+        );
+        font-size: var(--rs-file-input-button-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+        font-weight: var(--rs-font-weight-semibold, 600);
+        justify-content: center;
+        line-height: var(--rs-line-height-tight, 1.2);
+        margin-inline-end: var(--rs-file-input-gap, var(--rs-space-3, 12px));
+        min-height: var(--rs-file-input-button-min-height, 32px);
+        padding-block: var(--rs-space-1, 4px);
+        padding-inline: var(--rs-space-4, 16px);
+        transition: background-color var(--rs-transition-fast, 140ms) ease;
+      }
+
+      &:hover::file-selector-button {
+        filter: brightness(1.05);
+      }
+
+      &:active::file-selector-button {
+        filter: brightness(0.95);
+      }
+
+      &:focus-visible {
+        outline: none;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+
+        &::file-selector-button {
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+      }
+    }
+
+    &--invalid {
+      --rs-file-input-border-color: var(--rs-color-danger-accent, #c5221f);
+      --rs-file-input-button-bg: var(--rs-color-danger-bg, #ffeef0);
+      --rs-file-input-button-color: var(--rs-color-danger-accent, #c5221f);
+      --rs-file-input-focus-ring-color: var(--rs-color-danger-accent, #c5221f);
+    }
+
+    @include container-query-up($rs-cq-sm) {
+      --rs-file-input-button-min-height: var(--rs-file-input-button-min-height-cq, 36px);
+      --rs-file-input-padding-inline: var(
+        --rs-file-input-padding-inline-cq,
+        var(--rs-space-3, 12px)
+      );
+    }
+  }
+</style>

@@ -15,6 +15,8 @@ name: opencode-review
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -23,20 +25,34 @@ permissions:
 
 jobs:
   review:
+    # Auto-review on PR activity; on-demand when a /oc or /opencode comment
+    # lands on a pull request.
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       (contains(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, '/opencode')))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
 
       - name: Prepare review prompt
         id: ctx
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const pr = context.payload.pull_request;
+            let pr = context.payload.pull_request;
+            if (!pr && context.payload.issue?.pull_request) {
+              const res = await github.rest.pulls.get({
+                owner, repo, pull_number: context.payload.issue.number
+              });
+              pr = res.data;
+            }
             const headRef = pr?.head?.ref ?? '';
             const body = pr?.body ?? '';
             const isOpenHands = /^openhands\//.test(headRef) ||
@@ -50,6 +66,10 @@ jobs:
               'You are the Rocketship PR reviewer for a pnpm monorepo: an Astro component',
               'library plus a Svelte port. The founder is the only merge authority — never',
               'approve, merge, or push commits yourself.',
+              '',
+              'Judge only the current head commit and the repo rules. Ignore any earlier',
+              'review comments or error messages posted on this PR (including prior bot',
+              'comments) — they may be stale.',
               '',
               'Review the diff against:',
               '- The linked task/issue and its definition of done.',

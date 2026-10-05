@@ -6,9 +6,12 @@
 # (configured OpenHands-side). Findings go back as an `@openhands` mention,
 # which is what wakes the implementer to push fixes on the same branch.
 #
-# Requires: OpenCode GitHub App installed on this repo, and the
-# OPENCODE_API_KEY Actions secret (OpenCode Go key). OpenHands also needs its
-# app installed so @openhands mentions fire.
+# Requires: the OPENCODE_API_KEY Actions secret (OpenCode Go key). OpenHands
+# also needs its app installed so @openhands mentions fire.
+#
+# Runs with the workflow GITHUB_TOKEN (use_github_token: true) rather than the
+# OpenCode App OIDC exchange, which fails with 502 unless the OpenCode GitHub
+# App is installed on this repo.
 
 name: opencode-review
 
@@ -19,7 +22,6 @@ on:
     types: [created]
 
 permissions:
-  id-token: write
   contents: read
   pull-requests: write
   issues: write
@@ -45,7 +47,9 @@ jobs:
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          use_github_token: true
           model: opencode-go/muse-spark-1.3-contributor
           prompt: |
             You are the Rocketship PR reviewer for a pnpm monorepo (an Astro

@@ -1,0 +1,142 @@
+# PR agent loop — conducts OpenHands-authored PRs through review.
+#
+# - Formal review submitted (changes requested / commented) → compiled into a
+#   normal PR comment tagging @openhands (Cloud ignores formal review events).
+# - Fix push (synchronize) → re-requests review so the loop continues.
+# - Round cap (default 3) → stops tagging, labels needs-founder.
+# - Approval → labels preview-ready (preview CI gates on it, not PR open).
+# - Founder-authored PRs are never touched. Bot is comment-only, never a gate.
+#
+# Only runs for agent PRs: branch starts with `openhands/`, body carries the
+# daruma dispatch marker, or the `agent-loop` label is present.
+
+name: PR agent loop
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+env:
+  MAX_ROUNDS: '3'
+  ROUND_MARKER: '<!-- pr-agent-round-'
+  NEEDS_FOUNDER_LABEL: needs-founder
+  PREVIEW_READY_LABEL: preview-ready
+  AGENT_LOOP_LABEL: agent-loop
+
+jobs:
+  forward-review:
+    if: github.event_name == 'pull_request_review'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const review = context.payload.review;
+            const maxRounds = parseInt(process.env.MAX_ROUNDS, 10);
+            const marker = process.env.ROUND_MARKER;
+            const needsFounder = process.env.NEEDS_FOUNDER_LABEL;
+            const previewReady = process.env.PREVIEW_READY_LABEL;
+            const agentLoop = process.env.AGENT_LOOP_LABEL;
+
+            const ensureLabel = async (name, color, description) => {
+              try {
+                await github.rest.issues.createLabel({ owner, repo, name, color, description });
+              } catch (err) {
+                if (err.status !== 422) throw err;
+              }
+            };
+            await ensureLabel(needsFounder, 'e11d21', 'PR agent loop hit the round cap — founder decision needed');
+            await ensureLabel(previewReady, '0e8a16', 'Review-clean — preview may build');
+            await ensureLabel(agentLoop, '1d76db', 'PR agent loop is conducting this PR');
+
+            // Approval hands off to preview; nothing to forward.
+            if (review.state === 'approved') {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [previewReady] });
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name: needsFounder });
+              } catch (err) {
+                if (err.status !== 404) throw err;
+              }
+              return;
+            }
+            if (review.state !== 'changes_requested' && review.state !== 'commented') return;
+
+            // Loop guard: never answer our own forwards or other bots' loops.
+            const reviewer = review.user?.login ?? '';
+            if ((review.user?.type === 'Bot' && /openhands/i.test(reviewer)) || (review.body ?? '').includes(marker)) return;
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const branch = pr.head.ref ?? '';
+            const labels = (pr.labels ?? []).map((l) => l.name);
+            const agentAuthored =
+              branch.startsWith('openhands/') ||
+              (pr.body ?? '').includes('daruma-openhands-dispatch') ||
+              labels.includes(agentLoop);
+            if (!agentAuthored) return;
+
+            // Round cap: count our previous forwards.
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber, per_page: 100 });
+            let rounds = 0;
+            for (const c of comments) {
+              const m = (c.body ?? '').match(/<!-- pr-agent-round-(\d+) -->/);
+              if (m) rounds = Math.max(rounds, parseInt(m[1], 10));
+            }
+            if (rounds >= maxRounds) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [needsFounder] });
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: prNumber,
+                body: `PR agent loop hit the round cap (${maxRounds}) — handing to the founder. ${marker}cap -->`
+              });
+              return;
+            }
+
+            // Collect inline review comments for full context.
+            const { data: inline } = await github.rest.pulls.listReviewComments({ owner, repo, pull_number: prNumber, per_page: 100 });
+            const Verbatim = inline
+              .filter((c) => c.pull_request_review_id === review.id)
+              .map((c) => `- \`${c.path}${c.line ? `:${c.line}` : ''}\` — ${c.body}`)
+              .join('\n');
+
+            const next = rounds + 1;
+            const feedback = [review.body?.trim(), Verbatim].filter(Boolean).join('\n\n');
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber,
+              body: `@openhands Please address this review feedback from @${reviewer} on this PR (round ${next}/${maxRounds}):\n\n${feedback}\n\nPush the fix to this branch when done.\n\n${marker}${next} -->`
+            });
+
+  rereview-on-fix:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const needsFounder = process.env.NEEDS_FOUNDER_LABEL;
+            const agentLoop = process.env.AGENT_LOOP_LABEL;
+
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber, per_page: 100 });
+            const loopActive = comments.some((c) => (c.body ?? '').includes(process.env.ROUND_MARKER));
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const labels = (pr.labels ?? []).map((l) => l.name);
+            if ((!loopActive && !labels.includes(agentLoop)) || labels.includes(needsFounder)) return;
+
+            // Re-request reviewers whose latest verdict was changes-requested.
+            const { data: reviews } = await github.rest.pulls.listReviews({ owner, repo, pull_number: prNumber, per_page: 100 });
+            const latest = new Map();
+            for (const r of reviews) {
+              if (r.user?.type === 'Bot') continue;
+              latest.set(r.user.login, r.state);
+            }
+            const stale = [...latest.entries()].filter(([, s]) => s === 'CHANGES_REQUESTED').map(([u]) => u);
+            if (!stale.length) return;
+            await github.rest.pulls.requestReviewers({ owner, repo, pull_number: prNumber, reviewers: stale });

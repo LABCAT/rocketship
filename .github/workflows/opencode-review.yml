@@ -1,25 +1,19 @@
-# Rocketship PR agent — reviews agent-authored PRs and routes fixes to the
-# implementer (OpenHands) through the PR conversation. The founder stays the
-# only merge authority; this never approves or merges.
+# Rocketship PR agent — conducts OpenHands-authored PRs (head branch
+# `openhands/*`). Reviews the diff and, when changes are required, routes the
+# fixes back to the implementer through an `@openhands` mention on the PR.
+# Founder PRs are out of scope; the founder stays the only merge authority and
+# this never approves, merges, or pushes commits.
 #
-# Reviewer model: Muse Spark 1.3 (OpenCode Go). Implementer model: DeepSeek
-# (configured OpenHands-side). Findings go back as an `@openhands` mention,
-# which is what wakes the implementer to push fixes on the same branch.
-#
-# Requires: the OPENCODE_API_KEY Actions secret (OpenCode Go key). OpenHands
-# also needs its app installed so @openhands mentions fire.
-#
-# Runs with the workflow GITHUB_TOKEN (use_github_token: true) rather than the
-# OpenCode App OIDC exchange, which fails with 502 unless the OpenCode GitHub
-# App is installed on this repo.
+# Reviewer: Muse Spark 1.3 (OpenCode Go). Implementer: DeepSeek (OpenHands).
+# Requires the OPENCODE_API_KEY Actions secret; the OpenHands app must be
+# installed so @openhands mentions fire. Runs with the workflow GITHUB_TOKEN
+# (no OpenCode App OIDC exchange).
 
 name: opencode-review
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-  issue_comment:
-    types: [created]
 
 permissions:
   contents: read
@@ -28,14 +22,8 @@ permissions:
 
 jobs:
   review:
-    # Auto-review on PR activity; on-demand when a /oc or /opencode comment
-    # lands on a pull request.
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request != null &&
-       (contains(github.event.comment.body, '/oc') ||
-        contains(github.event.comment.body, '/opencode')))
+    # Only conduct PRs the implementer opened (openhands/* branches).
+    if: startsWith(github.head_ref, 'openhands/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -52,24 +40,27 @@ jobs:
           use_github_token: true
           model: opencode-go/muse-spark-1.3-contributor
           prompt: |
-            You are the Rocketship PR reviewer for a pnpm monorepo (an Astro
-            component library plus a Svelte port). A coding agent opened this
-            PR. The founder is the only merge authority — never approve, merge,
-            or push commits yourself.
+            You are the Rocketship PR reviewer for a pnpm monorepo: an Astro
+            component library plus a Svelte port. A coding agent (OpenHands)
+            opened this PR. The founder is the only merge authority — never
+            approve, merge, or push commits yourself.
 
             Review the diff against:
             - The linked task/issue and its definition of done.
-            - Repo rules: AGENTS.md and .agents/rules — BEM with the `rs`
-              prefix, `--rs-*` CSS custom properties, CSS/SCSS first (JS last),
-              pinned dependency versions, and no trivial happy-path tests.
+            - Repo rules in `.agents/rules/*.mdc` (rocketship-overview,
+              rocketship-bem-scss, rocketship-themes, rocketship-a11y,
+              rocketship-typescript, rocketship-story-copy,
+              rocketship-layout-responsive) and `.agents/skills/`. There is no
+              root AGENTS.md. Key rules: BEM with the `rs` prefix, `--rs-*` CSS
+              custom properties, CSS/SCSS first (JS last), pinned dependency
+              versions, and no trivial happy-path tests.
             - Required tests and failure cases.
 
             Then do exactly one of:
             - If changes are required: reply with a short numbered list of
-              required fixes (file/path and why), and end your reply with a
+              required fixes (file/path and why), then end your reply with a
               line that mentions `@openhands` and asks it to apply those fixes
-              on this branch. Do not fix the code yourself — the implementer
-              does that.
+              on this branch. Do not fix the code yourself.
             - If the PR is merge-ready: reply with a one-line pass summary.
 
             Keep it brief. Do not raise style nits that do not block merge.

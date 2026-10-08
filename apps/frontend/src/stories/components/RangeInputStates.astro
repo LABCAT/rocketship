@@ -1,0 +1,15 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Typography from '@labcat/rocketship/components/Typography'
+import RangeInput from '@labcat/rocketship/components/RangeInput'
+---
+
+<Container size="content" padded>
+  <Typography>
+    <p>Range input states: disabled and invalid.</p>
+  </Typography>
+  <label for="range-disabled">Disabled range</label>
+  <RangeInput id="range-disabled" disabled name="disabled-level" value={30} />
+  <label for="range-invalid">Invalid range</label>
+  <RangeInput id="range-invalid" invalid name="invalid-level" value={70} />
+</Container>

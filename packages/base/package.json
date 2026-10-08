@@ -29,7 +29,9 @@
     "./components/Container": "./src/components/Container.astro",
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Typography": "./src/components/Typography.astro",
-    "./components/Alert": "./src/components/Alert.astro"
+    "./components/Alert": "./src/components/Alert.astro",
+    "./components/FileInput": "./src/components/FileInput.astro",
+    "./components/RangeInput": "./src/components/RangeInput.astro"
   },
   "files": [
     "dist",

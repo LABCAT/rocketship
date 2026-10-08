@@ -1,0 +1,24 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import RangeInput from '@labcat/rocketship/components/RangeInput'
+---
+
+<Container size="content" padded>
+  <label for="range-volume">Volume</label>
+  <RangeInput
+    id="range-volume"
+    list="range-volume-ticks"
+    max={100}
+    min={0}
+    name="volume"
+    step={10}
+    value={50}
+  />
+  <datalist id="range-volume-ticks">
+    <option value="0"></option>
+    <option value="25"></option>
+    <option value="50"></option>
+    <option value="75"></option>
+    <option value="100"></option>
+  </datalist>
+</Container>

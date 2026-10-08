@@ -1,0 +1,32 @@
+{
+  "name": "@rocketship/svelte-storybook",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Svelte Storybook host for Rocketship",
+  "engines": {
+    "node": "^26.0.0"
+  },
+  "scripts": {
+    "dev": "storybook dev -p 6007",
+    "storybook": "storybook dev -p 6007",
+    "build": "storybook build",
+    "build-storybook": "storybook build",
+    "preview": "vite preview --outDir storybook-static --port 6007 --strictPort",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@labcat2020/rocketship": "workspace:*",
+    "@labcat2020/rocketship-svelte": "workspace:*"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "10.5.8",
+    "@storybook/svelte": "10.5.8",
+    "@storybook/svelte-vite": "10.5.8",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "sass": "^1.98.0",
+    "storybook": "10.5.8",
+    "svelte": "^5.57.2",
+    "vite": "^8.2.1"
+  }
+}

@@ -10,11 +10,13 @@
     "build": "pnpm run build:packages && pnpm run build:storybook",
     "build:packages": "pnpm --filter \"./packages/*\" build",
     "build:storybook": "pnpm --filter @rocketship/frontend build-storybook",
+    "build:storybook:svelte": "pnpm --filter @rocketship/svelte-storybook build-storybook",
     "dev": "pnpm run storybook",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "pnpm --filter @rocketship/frontend preview",
-    "storybook": "pnpm --filter @rocketship/frontend storybook"
+    "storybook": "pnpm --filter @rocketship/frontend storybook",
+    "storybook:svelte": "pnpm --filter @rocketship/svelte-storybook storybook"
   },
   "devDependencies": {
     "prettier": "^3.9.6",

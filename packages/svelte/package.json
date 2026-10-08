@@ -1,0 +1,44 @@
+{
+  "name": "@labcat2020/rocketship-svelte",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Rocketship Svelte port — Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LABCAT/rocketship.git",
+    "directory": "packages/svelte"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@labcat2020/rocketship": "workspace:*"
+  },
+  "devDependencies": {
+    "sass": "^1.105.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
+    "vite": "^8.2.1"
+  }
+}

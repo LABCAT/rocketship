@@ -24,6 +24,11 @@
       "import": "./src/styles/index.scss",
       "default": "./src/styles/index.scss"
     },
+    "./styles/mixins": {
+      "types": "./src/styles/css.d.ts",
+      "import": "./src/styles/mixins.scss",
+      "default": "./src/styles/mixins.scss"
+    },
     "./components/Button": "./src/components/Button.astro",
     "./components/Card": "./src/components/Card.astro",
     "./components/Container": "./src/components/Container.astro",

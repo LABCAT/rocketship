@@ -18,11 +18,13 @@ The port is **copy-style**: selectors, declarations, and their order come across
   // 2. Props type — always includes as, class, children; extends the native
   //    attributes of the DEFAULT tag (HTMLAttributes<HTMLElement> for a div-like
   //    root; use HTMLButtonAttributes / HTMLAnchorAttributes when the Astro
-  //    original extended those instead).
+  //    original extended those instead). Declare one snippet prop per named Astro
+  //    slot — `media` below is the named-slot example used by the markup.
   type Props = {
     as?: NameTag
     variant?: NameVariant
     class?: string
+    media?: Snippet
     children?: Snippet
   } & HTMLAttributes<HTMLElement>
 
@@ -31,6 +33,7 @@ The port is **copy-style**: selectors, declarations, and their order come across
     as = 'div',
     variant = 'default',
     class: className = '',
+    media,
     children,
     ...attrs
   }: Props = $props()
@@ -67,6 +70,9 @@ The port is **copy-style**: selectors, declarations, and their order come across
 
 ```scss
 <style lang="scss">
+  // Shared barrel: packages/base/src/styles/mixins.scss.
+  // NOTE: the './styles/mixins' export must be added to packages/base/package.json
+  // before this specifier resolves — see "Shared styles import" below.
   @use '@labcat2020/rocketship/styles/mixins' as *;
 
   :global {
@@ -121,11 +127,11 @@ Svelte scopes selectors and prunes rules it thinks are unused. Astro’s library
 
 ### Shared styles import
 
-`@labcat2020/rocketship/styles/mixins` is the base mixin barrel (`packages/base/src/styles/mixins.scss`, which `@forward`s `functions`, `breakpoints`, `container-query`, and the typography mixins). Import it with the barrel only — never `@use` an individual partial such as `mixins/container-query`, and never copy mixin or token source into `packages/svelte`.
+The barrel file is **`packages/base/src/styles/mixins.scss`**. It `@forward`s `functions`, `breakpoints`, `container-query`, and the typography mixins. Reference that barrel only — never `@use` an individual partial such as `mixins/container-query`, and never copy mixin or token source into `packages/svelte`.
 
-`packages/base/package.json` must expose that barrel from its `exports` map under the Sass conditions (`"sass"` / `"style"`) when `packages/svelte` is scaffolded, so the specifier resolves. If the scaffold wires the barrel differently, change only the specifier — the barrel-only rule stands.
+The `@use '@labcat2020/rocketship/styles/mixins'` specifier above is the **intended** package-relative form, but it does **not resolve today**: `packages/base/package.json` currently exposes only `.` and `./styles` from its `exports` map — there is no `./styles/mixins` entry. Adding that subpath (under the Sass conditions `"sass"` / `"style"`, pointing at `./src/styles/mixins.scss`) is a **required prerequisite** that must be done when `packages/svelte` is scaffolded, before any Svelte component's `@use` compiles. Until then, a component cannot import the barrel through the package specifier. If the scaffold wires the barrel differently, change only the specifier — the barrel-only rule stands.
 
-Token custom properties (`--rs-*`) are supplied by the app’s `import '@labcat2020/rocketship/styles'`; a component only references them.
+Token custom properties (`--rs-*`) are supplied by the app’s `import '@labcat2020/rocketship/styles'` (the `./styles` export, which does resolve); a component only references them.
 
 ### Token fallback depth
 
@@ -228,7 +234,7 @@ Astro `packages/base/src/components/Card.astro` → Svelte `packages/svelte/src/
     children?: Snippet
   } & HTMLAttributes<HTMLElement>
 
-  let { as = 'article', class: className = '', media, meta, children }: Props = $props()
+  let { as = 'article', class: className = '', media, meta, children, ...attrs }: Props = $props()
 
   const classes = $derived(['rs-card', className].filter(Boolean).join(' '))
 </script>
@@ -246,4 +252,4 @@ Astro `packages/base/src/components/Card.astro` → Svelte `packages/svelte/src/
 </svelte:element>
 ```
 
-The `<style lang="scss">` block is the Astro block wrapped in `:global { ... }`, with `@use '@labcat2020/rocketship/styles/mixins' as *;` above it — every selector and declaration unchanged.
+The `<style lang="scss">` block is the Astro block wrapped in `:global { ... }`, with `@use '@labcat2020/rocketship/styles/mixins' as *;` above it — every selector and declaration unchanged. (See "Shared styles import" above: the `./styles/mixins` export is not wired yet and must be added when `packages/svelte` is scaffolded.)

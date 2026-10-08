@@ -1,0 +1,43 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Select from '@labcat/rocketship/components/Select'
+import Typography from '@labcat/rocketship/components/Typography'
+---
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Disabled</h3>
+    <p>A select that is not interactive.</p>
+  </Typography>
+  <label for="rs-select-state-disabled">
+    Region
+    <Select disabled id="rs-select-state-disabled" name="region">
+      <option value="na">North America</option>
+      <option value="eu">Europe</option>
+      <option value="ap">Asia Pacific</option>
+    </Select>
+  </label>
+</Container>
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Invalid</h3>
+    <p>A select that failed validation, with an error message attached.</p>
+  </Typography>
+  <label for="rs-select-state-invalid">
+    Billing plan
+    <Select
+      aria-describedby="rs-select-state-error"
+      id="rs-select-state-invalid"
+      invalid
+      name="plan"
+    >
+      <option value="" disabled selected> Choose a plan </option>
+      <option value="starter">Starter</option>
+      <option value="growth">Growth</option>
+      <option value="enterprise">Enterprise</option>
+    </Select>
+  </label>
+  <Typography>
+    <p id="rs-select-state-error">A billing plan is required.</p>
+  </Typography>
+</Container>

@@ -1,0 +1,189 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type SelectSize = 'small' | 'medium' | 'large'
+
+type Props = {
+  size?: SelectSize | number
+  invalid?: boolean
+  multiple?: boolean
+  class?: string
+} & HTMLAttributes<'select'>
+
+const isSelectSize = (value: SelectSize | number | undefined): value is SelectSize =>
+  value === 'small' || value === 'medium' || value === 'large'
+
+const {
+  size = 'medium',
+  invalid = false,
+  multiple = false,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const variantSize: SelectSize = isSelectSize(size) ? size : 'medium'
+const nativeSize = isSelectSize(size) ? undefined : size
+
+const classes = ['rs-select', `rs-select--${variantSize}`, className]
+---
+
+<span class:list={classes}>
+  <select
+    {...attrs}
+    aria-invalid={invalid || undefined}
+    class="rs-select__control"
+    multiple={multiple || undefined}
+    size={nativeSize}
+  >
+    <slot />
+  </select>
+  {
+    multiple ? null : (
+      <svg
+        aria-hidden="true"
+        class="rs-select__icon"
+        focusable="false"
+        height="16"
+        viewBox="0 0 16 16"
+        width="16"
+      >
+        <path
+          d="M4 6l4 4 4-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        />
+      </svg>
+    )
+  }
+</span>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-select {
+    /* variant-owned locals — coordinated across size and states */
+    --rs-select-bg: var(--rs-color-surface, #ffffff);
+    --rs-select-border-color: var(--rs-color-border, #c8d2eb);
+    --rs-select-color: var(--rs-color-fg, #131a2f);
+    --rs-select-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+    --rs-select-icon-color: var(--rs-color-muted, #4f5b7d);
+    --rs-select-invalid-bg: var(--rs-color-danger-bg, #ffeef0);
+    --rs-select-invalid-border-color: var(--rs-color-danger-border, #f0a8b0);
+    --rs-select-invalid-focus-ring-color: var(--rs-color-danger-accent, #c5221f);
+
+    /* size defaults (medium) — opt-in hooks so adopters can override anywhere */
+    --rs-select-font-size: var(--rs-select-font-size-md, var(--rs-font-size-md, #{to-rem(16)}));
+    --rs-select-min-height: var(--rs-select-min-height-md, 40px);
+    --rs-select-padding-inline: var(--rs-select-padding-inline-md, var(--rs-space-4, 16px));
+
+    display: block;
+    position: relative;
+
+    &--small {
+      --rs-select-font-size: var(--rs-select-font-size-sm, var(--rs-font-size-sm, #{to-rem(14)}));
+      --rs-select-min-height: var(--rs-select-min-height-sm, 34px);
+      --rs-select-padding-inline: var(--rs-select-padding-inline-sm, var(--rs-space-3, 12px));
+    }
+
+    &--large {
+      --rs-select-font-size: var(--rs-select-font-size-lg, var(--rs-font-size-lg, #{to-rem(18)}));
+      --rs-select-min-height: var(--rs-select-min-height-lg, 48px);
+      --rs-select-padding-inline: var(--rs-select-padding-inline-lg, var(--rs-space-5, 20px));
+    }
+
+    /* comfortable touch targets when there is room */
+    @include container-query-up($rs-cq-sm) {
+      --rs-select-min-height: var(--rs-select-min-height-md, 44px);
+      --rs-select-padding-inline: var(--rs-select-padding-inline-md, var(--rs-space-5, 20px));
+
+      &--small {
+        --rs-select-min-height: var(--rs-select-min-height-sm, 40px);
+        --rs-select-padding-inline: var(--rs-select-padding-inline-sm, var(--rs-space-4, 16px));
+      }
+
+      &--large {
+        --rs-select-min-height: var(--rs-select-min-height-lg, 52px);
+        --rs-select-padding-inline: var(--rs-select-padding-inline-lg, var(--rs-space-6, 24px));
+      }
+    }
+
+    &__control {
+      appearance: none;
+      box-sizing: border-box;
+      background: var(--rs-select-bg);
+      border: var(--rs-select-border-width, var(--rs-border-width-sm, 1px)) solid
+        var(--rs-select-border-color);
+      border-radius: var(--rs-select-border-radius, var(--rs-radius-md, 10px));
+      color: var(--rs-select-color);
+      cursor: pointer;
+      display: block;
+      font-family: var(
+        --rs-font-family-sans,
+        'Inter',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif
+      );
+      font-size: var(--rs-select-font-size);
+      line-height: var(--rs-line-height-base, 1.45);
+      margin: 0;
+      min-height: var(--rs-select-min-height);
+      padding-block: var(--rs-select-padding-block, 6px);
+      padding-inline: var(--rs-select-padding-inline);
+      padding-inline-end: calc(var(--rs-select-padding-inline) + var(--rs-space-6, 24px));
+      transition:
+        background-color var(--rs-transition-fast, 140ms) ease,
+        border-color var(--rs-transition-fast, 140ms) ease;
+      width: 100%;
+
+      &[multiple] {
+        padding-inline-end: var(--rs-select-padding-inline);
+      }
+
+      &:hover {
+        --rs-select-border-color: var(--rs-color-accent, #2f5bdb);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--rs-select-focus-ring-color);
+        outline-offset: 2px;
+      }
+
+      &[aria-invalid='true'],
+      &:invalid {
+        --rs-select-bg: var(--rs-select-invalid-bg);
+        --rs-select-border-color: var(--rs-select-invalid-border-color);
+      }
+
+      &:focus-visible:is([aria-invalid='true'], :invalid) {
+        --rs-select-focus-ring-color: var(--rs-select-invalid-focus-ring-color);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+    }
+
+    &__icon {
+      color: var(--rs-select-icon-color);
+      inset-block-start: 50%;
+      inset-inline-end: var(--rs-select-padding-inline);
+      pointer-events: none;
+      position: absolute;
+      transform: translateY(-50%);
+      transition:
+        color var(--rs-transition-fast, 140ms) ease,
+        opacity var(--rs-transition-fast, 140ms) ease;
+    }
+
+    .rs-select__control:disabled + .rs-select__icon {
+      opacity: 0.55;
+    }
+  }
+</style>

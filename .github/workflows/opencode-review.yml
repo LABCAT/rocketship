@@ -1,9 +1,11 @@
 # Rocketship PR agent — reviews every pull request and, when changes are
-# required, routes the fixes back to the implementer through an `@openhands`
-# mention. The mention is only added for OpenHands-authored PRs (head branch
-# `openhands/*` or the Daruma dispatch marker in the body) — founder PRs are
-# reviewed but never tagged. The founder stays the only merge authority and
-# this never approves, merges, or pushes commits.
+# required, routes the fixes back to the implementer. The fix request carries
+# the `<!-- daruma-openhands-review -->` marker, which the Daruma dashboard
+# picks up via its webhook and turns into an OpenHands conversation resume
+# (a bot-posted @openhands mention does not trigger the OpenHands resolver).
+# The marker is only added for OpenHands-authored PRs (head branch `openhands/*`
+# or the Daruma dispatch marker in the body) — founder PRs are reviewed but
+# never routed. The founder stays the only merge authority.
 #
 # Reviewer: Muse Spark 1.3 (OpenCode Go). Implementer: DeepSeek (OpenHands).
 # Requires the OPENCODE_API_KEY Actions secret; the OpenHands app must be
@@ -59,8 +61,8 @@ jobs:
               body.includes('daruma-openhands-dispatch');
 
             const routing = isOpenHands
-              ? 'Then end your reply with a line that mentions `@openhands` and asks it to apply those fixes on this branch. Do not fix the code yourself.'
-              : 'Do not mention `@openhands` — this PR was not opened by the implementer agent. Do not fix the code yourself.';
+              ? 'Then end your reply with an extra final line containing exactly `<!-- daruma-openhands-review -->` so the implementer agent picks up the fixes. Do not fix the code yourself.'
+              : 'Do not fix the code yourself.';
 
             const lines = [
               'You are the Rocketship PR reviewer for a pnpm monorepo: an Astro component',

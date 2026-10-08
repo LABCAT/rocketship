@@ -1,0 +1,61 @@
+---
+description: Svelte 5 component authoring rules for Rocketship — component structure, typed props, polymorphic tags, BEM + --rs-* declaration order, container-query sizing, the shared mixin barrel, and no inline styles for design.
+globs:
+  - "**/*.svelte"
+alwaysApply: false
+---
+
+# Rocketship Svelte Components
+
+- **Scope and port model**
+  - Target **Svelte 5 with runes and TypeScript**; one component per `.svelte` file.
+  - A Svelte component is a **copy-style port** of its Astro original. Start from `packages/base/src/components/<Name>.astro`, mirror its `<style lang="scss">` rule block, and keep the styles as-is. Do not redesign, rename classes, or swap tokens.
+  - Svelte components live in `packages/svelte` (`@labcat2020/rocketship-svelte`); their Storybook is the separate host in `apps/svelte`. Do not rename `apps/frontend` — that stays the Astro host.
+  - The BEM prefix `rs` and the `--rs-*` tokens are unchanged from the Astro library.
+  - `_planning/svelte-port-checklist.md` is the acceptance contract for a port; follow it.
+
+- **Component structure**
+  - File order: `<script lang="ts">` (types, `$props()`, derived class string) → markup → `<style lang="scss">`.
+  - Keep the same section order as the Astro component: script, root element, then styles.
+  - Component styles live in the component's own `<style lang="scss">` block. Never create a separate component `.scss` file.
+
+- **Typed props**
+  - Declare a `Props` type, then destructure `$props()` with defaults and capture the rest:
+    `let { as = 'div', variant = 'default', class: className = '', ...attrs }: Props = $props()`.
+  - Export a union type per public axis (`export type NameVariant = ...`, `export type NameTag = ...`).
+  - Always include `as?`, `variant?`/`size?`, `class?: string`, and `children?: Snippet`; spread `...attrs` onto the root element.
+  - Extend the native attribute type from `svelte/elements`, typed to the **default** tag: `& HTMLAttributes<HTMLElement>` for a `div`-like root, or a tag-specific interface such as `HTMLButtonAttributes` / `HTMLAnchorAttributes`.
+  - Type slotted content with `Snippet` from `svelte` and render it with `{@render children?.()}`. Astro’s `<slot />` and `<slot name="x" />` become the `children` and named snippet props; `Astro.slots.has('x')` becomes an `{#if x}` guard. Record the slots → snippets change as an intentional API difference in the PR.
+  - Derive the class string once from props, filtering empties: `$derived([...].filter(Boolean).join(' '))`.
+
+- **Polymorphic tag pattern**
+  - Astro’s `const Tag = as` plus `<Tag {...attrs}>` becomes
+    `<svelte:element this={as} {...attrs} class={classes}>…</svelte:element>`.
+  - `as` defaults to the same tag as the Astro component.
+  - Spread order: `{...attrs}` first, then `class={classes}`, so composed classes win over an incoming `class`.
+
+- **Styles: BEM, `--rs-*`, declaration order**
+  - Wrap the rule block in `:global { ... }` inside `<style lang="scss">`, so `.rs-*` selectors compile unscoped — the Svelte equivalent of Astro’s `<style is:global>`. This is required: consumer content rendered through snippets and sibling components must be matchable and overridable, and Svelte otherwise scopes classes and prunes selectors it believes are unused. Do not rely on a `global` attribute on `<style>` — it has no effect.
+  - Import the shared mixin barrel once at the top of the block. The barrel file is `packages/base/src/styles/mixins.scss`; the intended specifier is `@use '@labcat2020/rocketship/styles/mixins' as *;`. That `./styles/mixins` subpath is **not** in `packages/base/package.json`'s `exports` today (it exposes only `.` and `./styles`), so the export must be added when `packages/svelte` is scaffolded before the specifier resolves. Never `@use` individual mixin partials under `mixins/`, and never copy mixin or token source into `packages/svelte`.
+  - Design tokens (`--rs-color-*`, `--rs-space-*`, `--rs-font-size-*`, `--rs-radius-*`, …) are provided by the app-level `import '@labcat2020/rocketship/styles'`. A component only references them, with the same fallback depth as its Astro original.
+  - BEM: block `rs-<name>`, elements nested as `&__element`, modifiers as `&--modifier`, nested under the block selector.
+  - Declaration order per rule block: `--rs-*` custom properties first (only when the Astro block assigns them), then reset (`all: unset`) if needed, then `box-sizing` if reset, then everything else (layout, then appearance).
+  - Preserve the two Astro variable patterns: opt-in hooks (three-level fallback, never assigned on the block) for spacing/radius/type, and variant-owned locals reassigned in modifiers for coordinated colour sets.
+  - Use `to-rem()` for every authored `font-size`; all other dimensions stay in `px`.
+
+- **Sizing: container queries**
+  - Size variants and typography scale changes use container queries through the barrel: `@include container-query-up($rs-cq-sm)` (`$rs-cq-sm` / `$rs-cq-md` / `$rs-cq-lg`).
+  - Do not add viewport `@media` queries to a Svelte component; `media-breakpoint-up` is reserved for Container/layout.
+
+- **No inline styles for design**
+  - Do not use inline `style="..."` attributes for anything design- or theme-related.
+  - Svelte style directives (`style:prop={value}`) are for genuinely dynamic, computed values only (for example a size derived from a prop). Never use them for colours, spacing, radii, or theming. Use classes plus `--rs-*` variables instead, so themes and consumers can override cleanly.
+
+- **Tokens, dark mode, and a11y**
+  - If a component needs a semantic token that does not exist in `packages/base/src/styles/variables.scss`, stop and tell the user. Never hard-code new hex values in a Svelte component.
+  - Never add component-level `prefers-color-scheme` blocks; semantic colour tokens already flip centrally in `variables.scss`.
+  - Mirror the Astro component’s semantics and ARIA exactly (roles, heading levels, visible `:focus-visible`).
+
+- **Verify**
+  - `svelte-check` and the package’s type/build script pass with no type or Sass errors.
+  - Diff against the Astro original: same section order, same `.rs-*` classes, same public props, same token fallback depth. Any deviation must be deliberate and explained (notably slots → snippets).

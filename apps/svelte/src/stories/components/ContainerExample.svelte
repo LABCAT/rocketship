@@ -3,7 +3,7 @@
   import Typography from '@labcat2020/rocketship-svelte/components/Typography'
 
   type Props = {
-    size?: 'default' | 'full' | 'wide' | 'content' | 'narrow'
+    size?: 'default' | 'full' | 'wide' | 'content'
   }
 
   let { size = 'default' }: Props = $props()

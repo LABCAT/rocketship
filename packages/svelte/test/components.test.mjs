@@ -46,7 +46,6 @@ const containerModifiers = [
   'rs-container--full-width',
   'rs-container--wide',
   'rs-container--content',
-  'rs-container--narrow',
 ]
 
 test('packages/svelte exports the Container and Typography subpaths like the Astro package', () => {
@@ -82,7 +81,6 @@ test('Container renders .rs-container and only the modifier for each size', asyn
     { label: 'full', props: { size: 'full' }, expected: ['rs-container--full-width'] },
     { label: 'wide', props: { size: 'wide' }, expected: ['rs-container--wide'] },
     { label: 'content', props: { size: 'content' }, expected: ['rs-container--content'] },
-    { label: 'narrow', props: { size: 'narrow' }, expected: ['rs-container--narrow'] },
   ]
 
   for (const { label, props, expected } of cases) {
@@ -217,7 +215,6 @@ test('Container styles compile through the shared barrel and keep every Astro se
     '.rs-container--content',
     '.rs-container--wide',
     '.rs-container--full-width',
-    '.rs-container--narrow',
     '.rs-container--padded',
     '.rs-container--no-gutters',
   ]) {

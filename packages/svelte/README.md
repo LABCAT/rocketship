@@ -25,7 +25,7 @@ Components are copy-style ports of their Astro originals and render the same BEM
 </Container>
 ```
 
-`Container` accepts `as` (`div`, `section`, `main`, `article`, `header`, `footer`, `nav`), `size` (`default`, `content`, `narrow`, `wide`, `full`), `padded`, `class`, and any native attribute. `Typography` accepts `as` (`div`, `section`, `article`), `html`, `class`, and any native attribute. Both spread unknown attributes onto the rendered element.
+`Container` accepts `as` (`div`, `section`, `main`, `article`, `header`, `footer`, `nav`), `size` (`default`, `content`, `wide`, `full`), `padded`, `class`, and any native attribute. `Typography` accepts `as` (`div`, `section`, `article`), `html`, `class`, and any native attribute. Both spread unknown attributes onto the rendered element.
 
 ## Install
 

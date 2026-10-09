@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import type { HTMLAttributes } from 'svelte/elements'
 
-  export type ContainerSize = 'default' | 'full' | 'wide' | 'content' | 'narrow'
+  export type ContainerSize = 'default' | 'full' | 'wide' | 'content'
   export type ContainerTag = 'div' | 'section' | 'main' | 'article' | 'header' | 'footer' | 'nav'
 
   type Props = {
@@ -28,7 +28,6 @@
       size === 'full' ? 'rs-container--full-width' : undefined,
       size === 'wide' ? 'rs-container--wide' : undefined,
       size === 'content' ? 'rs-container--content' : undefined,
-      size === 'narrow' ? 'rs-container--narrow' : undefined,
       padded ? 'rs-container--padded' : undefined,
       className,
     ]
@@ -78,12 +77,6 @@
 
       &--wide {
         --rs-container-width: var(--rs-container-width-wide, 1200px);
-      }
-
-      &--narrow {
-        @include media-breakpoint-up(lg) {
-          --rs-container-width: var(--rs-container-width-narrow-lg, 1000px);
-        }
       }
 
       &--full-width {

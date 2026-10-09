@@ -10,7 +10,7 @@ const meta = {
   argTypes: {
     size: {
       control: 'select',
-      options: ['default', 'content', 'narrow', 'wide', 'full'],
+      options: ['default', 'content', 'wide', 'full'],
     },
   },
 } satisfies Meta<typeof ContainerExample>
@@ -32,8 +32,4 @@ export const Wide: Story = {
 
 export const Content: Story = {
   args: { size: 'content' },
-}
-
-export const Narrow: Story = {
-  args: { size: 'narrow' },
 }

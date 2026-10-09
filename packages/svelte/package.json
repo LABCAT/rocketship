@@ -18,10 +18,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./components/Container": "./src/components/Container.svelte",
+    "./components/Typography": "./src/components/Typography.svelte"
   },
   "files": [
     "dist",
+    "src/components",
     "README.md"
   ],
   "publishConfig": {

@@ -23,6 +23,9 @@ jobs:
           node-version: 26
           registry-url: https://registry.npmjs.org
       - run: pnpm install --no-frozen-lockfile
+      # dist/ is gitignored, so build the packages on the CI checkout before
+      # publishing; otherwise the tarball omits the files main/module/types point at.
+      - run: pnpm --filter "./packages/*" build
       - run: pnpm --filter "./packages/*" publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

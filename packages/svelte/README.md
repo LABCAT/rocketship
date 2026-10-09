@@ -2,7 +2,30 @@
 
 Svelte 5 port of the Rocketship component library. Components reuse the same design system as the Astro package (`@labcat2020/rocketship`): design tokens, the mixin barrel, and the base resets are shared, not duplicated.
 
-This package is scaffolded and exports nothing yet. Components are added as copy-style ports of their Astro originals.
+Components are copy-style ports of their Astro originals and render the same BEM classes and accept the same props.
+
+## Components
+
+| Component    | Export                                                | Astro original     |
+| ------------ | ----------------------------------------------------- | ------------------ |
+| `Container`  | `@labcat2020/rocketship-svelte/components/Container`  | `Container.astro`  |
+| `Typography` | `@labcat2020/rocketship-svelte/components/Typography` | `Typography.astro` |
+
+```svelte
+<script lang="ts">
+  import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Typography from '@labcat2020/rocketship-svelte/components/Typography'
+</script>
+
+<Container as="main" size="content" padded>
+  <Typography as="article">
+    <h1>Title</h1>
+    <p>Body copy.</p>
+  </Typography>
+</Container>
+```
+
+`Container` accepts `as` (`div`, `section`, `main`, `article`, `header`, `footer`, `nav`), `size` (`default`, `content`, `wide`, `full`), `padded`, `class`, and any native attribute. `Typography` accepts `as` (`div`, `section`, `article`), `html`, `class`, and any native attribute. Both spread unknown attributes onto the rendered element.
 
 ## Install
 

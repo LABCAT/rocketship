@@ -50,13 +50,13 @@ const containerModifiers = [
   'rs-container--content',
 ]
 
-test('packages/svelte exports the Button, Card, Container and Typography subpaths like the Astro package', () => {
+test('packages/svelte exports the Alert, Button, Card, Container, Grid and Typography subpaths like the Astro package', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
   )
 
-  for (const name of ['Button', 'Card', 'Container', 'Typography']) {
+  for (const name of ['Alert', 'Button', 'Card', 'Container', 'Grid', 'Typography']) {
     assert.equal(
       pkg.exports[`./components/${name}`],
       `./src/components/${name}.svelte`,
@@ -408,4 +408,186 @@ test('Card styles compile through the shared barrel and keep every Astro selecto
   ]) {
     assert.ok(css.includes(selector), `compiled Card CSS must contain ${selector}`)
   }
+})
+
+test('Grid renders .rs-grid with exactly the column modifier for each column count', async () => {
+  const Grid = await loadComponent('Grid')
+
+  const cases = [
+    { columns: 2, expected: [] },
+    { columns: 3, expected: ['rs-grid--3-cols'] },
+    { columns: 4, expected: ['rs-grid--4-cols'] },
+  ]
+  const allModifiers = ['rs-grid--3-cols', 'rs-grid--4-cols']
+
+  for (const { columns, expected } of cases) {
+    const classes = classList(renderMarkup(Grid, { columns }))
+    assert.deepEqual(classes, ['rs-grid', ...expected], `Grid columns=${columns} class list`)
+    for (const modifier of allModifiers) {
+      assert.equal(
+        classes.includes(modifier),
+        expected.includes(modifier),
+        `Grid columns=${columns} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
+      )
+    }
+  }
+
+  assert.deepEqual(classList(renderMarkup(Grid)), ['rs-grid'], 'Grid defaults to two columns')
+})
+
+test('Grid as renders a list while keeping the block class and spreads native attributes', async () => {
+  const Grid = await loadComponent('Grid')
+
+  assert.ok(openingTag(renderMarkup(Grid), 'div').startsWith('<div'))
+
+  for (const tag of ['ul', 'ol']) {
+    const markup = renderMarkup(Grid, {
+      as: tag,
+      columns: 3,
+      class: 'consumer-class',
+      'data-region': 'cards',
+      children: snippet('<li>Item</li>'),
+    })
+    assert.ok(openingTag(markup, tag).length > 0, `Grid as="${tag}" must render a <${tag}>`)
+    assert.ok(!openingTag(markup, 'div'), `Grid as="${tag}" must not render a <div>`)
+    assert.deepEqual(classList(markup, tag), ['rs-grid', 'rs-grid--3-cols', 'consumer-class'])
+    assert.match(openingTag(markup, tag), /data-region="cards"/)
+    assert.match(markup, /<li>Item<\/li>/)
+  }
+})
+
+test('Grid styles compile through the shared barrel and keep every Astro selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Grid'))
+
+  for (const selector of ['.rs-grid', '.rs-grid--3-cols', '.rs-grid--4-cols']) {
+    assert.ok(css.includes(selector), `compiled Grid CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'the base grid restates two columns at the sm container query',
+  )
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*700px\)/,
+    'the 3/4 column modifiers restate at the md container query',
+  )
+})
+
+test('Alert renders .rs-alert with exactly one status modifier per variant', async () => {
+  const Alert = await loadComponent('Alert')
+
+  const variants = ['info', 'success', 'warning', 'error']
+  const modifiers = variants.map((v) => `rs-alert--${v}`)
+
+  for (const variant of variants) {
+    const classes = classList(renderMarkup(Alert, { variant }))
+    assert.deepEqual(classes, ['rs-alert', `rs-alert--${variant}`], `Alert ${variant} class list`)
+    for (const modifier of modifiers) {
+      assert.equal(
+        classes.includes(modifier),
+        modifier === `rs-alert--${variant}`,
+        `Alert ${variant} must ${modifier === `rs-alert--${variant}` ? '' : 'not '}render ${modifier}`,
+      )
+    }
+  }
+
+  assert.deepEqual(classList(renderMarkup(Alert)), ['rs-alert', 'rs-alert--info'], 'info default')
+})
+
+test('Alert derives role from the variant and lets an explicit role win', async () => {
+  const Alert = await loadComponent('Alert')
+
+  for (const variant of ['info', 'success']) {
+    assert.match(
+      openingTag(renderMarkup(Alert, { variant }), 'div'),
+      /role="status"/,
+      `Alert ${variant} must announce as status`,
+    )
+  }
+  for (const variant of ['warning', 'error']) {
+    assert.match(
+      openingTag(renderMarkup(Alert, { variant }), 'div'),
+      /role="alert"/,
+      `Alert ${variant} must announce as alert`,
+    )
+  }
+
+  assert.match(
+    openingTag(renderMarkup(Alert, { variant: 'error', role: 'status' }), 'div'),
+    /role="status"/,
+    'an explicit role overrides the variant-derived role',
+  )
+  assert.match(
+    openingTag(renderMarkup(Alert, { variant: 'info', role: 'alert' }), 'div'),
+    /role="alert"/,
+    'an explicit role overrides the variant-derived role in both directions',
+  )
+})
+
+test('Alert renders the title from the prop or the title snippet and always the body', async () => {
+  const Alert = await loadComponent('Alert')
+
+  const titled = renderMarkup(Alert, { title: 'Heads up', children: snippet('<p>Body</p>') })
+  assert.match(titled, /<h4 class="rs-alert__title">Heads up<\/h4>/)
+  assert.match(titled, /<div class="rs-alert__body">[\s\S]*?<p>Body<\/p>[\s\S]*?<\/div>/)
+
+  const slotted = renderMarkup(Alert, {
+    titleSlot: snippet('<em>Slotted title</em>'),
+    children: snippet('<p>Body</p>'),
+  })
+  assert.match(slotted, /<h4 class="rs-alert__title">[\s\S]*?<em>Slotted title<\/em>[\s\S]*?<\/h4>/)
+
+  const titleWins = renderMarkup(Alert, {
+    title: 'Prop title',
+    titleSlot: snippet('<em>Slotted title</em>'),
+  })
+  assert.match(titleWins, /<h4 class="rs-alert__title">Prop title<\/h4>/)
+  assert.doesNotMatch(titleWins, /Slotted title/)
+
+  const bare = renderMarkup(Alert, { children: snippet('<p>Body</p>') })
+  assert.doesNotMatch(bare, /rs-alert__title/, 'Alert omits the title element when none is given')
+  assert.match(bare, /rs-alert__body/)
+})
+
+test('Alert as and class mirror the Astro component and spread native attributes', async () => {
+  const Alert = await loadComponent('Alert')
+
+  for (const tag of ['section', 'aside', 'article']) {
+    const markup = renderMarkup(Alert, {
+      as: tag,
+      variant: 'success',
+      class: 'consumer-class',
+      id: 'alert-1',
+    })
+    assert.ok(openingTag(markup, tag).length > 0, `Alert as="${tag}" must render a <${tag}>`)
+    assert.ok(
+      markup.indexOf(`<${tag}`) < markup.indexOf('<div'),
+      `Alert as="${tag}" must use the requested tag as the root element`,
+    )
+    assert.deepEqual(classList(markup, tag), ['rs-alert', 'rs-alert--success', 'consumer-class'])
+    assert.match(openingTag(markup, tag), /id="alert-1"/)
+  }
+})
+
+test('Alert styles compile through the shared barrel and keep every Astro selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Alert'))
+
+  for (const selector of [
+    '.rs-alert',
+    '.rs-alert--success',
+    '.rs-alert--warning',
+    '.rs-alert--error',
+    '.rs-alert__title',
+    '.rs-alert__body',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Alert CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Alert padding and type scale restate at the sm container query',
+  )
 })

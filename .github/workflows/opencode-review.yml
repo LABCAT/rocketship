@@ -11,6 +11,12 @@
 # Requires the OPENCODE_API_KEY Actions secret; the OpenHands app must be
 # installed so @openhands mentions fire. Runs with the workflow GITHUB_TOKEN
 # (no OpenCode App OIDC exchange).
+#
+# Merge-ready signal: when the review passes, a follow-up step adds the
+# `preview-ready` label; when a later review requests changes, it removes the
+# label. `preview-deploy.yml` is the only thing that reacts to that label, so a
+# preview is published only after the PR agent considers the PR merge-ready.
+# The founder still merges.
 
 name: opencode-review
 
@@ -86,11 +92,36 @@ jobs:
               'Then do exactly one of:',
               '- If changes are required: reply with a short numbered list of required',
               `  fixes (file/path and why). ${routing}`,
-              '- If the PR is merge-ready: reply with a one-line pass summary.',
+              '- If the PR is merge-ready: reply with a one-line pass summary. Then end your',
+              '  reply with an extra final line containing exactly `<!-- preview-ready -->` so',
+              '  the merge-ready signal is recorded and the gated preview is published.',
               '',
               'Keep it brief. Do not raise style nits that do not block merge.'
             ];
             core.setOutput('prompt', lines.join('\n'));
+
+      # Any pull_request event means the head may have changed, so drop the
+      # merge-ready label first. It is re-added after the review passes, which
+      # republishes the gated preview for the new head; if the review asks for
+      # changes the label stays off and nothing is published.
+      - name: Reset merge-ready signal on a new head
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const number = context.payload.pull_request.number;
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+            if (pr.head.repo?.full_name !== `${owner}/${repo}`) return;
+            if (!pr.labels.some((l) => l.name === 'preview-ready')) return;
+            try {
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: number, name: 'preview-ready'
+              });
+              core.info('Removed preview-ready for the new head; re-added only if the new review passes.');
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
 
       - name: Run OpenCode review
         uses: anomalyco/opencode/github@aec0b9a6d8898f68f923aaf08b7306d931fd9d76 # v1.18.34
@@ -101,3 +132,58 @@ jobs:
           use_github_token: true
           model: opencode-go/muse-spark-1.3-contributor
           prompt: ${{ steps.ctx.outputs.prompt }}
+
+      - name: Record merge-ready signal
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const label = 'preview-ready';
+
+            const number = context.payload.issue?.number ?? context.payload.pull_request?.number;
+            if (!number) return;
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+            if (pr.head.repo?.full_name !== `${owner}/${repo}`) return;
+            const has = pr.labels.some((l) => l.name === label);
+
+            // The review just posted is the newest comment; decide on it alone so
+            // a stale pass can never re-add the label after a change request.
+            // Prefer the comment carrying this run's footer link.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number: number, per_page: 100
+            });
+            const botComments = comments.filter((c) => c.user?.login === 'github-actions[bot]');
+            const runMarker = `actions/runs/${context.runId}`;
+            const review =
+              botComments.filter((c) => c.body.includes(runMarker)).at(-1) ??
+              botComments.at(-1);
+            if (!review) return;
+
+            // A pass only counts when the review landed on the current head commit;
+            // otherwise the PR changed after the review and must be re-reviewed.
+            const { data: head } = await github.rest.repos.getCommit({
+              owner, repo, ref: pr.head.sha
+            });
+            const onHead =
+              new Date(review.created_at) >= new Date(head.commit.committer.date);
+
+            const passed =
+              review.body.includes('<!-- preview-ready -->') &&
+              !review.body.includes('daruma-openhands-review') &&
+              onHead;
+
+            if (passed && !has) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: number, labels: [label] });
+              core.info(`Added ${label} (review passed on the current head).`);
+            } else if (!passed && has) {
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: number, name: label });
+                core.info(`Removed ${label} (latest review does not pass the current head).`);
+              } catch (error) {
+                // A concurrent run may have removed it already.
+                if (error.status !== 404) throw error;
+              }
+            } else {
+              core.info(`No ${label} change needed.`);
+            }

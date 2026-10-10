@@ -19,6 +19,8 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./components/Button": "./src/components/Button.svelte",
+    "./components/Card": "./src/components/Card.svelte",
     "./components/Container": "./src/components/Container.svelte",
     "./components/Typography": "./src/components/Typography.svelte"
   },
@@ -39,6 +41,7 @@
     "@labcat2020/rocketship": "workspace:*"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "sass": "^1.105.1",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.6",

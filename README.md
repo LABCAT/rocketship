@@ -52,11 +52,12 @@ merge-ready.
    the `preview-ready` label; when a later review requests changes it removes the
    label. The label is only kept while the review matches the current head
    commit, so a new push must be re-reviewed before the label returns.
-2. **`preview-deploy.yml`** is the only thing that reacts to the label. It builds
-   the Storybook and publishes one Cloudflare Pages preview when `preview-ready`
-   is added, and does nothing when the label is absent or removed. Production
-   deploys are untouched — the workflow runs only for pull requests and only ever
-   publishes previews.
+2. **`preview-deploy.yml`** is the only thing that reacts to the label. It runs
+   after `opencode-review` finishes (and on a manual label add), checks the
+   label, then builds the Storybook and publishes one Cloudflare Pages preview.
+   It does nothing when the label is absent, and removing the label publishes
+   nothing new. Production deploys are untouched — the workflow runs only for
+   pull requests and only ever publishes previews.
 3. The founder remains the only merge authority; merging to `main` deploys
    production exactly as before.
 

@@ -1,8 +1,8 @@
 # Svelte Component Template (annotated)
 
-Extracted from the Astro components in `packages/base/src/components/` (`Card.astro`, `Button.astro`, `Grid.astro`, `Container.astro`, `Alert.astro`, `Typography.astro`). Replace `<Name>` / `rs-name` throughout, and keep the Astro original next to you as you port.
+Extracted from the Astro components in `packages/base/src/components/` (`Card.astro`, `Button.astro`, `Grid.astro`, `Container.astro`, `Alert.astro`, `Typography.astro`). Replace `<Name>` / `rs-name` throughout. On the **port path** keep the Astro original next to you as you port; on the **Svelte-first path** there is no Astro original — follow the same skeleton and conventions below, so a later Astro version can be ported back from it (provisional; Astro is the source of truth on divergence).
 
-The port is **copy-style**: selectors, declarations, and their order come across unchanged. Only the Astro-specific syntax (frontmatter, `Astro.props`, `Astro.slots`, `<slot>`, `<style is:global>`) becomes its Svelte 5 equivalent.
+On the port path the transfer is **copy-style**: selectors, declarations, and their order come across unchanged. Only the Astro-specific syntax (frontmatter, `Astro.props`, `Astro.slots`, `<slot>`, `<style is:global>`) becomes its Svelte 5 equivalent. On the Svelte-first path, author the block with the same BEM `rs-` selectors, `--rs-*` tokens, declaration order, and variable patterns.
 
 ## Script
 
@@ -252,4 +252,4 @@ Astro `packages/base/src/components/Card.astro` → Svelte `packages/svelte/src/
 </svelte:element>
 ```
 
-The `<style lang="scss">` block is the Astro block wrapped in `:global { ... }`, with `@use '@labcat2020/rocketship/styles/mixins' as *;` above it — every selector and declaration unchanged. (See "Shared styles import" above: the `./styles/mixins` export is not wired yet and must be added when `packages/svelte` is scaffolded.)
+The `<style lang="scss">` block is the Astro block wrapped in `:global { ... }` (port path), with `@use '@labcat2020/rocketship/styles/mixins' as *;` above it — every selector and declaration unchanged. On the Svelte-first path, author the same structure with BEM `rs-` selectors and `--rs-*` tokens. (See "Shared styles import" above: the `./styles/mixins` export is not wired yet and must be added when `packages/svelte` is scaffolded.)

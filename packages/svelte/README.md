@@ -2,7 +2,7 @@
 
 Svelte 5 port of the Rocketship component library. Components reuse the same design system as the Astro package (`@labcat2020/rocketship`): design tokens, the mixin barrel, and the base resets are shared, not duplicated.
 
-Components are copy-style ports of their Astro originals and render the same BEM classes and accept the same props.
+Components are either copy-style ports of their Astro originals, or Svelte-first components with no Astro original yet. Either way they render the same BEM classes and follow the same props, token, `:global` style, container-query and a11y conventions, so an Astro version can be ported back from a Svelte-first component. A Svelte-first component is provisional — it may change once the matching Astro component's platinum standard lands, and Astro is the source of truth when the two diverge.
 
 ## Components
 

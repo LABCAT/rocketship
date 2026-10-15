@@ -1,0 +1,116 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  striped?: boolean
+  compact?: boolean
+  hover?: boolean
+  class?: string
+} & HTMLAttributes<'table'>
+
+const {
+  striped = false,
+  compact = false,
+  hover = false,
+  class: className,
+  ...attrs
+} = Astro.props as Props
+
+const tableClasses = [
+  'rs-table',
+  striped && 'rs-table--striped',
+  compact && 'rs-table--compact',
+  hover && 'rs-table--hover',
+  className,
+]
+---
+
+<div class="rs-table-holder">
+  <table {...attrs} class:list={tableClasses}>
+    <slot />
+  </table>
+</div>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-table-holder {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--rs-color-surface, #ffffff);
+    border: var(--rs-table-border-width, var(--rs-border-width-sm, 1px)) solid
+      var(--rs-table-border-color, var(--rs-color-border, #c8d2eb));
+    border-radius: var(--rs-table-border-radius, var(--rs-radius-md, 10px));
+  }
+
+  .rs-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    font-family: var(
+      --rs-font-family-sans,
+      'Inter',
+      'Segoe UI',
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    font-size: var(--rs-table-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+    line-height: var(--rs-line-height-base, 1.45);
+    color: var(--rs-color-fg, #131a2f);
+    text-align: left;
+
+    th,
+    td {
+      padding-block: var(--rs-table-cell-padding-block, var(--rs-space-2, 8px));
+      padding-inline: var(--rs-table-cell-padding-inline, var(--rs-space-3, 12px));
+      text-align: left;
+      vertical-align: top;
+      border-bottom: var(--rs-table-border-width, var(--rs-border-width-sm, 1px)) solid
+        var(--rs-table-border-color, var(--rs-color-border, #c8d2eb));
+    }
+
+    thead th {
+      background: var(--rs-table-head-bg, var(--rs-color-surface-elevated, #eef2ff));
+      color: var(--rs-table-head-color, var(--rs-color-fg, #131a2f));
+      font-weight: var(--rs-font-weight-semibold, 600);
+      white-space: nowrap;
+      border-bottom-width: var(--rs-table-head-border-width, var(--rs-border-width-sm, 1px));
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    caption {
+      caption-side: top;
+      color: var(--rs-color-muted, #4f5b7d);
+      font-size: var(--rs-font-size-sm, #{to-rem(14)});
+      line-height: var(--rs-line-height-base, 1.45);
+      padding-block: var(--rs-space-2, 8px);
+      padding-inline: var(--rs-space-3, 12px);
+      text-align: left;
+    }
+
+    &--striped {
+      tbody tr:nth-child(even) {
+        background: var(--rs-table-striped-bg, var(--rs-color-surface-elevated, #eef2ff));
+      }
+    }
+
+    &--hover {
+      tbody tr:hover {
+        background: var(--rs-table-hover-bg, var(--rs-color-surface-elevated, #eef2ff));
+      }
+    }
+
+    &--compact {
+      th,
+      td {
+        padding-block: var(--rs-table-compact-padding-block, var(--rs-space-1, 4px));
+        padding-inline: var(--rs-table-compact-padding-inline, var(--rs-space-2, 8px));
+      }
+    }
+  }
+</style>

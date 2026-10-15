@@ -1,0 +1,16 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Select from '@labcat/rocketship/components/Select'
+---
+
+<Container size="content" padded>
+  <label for="rs-select-focused">
+    Project status
+    <Select id="rs-select-focused" name="status">
+      <option value="planning">Planning</option>
+      <option value="in-progress">In progress</option>
+      <option value="review">In review</option>
+      <option value="shipped">Shipped</option>
+    </Select>
+  </label>
+</Container>

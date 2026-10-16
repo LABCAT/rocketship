@@ -27,9 +27,11 @@
     errorId?: string
     required?: boolean
     optional?: boolean
+    requiredText?: string
+    optionalText?: string
     disabled?: boolean
     class?: string
-    labelSlot?: Snippet
+    labelSlot?: Snippet<[string]>
     hintSlot?: Snippet
     errorSlot?: Snippet
     children?: Snippet<[FieldControlProps]>
@@ -45,8 +47,11 @@
     errorId: errorIdProp,
     required = false,
     optional = false,
+    requiredText,
+    optionalText,
     disabled = false,
     class: className = '',
+    'aria-disabled': ariaDisabled,
     labelSlot,
     hintSlot,
     errorSlot,
@@ -78,15 +83,22 @@
   const classes = $derived(
     ['rs-field', disabled ? 'rs-field--disabled' : undefined, className].filter(Boolean).join(' '),
   )
+
+  const wrapperAriaDisabled = $derived(disabled ? 'true' : ariaDisabled)
 </script>
 
-<svelte:element this={as} {...attrs} class={classes}>
+<svelte:element
+  this={as}
+  {...attrs}
+  class={classes}
+  aria-disabled={wrapperAriaDisabled}
+>
   {#if hasLabel}
     <div class="rs-field__label">
       {#if label}
-        <Label for={id} {required} {optional}>{label}</Label>
+        <Label for={id} {required} {optional} {requiredText} {optionalText}>{label}</Label>
       {:else if labelSlot}
-        {@render labelSlot()}
+        {@render labelSlot(id)}
       {/if}
     </div>
   {/if}
@@ -139,7 +151,10 @@
       }
 
       &--disabled {
-        .rs-field__label {
+        .rs-field__label,
+        .rs-field__control,
+        .rs-field__hint,
+        .rs-field__error {
           opacity: 0.55;
         }
       }

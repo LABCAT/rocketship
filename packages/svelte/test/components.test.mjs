@@ -674,9 +674,13 @@ test('Label required and optional markers stay inside the label element', async 
   assert.match(optional, /<span class="rs-label__optional">\(optional\)<\/span>/)
   assert.doesNotMatch(optional, /rs-label__required/)
 
-  const both = renderMarkup(Label, { required: true, optional: true })
-  assert.match(both, /rs-label__required/)
-  assert.match(both, /rs-label__optional/)
+  const both = renderMarkup(Label, { required: true, optional: true, children: snippet('Email') })
+  assert.match(both, /rs-label__required/, 'required wins when both are set')
+  assert.doesNotMatch(
+    both,
+    /rs-label__optional/,
+    'required and optional are exclusive — never both',
+  )
 
   const custom = renderMarkup(Label, {
     required: true,
@@ -684,6 +688,13 @@ test('Label required and optional markers stay inside the label element', async 
     optionalText: '(nice to have)',
   })
   assert.match(custom, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const customOptional = renderMarkup(Label, {
+    optional: true,
+    requiredText: '(must fill)',
+    optionalText: '(nice to have)',
+  })
+  assert.match(customOptional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
 
   const plain = renderMarkup(Label, { children: snippet('Notes') })
   assert.doesNotMatch(plain, /rs-label__required/)
@@ -849,6 +860,102 @@ test('Field propagates required and disabled to the control wiring and label', a
   assert.doesNotMatch(openingTag(enabled, 'input'), /\brequired\b/)
   assert.doesNotMatch(openingTag(enabled, 'input'), /\bdisabled\b/)
   assert.ok(!classList(enabled).includes('rs-field--disabled'))
+})
+
+test('Field exposes aria-disabled on the wrapper only while disabled', async () => {
+  const Field = await loadComponent('Field')
+
+  const disabled = renderMarkup(Field, { id: 'f1', disabled: true, children: controlSnippet() })
+  assert.match(openingTag(disabled, 'div'), /aria-disabled="true"/)
+
+  const enabled = renderMarkup(Field, { id: 'f1', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(enabled, 'div'), /aria-disabled/)
+
+  const explicit = renderMarkup(Field, {
+    id: 'f1',
+    'aria-disabled': 'true',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(explicit, 'div'),
+    /aria-disabled="true"/,
+    'a consumer aria-disabled must be forwarded while enabled',
+  )
+
+  const override = renderMarkup(Field, {
+    id: 'f1',
+    disabled: true,
+    'aria-disabled': 'false',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(override, 'div'),
+    /aria-disabled="true"/,
+    'the disabled prop owns aria-disabled on the wrapper',
+  )
+})
+
+test('Field disabled dims the label, control, hint and error together', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Field'))
+  const disabledBlock = css.match(/\.rs-field--disabled[^{]*\{([^}]*)\}/)?.[0] ?? ''
+
+  for (const element of ['__label', '__control', '__hint', '__error']) {
+    assert.match(
+      disabledBlock,
+      new RegExp(`\\.rs-field--disabled\\s+\\.rs-field${element}\\b`),
+      `the disabled modifier must dim .rs-field${element}`,
+    )
+  }
+
+  assert.match(disabledBlock, /opacity:\s*0?\.\d+/, 'dimming must use a reduced opacity')
+})
+
+test('Field forwards requiredText and optionalText to the Label it renders', async () => {
+  const Field = await loadComponent('Field')
+
+  const required = renderMarkup(Field, {
+    id: 'f1',
+    label: 'Email',
+    required: true,
+    requiredText: '(must fill)',
+    children: controlSnippet(),
+  })
+  assert.match(required, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const optional = renderMarkup(Field, {
+    id: 'f2',
+    label: 'Referral code',
+    optional: true,
+    optionalText: '(nice to have)',
+    children: controlSnippet(),
+  })
+  assert.match(optional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
+})
+
+test('Field passes its control id into the labelSlot so for cannot drift', async () => {
+  const Field = await loadComponent('Field')
+  const labelSlot = createRawSnippet((id) => ({
+    render: () => `<label class="custom-label" for="${id()}">Custom</label>`,
+  }))
+
+  const markup = renderMarkup(Field, {
+    id: 'account-name',
+    labelSlot,
+    children: controlSnippet(),
+  })
+
+  const controlId = attributeValue(openingTag(markup, 'input'), 'id')
+  assert.equal(controlId, 'account-name')
+  assert.equal(
+    attributeValue(openingTag(markup, 'label'), 'for'),
+    controlId,
+    'the labelSlot id must be the control id Field generated or received',
+  )
+
+  const generated = renderMarkup(Field, { labelSlot, children: controlSnippet() })
+  const generatedId = attributeValue(openingTag(generated, 'input'), 'id')
+  assert.match(generatedId, /^rs-field-/, 'a missing id must still be generated for the slot')
+  assert.equal(attributeValue(openingTag(generated, 'label'), 'for'), generatedId)
 })
 
 test('Field gives each instance a distinct generated id', async () => {

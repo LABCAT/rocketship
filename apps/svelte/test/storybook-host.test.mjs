@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -65,4 +65,33 @@ test('the Astro host is left unchanged', () => {
   assert.match(astroPkg.scripts.storybook, /6006\b/, 'the Astro host keeps port 6006')
   const astroMain = read(join(repoRoot, 'apps', 'frontend', '.storybook', 'main.ts'))
   assert.match(astroMain, /@storybook-astro\/framework/, 'the Astro host keeps its framework')
+})
+
+test('the Field title lives in exactly one story file', () => {
+  const storiesDir = join(appRoot, 'src', 'stories')
+  const files = readdirSync(storiesDir).filter((name) => /\.stories\.ts$/.test(name))
+
+  const owners = files.filter((file) =>
+    /title:\s*'Components\/Field'/.test(read(join(storiesDir, file))),
+  )
+  assert.deepEqual(owners, ['Field.stories.ts'], 'Components/Field must be declared once')
+})
+
+test('the Field stories live in one file exporting Default, Disabled and Snippets', () => {
+  const source = read(join(appRoot, 'src', 'stories', 'Field.stories.ts'))
+  assert.match(source, /title:\s*'Components\/Field'/, 'Field keeps its Components/Field title')
+
+  for (const name of ['Default', 'Disabled', 'Snippets']) {
+    assert.match(
+      source,
+      new RegExp(`export const ${name}: Story`),
+      `Field.stories.ts must export the ${name} story`,
+    )
+  }
+
+  const files = readdirSync(join(appRoot, 'src', 'stories'))
+  assert.ok(
+    !files.includes('Field.disabled.stories.ts') && !files.includes('Field.snippets.stories.ts'),
+    'the extra Field story files must be collapsed into Field.stories.ts',
+  )
 })

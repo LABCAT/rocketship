@@ -17,8 +17,8 @@
   </Field>
 
   <Field id="field-name">
-    {#snippet labelSlot()}
-      <Label for="field-name" required>Display name</Label>
+    {#snippet labelSlot(controlId)}
+      <Label for={controlId} required>Display name</Label>
     {/snippet}
     {#snippet hintSlot()}
       This appears next to your comments.
@@ -29,8 +29,8 @@
   </Field>
 
   <Field id="field-bio">
-    {#snippet labelSlot()}
-      <Label for="field-bio" optional>Short bio</Label>
+    {#snippet labelSlot(controlId)}
+      <Label for={controlId} optional>Short bio</Label>
     {/snippet}
     {#snippet children(control)}
       <textarea {...control} rows="2" placeholder="One or two sentences"></textarea>

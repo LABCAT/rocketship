@@ -6,8 +6,8 @@
 
 <Container as="main" size="content" padded>
   <Field id="label-default">
-    {#snippet labelSlot()}
-      <Label for="label-default">Email address</Label>
+    {#snippet labelSlot(controlId)}
+      <Label for={controlId}>Email address</Label>
     {/snippet}
     {#snippet children(control)}
       <input {...control} type="email" autocomplete="email" />
@@ -15,8 +15,8 @@
   </Field>
 
   <Field id="label-required">
-    {#snippet labelSlot()}
-      <Label for="label-required" required>Email address</Label>
+    {#snippet labelSlot(controlId)}
+      <Label for={controlId} required>Email address</Label>
     {/snippet}
     {#snippet children(control)}
       <input {...control} type="email" required />
@@ -24,8 +24,8 @@
   </Field>
 
   <Field id="label-optional">
-    {#snippet labelSlot()}
-      <Label for="label-optional" optional>Referral code</Label>
+    {#snippet labelSlot(controlId)}
+      <Label for={controlId} optional>Referral code</Label>
     {/snippet}
     {#snippet children(control)}
       <input {...control} type="text" />

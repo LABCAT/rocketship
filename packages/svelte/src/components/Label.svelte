@@ -34,8 +34,7 @@
   {#if required}
     <span class="rs-label__required" aria-hidden="true">*</span>
     <span class="rs-label__sr-only">{requiredText}</span>
-  {/if}
-  {#if optional}
+  {:else if optional}
     <span class="rs-label__optional">{optionalText}</span>
   {/if}
 </svelte:element>

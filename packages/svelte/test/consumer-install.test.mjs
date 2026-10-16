@@ -20,7 +20,7 @@ const installedScope = join(consumerRoot, 'node_modules', '@labcat2020')
 // Compiled components are emitted inside node_modules so bare `svelte` imports resolve.
 const renderCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-consumer-tests')
 
-const componentSubpaths = ['Container', 'Grid', 'Card', 'Typography', 'Button']
+const componentSubpaths = ['Alert', 'Button', 'Card', 'Container', 'Grid', 'Typography']
 
 /** The tarball filename `pnpm pack` produces for a package (`@scope/name` -> `scope-name-version.tgz`). */
 const tarballName = ({ name, version }) =>
@@ -110,7 +110,20 @@ after(() => {
   rmSync(consumerRoot, { recursive: true, force: true })
 })
 
-test('a clean consumer install resolves all five component subpaths from the published tarballs', () => {
+test('a clean consumer install resolves every published component subpath from the tarballs', () => {
+  const installedPkg = JSON.parse(
+    readFileSync(join(installedScope, 'rocketship-svelte', 'package.json'), 'utf8'),
+  )
+  const exportedComponents = Object.keys(installedPkg.exports)
+    .filter((key) => key.startsWith('./components/'))
+    .map((key) => key.replace('./components/', ''))
+
+  assert.deepEqual(
+    [...componentSubpaths].sort(),
+    [...exportedComponents].sort(),
+    'every ./components/* export in the published tarball must be covered here',
+  )
+
   for (const name of componentSubpaths) {
     const specifier = `@labcat2020/rocketship-svelte/components/${name}`
     const resolved = resolveFromConsumer(specifier)
@@ -129,11 +142,12 @@ test('a clean consumer install resolves all five component subpaths from the pub
 
 test('each published component compiles and server-renders its BEM block class', async () => {
   const blockByComponent = {
+    Alert: 'rs-alert',
+    Button: 'rs-button',
+    Card: 'rs-card',
     Container: 'rs-container',
     Grid: 'rs-grid',
-    Card: 'rs-card',
     Typography: 'rs-typography',
-    Button: 'rs-button',
   }
 
   for (const [name, block] of Object.entries(blockByComponent)) {

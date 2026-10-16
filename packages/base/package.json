@@ -1,6 +1,6 @@
 {
   "name": "@labcat2020/rocketship",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "type": "module",
   "description": "Rocketship — Astro-focused, CSS-first component library: design tokens, default theme, and core components",

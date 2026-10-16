@@ -1,0 +1,70 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Field from '@labcat/rocketship/components/Field'
+import Label from '@labcat/rocketship/components/Label'
+import Typography from '@labcat/rocketship/components/Typography'
+---
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h2>Field layout</h2>
+    <p>
+      The field layout stacks a control with its label, helper text, and validation message. Pair
+      the label with the control through <code>for</code>/<code>id</code>, and expose helper or
+      error text through <code>aria-describedby</code>.
+    </p>
+  </Typography>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Text input</h3>
+    <p>A required field with helper text announced alongside the control.</p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field hintId="field-username-hint">
+    <Label slot="label" for="field-username" required>Username</Label>
+    <input id="field-username" type="text" aria-describedby="field-username-hint" required />
+    <span slot="hint">Your handle is public.</span>
+  </Field>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Select</h3>
+    <p>
+      A required picker. The placeholder option carries an empty value so the field reads as
+      incomplete.
+    </p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field>
+    <Label slot="label" for="field-plan" required>Billing plan</Label>
+    <select id="field-plan" required>
+      <option value="">Choose a plan</option>
+      <option>Starter</option>
+      <option>Pro</option>
+      <option>Enterprise</option>
+    </select>
+  </Field>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Textarea with error</h3>
+    <p>Validation text renders inside the field and can be referenced by the control.</p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field errorId="field-notes-error">
+    <Label slot="label" for="field-notes">Notes</Label>
+    <textarea
+      id="field-notes"
+      aria-describedby="field-notes-error"
+      rows="3"
+      placeholder="Anything your reviewer should know"></textarea>
+    <span slot="error">Add a note of at least ten characters.</span>
+  </Field>
+</Container>

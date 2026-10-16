@@ -1,0 +1,58 @@
+---
+import Container from '@labcat/rocketship/components/Container'
+import Field from '@labcat/rocketship/components/Field'
+import Label from '@labcat/rocketship/components/Label'
+import Typography from '@labcat/rocketship/components/Typography'
+---
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h2>Label</h2>
+    <p>
+      Labels caption form controls. The required and optional markers ride inside the same label
+      element, so the accessible name of the field stays complete.
+    </p>
+  </Typography>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Default</h3>
+    <p>A plain label with no marker.</p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field>
+    <Label slot="label" for="label-default">Email address</Label>
+    <input id="label-default" type="email" />
+  </Field>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Required</h3>
+    <p>
+      The asterisk marks the field as mandatory. The <code>(required)</code> suffix is visually hidden
+      so screen readers announce it while the field shows only the star.
+    </p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field>
+    <Label slot="label" for="label-required" required>Email address</Label>
+    <input id="label-required" type="email" required />
+  </Field>
+</Container>
+
+<Container size="content" padded>
+  <Typography as="section">
+    <h3>Optional</h3>
+    <p>The <code>(optional)</code> marker is plain visible text for every reader.</p>
+  </Typography>
+</Container>
+<Container size="content">
+  <Field>
+    <Label slot="label" for="label-optional" optional>Email address</Label>
+    <input id="label-optional" type="email" />
+  </Field>
+</Container>

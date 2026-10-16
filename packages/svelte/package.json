@@ -20,9 +20,11 @@
       "default": "./dist/index.js"
     },
     "./components/Alert": "./src/components/Alert.svelte",
+    "./components/Accordion": "./src/components/Accordion.svelte",
     "./components/Button": "./src/components/Button.svelte",
     "./components/Card": "./src/components/Card.svelte",
     "./components/Container": "./src/components/Container.svelte",
+    "./components/Disclosure": "./src/components/Disclosure.svelte",
     "./components/Grid": "./src/components/Grid.svelte",
     "./components/Typography": "./src/components/Typography.svelte"
   },
@@ -44,6 +46,8 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "axe-core": "4.11.1",
+    "jsdom": "^30.1.2",
     "sass": "^1.105.1",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.6",

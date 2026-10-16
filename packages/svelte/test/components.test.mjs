@@ -1,15 +1,18 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
+import { createRequire } from 'node:module'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { JSDOM } from 'jsdom'
 import { compile, preprocess } from 'svelte/compiler'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { createRawSnippet } from 'svelte'
 import { render } from 'svelte/server'
 import { preprocessCSS, resolveConfig } from 'vite'
 
+const require = createRequire(import.meta.url)
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 const repoRoot = dirname(dirname(packageRoot))
 const componentsDir = join(packageRoot, 'src', 'components')
@@ -44,6 +47,98 @@ const classList = (markup, name = 'div') =>
 /** Renders a Svelte snippet around raw markup, standing in for a default slot. */
 const snippet = (html) => createRawSnippet(() => ({ render: () => html }))
 
+/**
+ * Installs a jsdom window on `globalThis` and returns the Svelte client runtime. Svelte resolves
+ * its entry through the `browser` export condition, which `node --test` does not set, so the
+ * client module is imported from its file path instead.
+ */
+const setupDom = async () => {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true })
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  Object.defineProperty(globalThis, 'navigator', {
+    value: dom.window.navigator,
+    configurable: true,
+  })
+  for (const key of Object.getOwnPropertyNames(dom.window)) {
+    if (key in globalThis) continue
+    try {
+      globalThis[key] = dom.window[key]
+    } catch {
+      // Read-only accessor on the Node global (location, top, ...): the component does not use it.
+    }
+  }
+
+  const clientEntry = join(dirname(require.resolve('svelte/package.json')), 'src', 'index-client.js')
+  const client = await import(pathToFileURL(clientEntry).href)
+  return { ...client, dom }
+}
+
+const { mount, tick, unmount, createRawSnippet: createClientSnippet } = await setupDom()
+
+/**
+ * Renders a Svelte snippet for a client-mounted component. The `svelte` entry resolves to the
+ * server build under `node --test`, and a server snippet cannot be rendered by the client runtime.
+ */
+const clientSnippet = (html) => createClientSnippet(() => ({ render: () => html }))
+
+/** Compiles a component for the browser and imports it, so effects and bindings run. */
+const loadClientComponent = async (name) => {
+  const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
+  const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
+  mkdirSync(renderCache, { recursive: true })
+  const file = join(renderCache, `${name}-client-${randomUUID()}.mjs`)
+  writeFileSync(file, js.code)
+  const module = await import(pathToFileURL(file).href)
+  return module.default
+}
+
+/**
+ * Stands in for the platform ResizeObserver so a test can drive a re-measure on demand. The
+ * callbacks are collected because the component registers one observer over two targets.
+ */
+const observerCallbacks = new Set()
+globalThis.ResizeObserver = class {
+  constructor(callback) {
+    this.callback = callback
+  }
+  observe() {
+    observerCallbacks.add(this.callback)
+  }
+  unobserve() {}
+  disconnect() {
+    observerCallbacks.delete(this.callback)
+  }
+}
+
+/** Fires every observed resize, as the browser would after a layout change. */
+const resize = () => {
+  for (const callback of observerCallbacks) callback([])
+}
+
+/** jsdom does no layout, so the scroll and client widths are stubbed to model an overflow. */
+const setOverflow = (element, scrollWidth, clientWidth) => {
+  Object.defineProperty(element, 'scrollWidth', { value: scrollWidth, configurable: true })
+  Object.defineProperty(element, 'clientWidth', { value: clientWidth, configurable: true })
+}
+
+/** Mounts a component into a detached target and returns the element plus a teardown. */
+const mountComponent = async (Component, props = {}) => {
+  const target = document.createElement('div')
+  document.body.appendChild(target)
+  const instance = mount(Component, { target, props })
+  await tick()
+  return {
+    instance,
+    target,
+    unmount: () => {
+      unmount(instance)
+      target.remove()
+    },
+  }
+}
+
 const containerModifiers = [
   'rs-container--full-width',
   'rs-container--wide',
@@ -71,6 +166,34 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid and Typog
   assert.ok(
     pkg.files.includes('src/components'),
     'src/components must be in files[] so the published tarball contains the Svelte components',
+  )
+})
+
+test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Table'],
+    './src/components/Table.svelte',
+    'packages/svelte must export ./components/Table',
+  )
+  assert.ok(
+    !basePkg.exports?.['./components/Table'],
+    'Table is Svelte-first, so the Astro package must not expose it yet',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Table \} from '\.\/components\/Table\.svelte'/,
+    'the barrel must export the Table value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Table\.svelte'/,
+    'the barrel must re-export the Table prop union types',
   )
 })
 
@@ -589,5 +712,315 @@ test('Alert styles compile through the shared barrel and keep every Astro select
     css,
     /@container\s+rs-component\s*\(min-width:\s*500px\)/,
     'Alert padding and type scale restate at the sm container query',
+  )
+})
+
+const tableModifiers = ['rs-table--striped', 'rs-table--compact', 'rs-table--hover']
+
+const tableRows = (rows) =>
+  `<thead><tr><th scope="col">Name</th><th scope="col">Role</th></tr></thead><tbody>${rows
+    .map(([name, role]) => `<tr><td>${name}</td><td>${role}</td></tr>`)
+    .join('')}</tbody>`
+
+test('Table renders .rs-table-holder around .rs-table with only the modifiers that were set', async () => {
+  const Table = await loadComponent('Table')
+
+  const cases = [
+    { label: 'no modifiers', props: {}, expected: [] },
+    { label: 'striped', props: { striped: true }, expected: ['rs-table--striped'] },
+    { label: 'compact', props: { compact: true }, expected: ['rs-table--compact'] },
+    { label: 'hover', props: { hover: true }, expected: ['rs-table--hover'] },
+    {
+      label: 'striped + compact + hover',
+      props: { striped: true, compact: true, hover: true },
+      expected: tableModifiers,
+    },
+    { label: 'explicit false', props: { striped: false, compact: false, hover: false }, expected: [] },
+  ]
+
+  for (const { label, props, expected } of cases) {
+    const markup = renderMarkup(Table, { ...props, children: snippet(tableRows([])) })
+
+    assert.ok(
+      openingTag(markup, 'div').includes('rs-table-holder'),
+      `Table ${label} must wrap the table in .rs-table-holder`,
+    )
+    assert.ok(
+      markup.indexOf('<div') < markup.indexOf('<table'),
+      `Table ${label} must render the holder before the table`,
+    )
+
+    const classes = classList(markup, 'table')
+    assert.ok(classes.includes('rs-table'), `Table ${label} must render .rs-table`)
+    for (const modifier of tableModifiers) {
+      assert.equal(
+        classes.includes(modifier),
+        expected.includes(modifier),
+        `Table ${label} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
+      )
+    }
+  }
+})
+
+test('Table puts consumer classes on the holder and never on the table, per the Svelte rules', async () => {
+  const Table = await loadComponent('Table')
+
+  const markup = renderMarkup(Table, {
+    striped: true,
+    class: 'consumer-class',
+    children: snippet(tableRows([])),
+  })
+
+  assert.deepEqual(classList(markup, 'div'), ['rs-table-holder', 'consumer-class'])
+  assert.deepEqual(classList(markup, 'table'), ['rs-table', 'rs-table--striped'])
+})
+
+test('Table renders the caption inside the table so it is exposed as the table name', async () => {
+  const Table = await loadComponent('Table')
+
+  const withCaption = renderMarkup(Table, {
+    caption: 'Quarterly revenue by region',
+    children: snippet(tableRows([])),
+  })
+  const captionIndex = withCaption.indexOf('<caption>')
+  const closeTableIndex = withCaption.indexOf('</table>')
+
+  assert.ok(captionIndex > -1, 'a caption prop must render a <caption>')
+  assert.ok(
+    captionIndex < closeTableIndex,
+    'the caption must sit inside the table so assistive tech reads it as the table name',
+  )
+  assert.match(withCaption, /<caption>Quarterly revenue by region<\/caption>/)
+  assert.equal((withCaption.match(/<caption>/g) ?? []).length, 1)
+
+  const withoutCaption = renderMarkup(Table, { children: snippet(tableRows([])) })
+  assert.ok(!withoutCaption.includes('<caption>'), 'no caption prop must render no <caption>')
+  assert.ok(
+    !openingTag(withCaption, 'table').includes('<caption>'),
+    'the caption must not leak into the table tag itself',
+  )
+})
+
+test('Table treats a blank caption as absent so no empty name reaches the table', async () => {
+  const Table = await loadComponent('Table')
+
+  for (const caption of ['', '   ', '\n\t']) {
+    const markup = renderMarkup(Table, { caption, children: snippet(tableRows([])) })
+    assert.ok(
+      !markup.includes('<caption>'),
+      `caption ${JSON.stringify(caption)} must not render an empty <caption>`,
+    )
+  }
+})
+
+test('Table spreads native attributes onto the holder while children render inside the table', async () => {
+  const Table = await loadComponent('Table')
+
+  const markup = renderMarkup(Table, {
+    id: 'revenue',
+    'data-region': 'finance',
+    children: snippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  const holder = openingTag(markup, 'div')
+  assert.match(holder, /id="revenue"/)
+  assert.match(holder, /data-region="finance"/)
+  assert.ok(
+    markup.includes('<td>Ada Lovelace</td>'),
+    'children must render inside the table, standing in for thead/tbody',
+  )
+  assert.ok(
+    !openingTag(markup, 'table').includes('id="revenue"'),
+    'the table must not take the attributes the holder owns',
+  )
+})
+
+test('Table as renders the requested holder tag while keeping the block class', async () => {
+  const Table = await loadComponent('Table')
+
+  assert.ok(openingTag(renderMarkup(Table, { children: snippet('') }), 'div').startsWith('<div'))
+
+  const section = renderMarkup(Table, { as: 'section', children: snippet('') })
+  assert.ok(openingTag(section, 'section').length > 0, 'as="section" must render a <section>')
+  assert.ok(!openingTag(section, 'div'), 'as="section" must not also render a <div>')
+  assert.ok(classList(section, 'section').includes('rs-table-holder'))
+})
+
+test('Table server-renders no scroll-region semantics, because nothing has been measured yet', async () => {
+  const Table = await loadComponent('Table')
+
+  const markup = renderMarkup(Table, {
+    caption: 'Quarterly revenue by region',
+    children: snippet(tableRows([])),
+  })
+
+  const holder = openingTag(markup, 'div')
+  assert.ok(!/role="/.test(holder), 'SSR must not claim a region before measuring an overflow')
+  assert.ok(!/tabindex/.test(holder), 'SSR must not add a tab stop before measuring an overflow')
+})
+
+test('Table makes the holder keyboard-scrollable only while it overflows, and clears it again', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    caption: 'Quarterly revenue by region',
+    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    assert.ok(holder, 'the holder must be rendered')
+
+    assert.equal(holder.getAttribute('role'), null, 'a table that fits is not a scroll region')
+    assert.equal(holder.getAttribute('tabindex'), null, 'a table that fits stays out of tab order')
+    assert.equal(holder.getAttribute('aria-label'), null, 'a table that fits needs no region name')
+
+    setOverflow(holder, 900, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('tabindex'), '0', 'an overflowing holder must be tabbable')
+    assert.equal(holder.getAttribute('role'), 'region', 'an overflowing holder must be a region')
+    assert.equal(
+      holder.getAttribute('aria-label'),
+      'Quarterly revenue by region',
+      'the region must be named from the caption',
+    )
+
+    setOverflow(holder, 300, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('role'), null, 'the region role must be removed when it fits')
+    assert.equal(holder.getAttribute('tabindex'), null, 'the tab stop must be removed when it fits')
+  } finally {
+    teardown()
+  }
+})
+
+test('Table names the scroll region from label first, then caption, then a generic name', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const cases = [
+    { label: 'label wins', props: { label: 'Revenue', caption: 'Caption text' }, expected: 'Revenue' },
+    { label: 'caption fallback', props: { caption: 'Caption text' }, expected: 'Caption text' },
+    { label: 'generic fallback', props: {}, expected: 'Table' },
+    {
+      label: 'blank label falls through',
+      props: { label: '  ', caption: 'Caption text' },
+      expected: 'Caption text',
+    },
+  ]
+
+  for (const { label, props, expected } of cases) {
+    const { target, unmount: teardown } = await mountComponent(Table, {
+      ...props,
+      children: clientSnippet(tableRows([])),
+    })
+    try {
+      const holder = target.querySelector('.rs-table-holder')
+      setOverflow(holder, 900, 300)
+      resize()
+      await tick()
+      assert.equal(holder.getAttribute('aria-label'), expected, `${label}: wrong region name`)
+    } finally {
+      teardown()
+    }
+  }
+})
+
+test('Table keeps a consumer-supplied role, tabindex and label instead of overwriting them', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    role: 'group',
+    tabindex: -1,
+    'aria-label': 'Custom name',
+    caption: 'Quarterly revenue by region',
+    children: clientSnippet(tableRows([])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    setOverflow(holder, 900, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('role'), 'group', 'an explicit role must survive')
+    assert.equal(holder.getAttribute('tabindex'), '-1', 'an explicit tabindex must survive')
+    assert.equal(holder.getAttribute('aria-label'), 'Custom name', 'an explicit label must survive')
+  } finally {
+    teardown()
+  }
+})
+
+test('Table re-measures on resize, so a holder that shrinks later becomes scrollable', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    setOverflow(holder, 400, 400)
+    resize()
+    await tick()
+    assert.equal(holder.getAttribute('tabindex'), null, 'no tab stop while the table fits')
+
+    setOverflow(holder, 1200, 400)
+    resize()
+    await tick()
+    assert.equal(holder.getAttribute('tabindex'), '0', 'the tab stop appears once it overflows')
+    assert.equal(holder.getAttribute('aria-label'), 'Table', 'an unnamed region falls back to Table')
+
+    setOverflow(holder, 400, 1200)
+    resize()
+    await tick()
+    assert.equal(
+      holder.getAttribute('tabindex'),
+      null,
+      'growing past the content clears the tab stop',
+    )
+  } finally {
+    teardown()
+  }
+})
+
+test('Table stops observing once unmounted, so a late resize cannot touch a detached holder', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    children: clientSnippet(tableRows([])),
+  })
+  const holder = target.querySelector('.rs-table-holder')
+  setOverflow(holder, 900, 300)
+  resize()
+  await tick()
+  assert.equal(holder.getAttribute('tabindex'), '0', 'precondition: the holder overflows')
+
+  teardown()
+
+  assert.equal(observerCallbacks.size, 0, 'unmounting must disconnect the ResizeObserver')
+  assert.doesNotThrow(() => resize(), 'firing a resize after teardown must be a no-op')
+})
+
+test('Table styles compile through the shared barrel and keep every Astro selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Table'))
+
+  for (const selector of [
+    '.rs-table-holder',
+    '.rs-table',
+    '.rs-table--striped',
+    '.rs-table--compact',
+    '.rs-table--hover',
+    '.rs-table caption',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Table CSS must contain ${selector}`)
+  }
+
+  assert.ok(
+    !/@media/.test(css),
+    'Table has no size variants, so it must not reach for viewport media queries',
   )
 })

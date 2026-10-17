@@ -17,19 +17,41 @@ const componentsDir = join(packageRoot, 'src', 'components')
 const renderCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-svelte-component-tests')
 
 /**
- * Compiles a component to a server-renderable ES module and imports it, mirroring
- * how the Svelte compiler consumes the component source at build time.
+ * Compiles component source to a server-renderable ES module and imports it, mirroring
+ * how the Svelte compiler consumes the component source at build time. Sibling
+ * component imports are compiled too, so composed components (Field renders Label)
+ * resolve instead of failing on the raw `.svelte` specifier.
  */
-const loadComponent = async (name) => {
-  const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
-  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
-  const { js } = compile(code, { generate: 'server', filename: `${name}.svelte` })
-  mkdirSync(renderCache, { recursive: true })
-  const file = join(renderCache, `${name}-${randomUUID()}.mjs`)
-  writeFileSync(file, js.code)
+const runCache = join(renderCache, randomUUID())
+
+const compileComponent = async (source, filename) => {
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${filename}.svelte` })
+  const { js } = compile(code, { generate: 'server', filename: `${filename}.svelte` })
+
+  const siblings = [
+    ...new Set(
+      [...js.code.matchAll(/from\s+['"]\.\/([A-Za-z0-9_]+)\.svelte['"]/g)].map((match) => match[1]),
+    ),
+  ]
+  for (const sibling of siblings) await loadComponent(sibling)
+
+  const rewritten = js.code.replace(
+    /from\s+(['"])\.\/([A-Za-z0-9_]+)\.svelte\1/g,
+    (_, quote, sibling) => `from ${quote}./${sibling}.compiled.mjs${quote}`,
+  )
+
+  mkdirSync(runCache, { recursive: true })
+  const file = join(runCache, `${filename}.compiled.mjs`)
+  writeFileSync(file, rewritten)
   const module = await import(pathToFileURL(file).href)
   return module.default
 }
+
+const loadComponent = async (name) =>
+  compileComponent(readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'), name)
+
+/** Compiles a throwaway wrapper component so several instances can render in one pass. */
+const loadInline = async (source) => compileComponent(source, `inline-${randomUUID()}`)
 
 /** Renders a component and returns the server-rendered body markup. */
 const renderMarkup = (Component, props = {}) => render(Component, { props }).body
@@ -590,4 +612,492 @@ test('Alert styles compile through the shared barrel and keep every Astro select
     /@container\s+rs-component\s*\(min-width:\s*500px\)/,
     'Alert padding and type scale restate at the sm container query',
   )
+})
+
+/** Builds a `children` snippet that renders the wiring Field hands to the control. */
+const controlSnippet = () =>
+  createRawSnippet((wiring) => ({
+    render: () => {
+      const props = wiring()
+      const describedBy = props['aria-describedby']
+      const invalid = props['aria-invalid']
+      return [
+        '<input',
+        ` id="${props.id}"`,
+        describedBy ? ` aria-describedby="${describedBy}"` : '',
+        invalid ? ` aria-invalid="${invalid}"` : '',
+        props.required ? ' required' : '',
+        props.disabled ? ' disabled' : '',
+        ' />',
+      ].join('')
+    },
+  }))
+
+/** Reads an attribute value off the first tag that carries it. */
+const attributeValue = (markup, name) =>
+  markup.match(new RegExp(`${name}="([^"]*)"`))?.[1] ?? undefined
+
+test('Label renders .rs-label, defaults to <label> and only forwards for on a real label', async () => {
+  const Label = await loadComponent('Label')
+
+  const markup = renderMarkup(Label, { for: 'email', children: snippet('Email') })
+  const tag = openingTag(markup, 'label')
+  assert.ok(tag.startsWith('<label'), 'Label defaults to the label tag')
+  assert.match(tag, /for="email"/)
+  assert.deepEqual(classList(markup, 'label'), ['rs-label'])
+  assert.match(markup, />Email</)
+
+  for (const nonLabelTag of ['span', 'div']) {
+    const nonLabel = renderMarkup(Label, { as: nonLabelTag, for: 'email' })
+    assert.ok(
+      openingTag(nonLabel, nonLabelTag).length > 0,
+      `Label as="${nonLabelTag}" must render a <${nonLabelTag}>`,
+    )
+    assert.doesNotMatch(
+      openingTag(nonLabel, nonLabelTag),
+      /for=/,
+      `Label as="${nonLabelTag}" must not render for — only a real label can own it`,
+    )
+    assert.ok(classList(nonLabel, nonLabelTag).includes('rs-label'))
+  }
+})
+
+test('Label required and optional markers stay inside the label element', async () => {
+  const Label = await loadComponent('Label')
+
+  const required = renderMarkup(Label, { required: true, children: snippet('Email') })
+  assert.match(required, /<span class="rs-label__required" aria-hidden="true">\*<\/span>/)
+  assert.match(required, /<span class="rs-label__sr-only">\(required\)<\/span>/)
+  assert.doesNotMatch(required, /rs-label__optional/)
+
+  const optional = renderMarkup(Label, { optional: true, children: snippet('Phone') })
+  assert.match(optional, /<span class="rs-label__optional">\(optional\)<\/span>/)
+  assert.doesNotMatch(optional, /rs-label__required/)
+
+  const both = renderMarkup(Label, { required: true, optional: true, children: snippet('Email') })
+  assert.match(both, /rs-label__required/, 'required wins when both are set')
+  assert.doesNotMatch(
+    both,
+    /rs-label__optional/,
+    'required and optional are exclusive — never both',
+  )
+
+  const custom = renderMarkup(Label, {
+    required: true,
+    requiredText: '(must fill)',
+    optionalText: '(nice to have)',
+  })
+  assert.match(custom, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const customOptional = renderMarkup(Label, {
+    optional: true,
+    requiredText: '(must fill)',
+    optionalText: '(nice to have)',
+  })
+  assert.match(customOptional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
+
+  const plain = renderMarkup(Label, { children: snippet('Notes') })
+  assert.doesNotMatch(plain, /rs-label__required/)
+  assert.doesNotMatch(plain, /rs-label__optional/)
+})
+
+test('Label composes a consumer class and spreads native attributes', async () => {
+  const Label = await loadComponent('Label')
+
+  const markup = renderMarkup(Label, {
+    class: 'consumer-class',
+    id: 'email-label',
+    'data-test': 'label',
+    children: snippet('Email'),
+  })
+
+  assert.deepEqual(classList(markup, 'label'), ['rs-label', 'consumer-class'])
+  const tag = openingTag(markup, 'label')
+  assert.match(tag, /id="email-label"/)
+  assert.match(tag, /data-test="label"/)
+})
+
+test('Field renders the label, control, hint and error blocks it is given', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    label: 'Email',
+    hint: 'We only use this to reach you.',
+    error: 'Enter a valid address.',
+    children: controlSnippet(),
+  })
+
+  assert.ok(classList(markup).includes('rs-field'))
+  assert.match(markup, /class="rs-field__label"/)
+  assert.match(markup, /class="rs-field__control"/)
+  assert.match(markup, /class="rs-field__hint"/)
+  assert.match(markup, /class="rs-field__error"/)
+  assert.match(markup, /We only use this to reach you\./)
+  assert.match(markup, /Enter a valid address\./)
+
+  const bare = renderMarkup(Field, { children: controlSnippet() })
+  assert.doesNotMatch(bare, /rs-field__label/)
+  assert.doesNotMatch(bare, /rs-field__hint/)
+  assert.doesNotMatch(bare, /rs-field__error/)
+  assert.match(bare, /class="rs-field__control"/)
+})
+
+test('Field generates an id, links the label to the control and derives hint and error ids', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+
+  const controlId = attributeValue(openingTag(markup, 'input'), 'id')
+  assert.match(controlId, /^rs-field-/, 'a missing id must be generated with the rs-field prefix')
+
+  assert.equal(
+    attributeValue(openingTag(markup, 'label'), 'for'),
+    controlId,
+    'the generated label for must match the control id',
+  )
+
+  const hintTag = markup.match(/<div class="rs-field__hint" id="([^"]*)"/)?.[1]
+  const errorTag = markup.match(/<div class="rs-field__error" id="([^"]*)"/)?.[1]
+  assert.equal(hintTag, `${controlId}-hint`)
+  assert.equal(errorTag, `${controlId}-error`)
+
+  const describedBy = attributeValue(openingTag(markup, 'input'), 'aria-describedby')
+  assert.equal(describedBy, `${controlId}-hint ${controlId}-error`)
+})
+
+test('Field respects an explicit id and explicit hint and error ids', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'account-email',
+    hintId: 'account-email-help',
+    errorId: 'account-email-error',
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+
+  assert.equal(attributeValue(openingTag(markup, 'input'), 'id'), 'account-email')
+  assert.equal(attributeValue(openingTag(markup, 'label'), 'for'), 'account-email')
+  assert.match(markup, /class="rs-field__hint" id="account-email-help"/)
+  assert.match(markup, /class="rs-field__error" id="account-email-error"/)
+  assert.equal(
+    attributeValue(openingTag(markup, 'input'), 'aria-describedby'),
+    'account-email-help account-email-error',
+  )
+
+  const derived = renderMarkup(Field, {
+    id: 'account-email',
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+  assert.equal(
+    attributeValue(derived, 'aria-describedby'),
+    'account-email-hint account-email-error',
+  )
+})
+
+test('Field only lists the hint and error ids that are actually rendered', async () => {
+  const Field = await loadComponent('Field')
+
+  const hintOnly = renderMarkup(Field, {
+    id: 'f1',
+    hint: 'Helper',
+    children: controlSnippet(),
+  })
+  assert.equal(attributeValue(openingTag(hintOnly, 'input'), 'aria-describedby'), 'f1-hint')
+  assert.doesNotMatch(hintOnly, /aria-invalid/)
+
+  const errorOnly = renderMarkup(Field, {
+    id: 'f2',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+  assert.equal(attributeValue(openingTag(errorOnly, 'input'), 'aria-describedby'), 'f2-error')
+  assert.equal(attributeValue(openingTag(errorOnly, 'input'), 'aria-invalid'), 'true')
+
+  const neither = renderMarkup(Field, { id: 'f3', children: controlSnippet() })
+  assert.doesNotMatch(neither, /aria-describedby/)
+  assert.doesNotMatch(neither, /aria-invalid/)
+})
+
+test('Field marks an error invalid and clears it once the error is removed', async () => {
+  const Field = await loadComponent('Field')
+
+  const invalid = renderMarkup(Field, { id: 'f1', error: 'Problem', children: controlSnippet() })
+  assert.equal(attributeValue(openingTag(invalid, 'input'), 'aria-invalid'), 'true')
+
+  const valid = renderMarkup(Field, { id: 'f1', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(valid, 'input'), /aria-invalid/)
+})
+
+test('Field propagates required and disabled to the control wiring and label', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'f1',
+    label: 'Email',
+    required: true,
+    disabled: true,
+    children: controlSnippet(),
+  })
+
+  const input = openingTag(markup, 'input')
+  assert.match(input, /\brequired\b/, 'required must reach the control')
+  assert.match(input, /\bdisabled\b/, 'disabled must reach the control')
+  assert.ok(classList(markup).includes('rs-field--disabled'))
+  assert.match(markup, /<span class="rs-label__required" aria-hidden="true">\*<\/span>/)
+
+  const enabled = renderMarkup(Field, { id: 'f1', label: 'Email', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(enabled, 'input'), /\brequired\b/)
+  assert.doesNotMatch(openingTag(enabled, 'input'), /\bdisabled\b/)
+  assert.ok(!classList(enabled).includes('rs-field--disabled'))
+})
+
+test('Field exposes aria-disabled on the wrapper only while disabled', async () => {
+  const Field = await loadComponent('Field')
+
+  const disabled = renderMarkup(Field, { id: 'f1', disabled: true, children: controlSnippet() })
+  assert.match(openingTag(disabled, 'div'), /aria-disabled="true"/)
+
+  const enabled = renderMarkup(Field, { id: 'f1', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(enabled, 'div'), /aria-disabled/)
+
+  const explicit = renderMarkup(Field, {
+    id: 'f1',
+    'aria-disabled': 'true',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(explicit, 'div'),
+    /aria-disabled="true"/,
+    'a consumer aria-disabled must be forwarded while enabled',
+  )
+
+  const override = renderMarkup(Field, {
+    id: 'f1',
+    disabled: true,
+    'aria-disabled': 'false',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(override, 'div'),
+    /aria-disabled="true"/,
+    'the disabled prop owns aria-disabled on the wrapper',
+  )
+})
+
+test('Field disabled dims the label, control, hint and error together', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Field'))
+  const disabledBlock = css.match(/\.rs-field--disabled[^{]*\{([^}]*)\}/)?.[0] ?? ''
+
+  for (const element of ['__label', '__control', '__hint', '__error']) {
+    assert.match(
+      disabledBlock,
+      new RegExp(`\\.rs-field--disabled\\s+\\.rs-field${element}\\b`),
+      `the disabled modifier must dim .rs-field${element}`,
+    )
+  }
+
+  assert.match(disabledBlock, /opacity:\s*0?\.\d+/, 'dimming must use a reduced opacity')
+})
+
+test('Field forwards requiredText and optionalText to the Label it renders', async () => {
+  const Field = await loadComponent('Field')
+
+  const required = renderMarkup(Field, {
+    id: 'f1',
+    label: 'Email',
+    required: true,
+    requiredText: '(must fill)',
+    children: controlSnippet(),
+  })
+  assert.match(required, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const optional = renderMarkup(Field, {
+    id: 'f2',
+    label: 'Referral code',
+    optional: true,
+    optionalText: '(nice to have)',
+    children: controlSnippet(),
+  })
+  assert.match(optional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
+})
+
+test('Field passes its control id into the labelSlot so for cannot drift', async () => {
+  const Field = await loadComponent('Field')
+  const labelSlot = createRawSnippet((id) => ({
+    render: () => `<label class="custom-label" for="${id()}">Custom</label>`,
+  }))
+
+  const markup = renderMarkup(Field, {
+    id: 'account-name',
+    labelSlot,
+    children: controlSnippet(),
+  })
+
+  const controlId = attributeValue(openingTag(markup, 'input'), 'id')
+  assert.equal(controlId, 'account-name')
+  assert.equal(
+    attributeValue(openingTag(markup, 'label'), 'for'),
+    controlId,
+    'the labelSlot id must be the control id Field generated or received',
+  )
+
+  const generated = renderMarkup(Field, { labelSlot, children: controlSnippet() })
+  const generatedId = attributeValue(openingTag(generated, 'input'), 'id')
+  assert.match(generatedId, /^rs-field-/, 'a missing id must still be generated for the slot')
+  assert.equal(attributeValue(openingTag(generated, 'label'), 'for'), generatedId)
+})
+
+test('Field gives each instance a distinct generated id', async () => {
+  const TwoFields = await loadInline(`<script>
+    import Field from './Field.svelte'
+  </script>
+  <Field label="One">
+    {#snippet children(control)}
+      <input {...control} />
+    {/snippet}
+  </Field>
+  <Field label="Two">
+    {#snippet children(control)}
+      <input {...control} />
+    {/snippet}
+  </Field>`)
+
+  const markup = renderMarkup(TwoFields)
+  const ids = [...markup.matchAll(/<input id="([^"]*)"/g)].map((match) => match[1])
+
+  assert.equal(ids.length, 2, 'both fields must render a control')
+  assert.notEqual(ids[0], ids[1], 'two Field instances must not share a generated id')
+
+  const fors = [...markup.matchAll(/<label[^>]*for="([^"]*)"/g)].map((match) => match[1])
+  assert.deepEqual(fors, ids, 'each label for must follow its own control id')
+})
+
+test('Field keeps hint and error ids in sync when they come from snippets', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'custom',
+    hintId: 'custom-hint',
+    hintSlot: snippet('Custom helper'),
+    errorSlot: snippet('Custom problem'),
+    children: controlSnippet(),
+  })
+
+  assert.match(markup, /Custom helper/)
+  assert.match(markup, /Custom problem/)
+  assert.match(markup, /class="rs-field__hint" id="custom-hint"/)
+  assert.match(markup, /class="rs-field__error" id="custom-error"/)
+  assert.equal(
+    attributeValue(openingTag(markup, 'input'), 'aria-describedby'),
+    'custom-hint custom-error',
+  )
+})
+
+test('Field as and class mirror the Astro component and spread native attributes', async () => {
+  const Field = await loadComponent('Field')
+
+  assert.ok(openingTag(renderMarkup(Field), 'div').startsWith('<div'))
+
+  const markup = renderMarkup(Field, {
+    as: 'section',
+    class: 'consumer-class',
+    'data-region': 'account',
+    children: controlSnippet(),
+  })
+  assert.ok(openingTag(markup, 'section').length > 0, 'Field as="section" must render a <section>')
+  assert.deepEqual(classList(markup, 'section'), ['rs-field', 'consumer-class'])
+  assert.match(openingTag(markup, 'section'), /data-region="account"/)
+
+  const wrapped = renderMarkup(Field, { id: 'field-section', children: controlSnippet() })
+  assert.equal(
+    attributeValue(openingTag(wrapped, 'input'), 'id'),
+    'field-section',
+    'Field id is the control id, not a wrapper attribute',
+  )
+})
+
+test('Field styles compile through the shared barrel and keep the Astro selectors', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Field'))
+
+  for (const selector of [
+    '.rs-field',
+    '.rs-field__control',
+    '.rs-field__hint',
+    '.rs-field__error',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Field CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Field restates its gap at the sm container query',
+  )
+})
+
+test('Label styles compile through the shared barrel and keep the Astro selectors', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Label'))
+
+  for (const selector of [
+    '.rs-label',
+    '.rs-label__required',
+    '.rs-label__optional',
+    '.rs-label__sr-only',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Label CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Label restates its type scale at the sm container query',
+  )
+})
+
+test('packages/svelte/src/index.ts re-exports Field and Label with their prop union types', () => {
+  const index = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+
+  const unions = {
+    Field: ['FieldTag', 'FieldControlProps'],
+    Label: ['LabelTag'],
+  }
+
+  for (const [name, exportedTypes] of Object.entries(unions)) {
+    assert.match(
+      index,
+      new RegExp(`export \\{ default as ${name} \\} from './components/${name}\\.svelte'`),
+      `index.ts must export the ${name} component`,
+    )
+    assert.match(
+      index,
+      new RegExp(`export type \\* from './components/${name}\\.svelte'`),
+      `index.ts must re-export the ${name} prop union types`,
+    )
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `package.json must expose ./components/${name}`,
+    )
+
+    const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+    for (const exportedType of exportedTypes) {
+      assert.match(
+        source,
+        new RegExp(`export type ${exportedType}\\b`),
+        `${name}.svelte must export the ${exportedType} union`,
+      )
+    }
+  }
 })

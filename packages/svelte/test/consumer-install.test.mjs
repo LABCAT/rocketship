@@ -20,7 +20,20 @@ const installedScope = join(consumerRoot, 'node_modules', '@labcat2020')
 // Compiled components are emitted inside node_modules so bare `svelte` imports resolve.
 const renderCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-consumer-tests')
 
-const componentSubpaths = ['Alert', 'Button', 'Card', 'Container', 'Grid', 'Typography']
+const componentSubpaths = [
+  'Accordion',
+  'Alert',
+  'Button',
+  'Card',
+  'Container',
+  'Disclosure',
+  'Field',
+  'Figure',
+  'Grid',
+  'Label',
+  'Table',
+  'Typography',
+]
 
 /** The tarball filename `pnpm pack` produces for a package (`@scope/name` -> `scope-name-version.tgz`). */
 const tarballName = ({ name, version }) =>

@@ -14,6 +14,12 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Typography` | `@labcat2020/rocketship-svelte/components/Typography` | `Typography.astro` |
 | `Button`     | `@labcat2020/rocketship-svelte/components/Button`     | `Button.astro`     |
 | `Alert`      | `@labcat2020/rocketship-svelte/components/Alert`      | `Alert.astro`      |
+| `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | — (Svelte-first)   |
+| `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | — (Svelte-first)   |
+| `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
+| `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
+| `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
+| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | `Figure.astro`     |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 
@@ -50,6 +56,7 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
 | `Alert`      | `as` (`div`, `section`, `aside`, `article`), `variant` (`info`, `success`, `warning`, `error`), `title`, `titleSlot` snippet, `role`, `class` |
+| `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
 
 ### `Typography` `html` prop
 

@@ -19,7 +19,7 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
 | `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
-| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | `Figure.astro`     |
+| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 

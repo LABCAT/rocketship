@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { JSDOM } from 'jsdom'
@@ -2007,6 +2007,36 @@ test('Disclosure and Accordion styles compile through the shared barrel with the
   const accordion = await compileStyleBlock(styleBlockOf('Accordion'))
   for (const selector of ['.rs-accordion', '.rs-accordion--single']) {
     assert.ok(accordion.includes(selector), `compiled Accordion CSS must contain ${selector}`)
+  }
+})
+
+test('the README Astro-original column matches what is actually on disk', () => {
+  const readme = readFileSync(join(packageRoot, 'README.md'), 'utf8')
+  const astroDir = join(repoRoot, 'packages', 'base', 'src', 'components')
+
+  const rows = [...readme.matchAll(/^\|\s*`([A-Za-z]+)`\s*\|[^|]*\|\s*([^|]+?)\s*\|$/gm)].map(
+    ([, component, provenance]) => ({ component, provenance }),
+  )
+
+  assert.ok(rows.length > 0, 'the README component table must list components')
+
+  for (const { component, provenance } of rows) {
+    // The claim must track the filesystem, so an unmerged Astro PR cannot be cited as the
+    // original and a later port cannot leave a stale `— (Svelte-first)` behind.
+    const hasAstroOriginal = existsSync(join(astroDir, `${component}.astro`))
+    if (hasAstroOriginal) {
+      assert.equal(
+        provenance,
+        `\`${component}.astro\``,
+        `README must name \`${component}.astro\` as the original because it exists on disk`,
+      )
+    } else {
+      assert.equal(
+        provenance,
+        '— (Svelte-first)',
+        `README must mark ${component} as Svelte-first because packages/base/src/components/${component}.astro does not exist`,
+      )
+    }
   }
 })
 

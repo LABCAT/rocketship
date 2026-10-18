@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { JSDOM } from 'jsdom'
@@ -12,6 +12,7 @@ import { createRawSnippet } from 'svelte'
 import { render } from 'svelte/server'
 import { preprocessCSS, resolveConfig } from 'vite'
 
+const require = createRequire(import.meta.url)
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 const repoRoot = dirname(dirname(packageRoot))
 const componentsDir = join(packageRoot, 'src', 'components')
@@ -19,42 +20,41 @@ const componentsDir = join(packageRoot, 'src', 'components')
 const renderCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-svelte-component-tests')
 
 /**
- * Compiles a component to a server-renderable ES module, mirroring how the Svelte
- * compiler consumes the component source at build time. Component imports are rewritten
- * to the compiled sibling so cross-component imports resolve from the cache directory.
+ * Compiles component source to a server-renderable ES module and imports it, mirroring
+ * how the Svelte compiler consumes the component source at build time. Sibling
+ * component imports are compiled too, so composed components (Field renders Label)
+ * resolve instead of failing on the raw `.svelte` specifier.
  */
-const compileServerModule = async (name) => {
-  const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
-  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
-  const { js } = compile(code, { generate: 'server', filename: `${name}.svelte` })
-  return js.code.replace(
-    /(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g,
-    (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`,
+const runCache = join(renderCache, randomUUID())
+
+const compileComponent = async (source, filename) => {
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${filename}.svelte` })
+  const { js } = compile(code, { generate: 'server', filename: `${filename}.svelte` })
+
+  const siblings = [
+    ...new Set(
+      [...js.code.matchAll(/from\s+['"]\.\/([A-Za-z0-9_]+)\.svelte['"]/g)].map((match) => match[1]),
+    ),
+  ]
+  for (const sibling of siblings) await loadComponent(sibling)
+
+  const rewritten = js.code.replace(
+    /from\s+(['"])\.\/([A-Za-z0-9_]+)\.svelte\1/g,
+    (_, quote, sibling) => `from ${quote}./${sibling}.compiled.mjs${quote}`,
   )
+
+  mkdirSync(runCache, { recursive: true })
+  const file = join(runCache, `${filename}.compiled.mjs`)
+  writeFileSync(file, rewritten)
+  const module = await import(pathToFileURL(file).href)
+  return module.default
 }
 
-let serverComponentsWritten = false
+const loadComponent = async (name) =>
+  compileComponent(readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'), name)
 
-/**
- * Every component is compiled up front: Accordion imports Disclosure, so both modules
- * have to exist on disk before either is imported.
- */
-const writeServerComponents = async () => {
-  if (serverComponentsWritten) return
-  mkdirSync(renderCache, { recursive: true })
-  for (const entry of readdirSync(componentsDir)) {
-    if (!entry.endsWith('.svelte')) continue
-    const name = entry.replace(/\.svelte$/, '')
-    writeFileSync(join(renderCache, `${name}.compiled.mjs`), await compileServerModule(name))
-  }
-  serverComponentsWritten = true
-}
-
-/** Compiles a component to a server module and imports it. */
-const loadComponent = async (name) => {
-  await writeServerComponents()
-  return (await import(pathToFileURL(join(renderCache, `${name}.compiled.mjs`)).href)).default
-}
+/** Compiles a throwaway wrapper component so several instances can render in one pass. */
+const loadInline = async (source) => compileComponent(source, `inline-${randomUUID()}`)
 
 /** Renders a component and returns the server-rendered body markup. */
 const renderMarkup = (Component, props = {}) => render(Component, { props }).body
@@ -68,6 +68,180 @@ const classList = (markup, name = 'div') =>
 
 /** Renders a Svelte snippet around raw markup, standing in for a default slot. */
 const snippet = (html) => createRawSnippet(() => ({ render: () => html }))
+
+/**
+ * Installs a jsdom window on `globalThis` and returns the Svelte client runtime. Svelte resolves
+ * its entry through the `browser` export condition, which `node --test` does not set, so the
+ * client module is imported from its file path instead.
+ */
+const setupDom = async () => {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true })
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  Object.defineProperty(globalThis, 'navigator', {
+    value: dom.window.navigator,
+    configurable: true,
+  })
+  for (const key of Object.getOwnPropertyNames(dom.window)) {
+    if (key in globalThis) continue
+    try {
+      globalThis[key] = dom.window[key]
+    } catch {
+      // Read-only accessor on the Node global (location, top, ...): the component does not use it.
+    }
+  }
+
+  const clientEntry = join(dirname(require.resolve('svelte/package.json')), 'src', 'index-client.js')
+  const client = await import(pathToFileURL(clientEntry).href)
+  return { ...client, dom }
+}
+
+const { mount, tick, unmount, createRawSnippet: createClientSnippet } = await setupDom()
+
+/**
+ * Renders a Svelte snippet for a client-mounted component. The `svelte` entry resolves to the
+ * server build under `node --test`, and a server snippet cannot be rendered by the client runtime.
+ */
+const clientSnippet = (html) => createClientSnippet(() => ({ render: () => html }))
+
+/** Compiles a component for the browser and imports it, so effects and bindings run. */
+const loadClientComponent = async (name) => {
+  const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
+  const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
+  mkdirSync(renderCache, { recursive: true })
+  const file = join(renderCache, `${name}-client-${randomUUID()}.mjs`)
+  writeFileSync(file, js.code)
+  const module = await import(pathToFileURL(file).href)
+  return module.default
+}
+
+/**
+ * Stands in for the platform ResizeObserver so a test can drive a re-measure on demand. The
+ * callbacks are collected because the component registers one observer over two targets.
+ */
+const observerCallbacks = new Set()
+globalThis.ResizeObserver = class {
+  constructor(callback) {
+    this.callback = callback
+  }
+  observe() {
+    observerCallbacks.add(this.callback)
+  }
+  unobserve() {}
+  disconnect() {
+    observerCallbacks.delete(this.callback)
+  }
+}
+
+/** Fires every observed resize, as the browser would after a layout change. */
+const resize = () => {
+  for (const callback of observerCallbacks) callback([])
+}
+
+/** jsdom does no layout, so the scroll and client widths are stubbed to model an overflow. */
+const setOverflow = (element, scrollWidth, clientWidth) => {
+  Object.defineProperty(element, 'scrollWidth', { value: scrollWidth, configurable: true })
+  Object.defineProperty(element, 'clientWidth', { value: clientWidth, configurable: true })
+}
+
+/** Mounts a component into a detached target and returns the element plus a teardown. */
+const mountComponent = async (Component, props = {}) => {
+  const target = document.createElement('div')
+  document.body.appendChild(target)
+  const instance = mount(Component, { target, props })
+  await tick()
+  return {
+    instance,
+    target,
+    unmount: () => {
+      unmount(instance)
+      target.remove()
+    },
+  }
+}
+
+/**
+ * Client-side fixture harness for the interactive components (Accordion/Disclosure). It shares
+ * the jsdom globals and Svelte client runtime installed by setupDom above, so both harnesses run
+ * against one DOM. Components are compiled with `generate: 'client'` and their relative component
+ * imports and the bare `svelte` specifier are rewritten to resolve from the cache directory.
+ */
+const ensureClientDom = () => ({ window: globalThis.window, dom: globalThis.document })
+
+const clientCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-svelte-client-tests')
+
+/** Reads a component's raw source so it can be compiled for the client. */
+const loadComponentSource = (name) => readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+
+/**
+ * Compiles a component (or a test fixture) with `generate: 'client'` and writes it to the cache.
+ * Shared components use a stable file name so fixtures can import them by path; fixtures get a
+ * unique name.
+ */
+const writeClientComponent = async (name, source, { stable = false } = {}) => {
+  ensureClientDom()
+  const clientEntry = pathToFileURL(
+    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+  ).href
+
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
+  const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
+
+  const rewritten = js.code
+    .replace(/(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g, (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`)
+    .replace(/(['"])svelte\1/g, (_, quote) => `${quote}${clientEntry}${quote}`)
+
+  mkdirSync(clientCache, { recursive: true })
+  const file = join(clientCache, stable ? `${name}.compiled.mjs` : `${name}-${randomUUID()}.compiled.mjs`)
+  writeFileSync(file, rewritten)
+  return file
+}
+
+const importClientComponent = async (file) => (await import(pathToFileURL(file).href)).default
+
+const loadFixtureComponent = async (name, source, options) =>
+  importClientComponent(await writeClientComponent(name, source, options))
+
+const mountFixture = async (markup, script = '') => {
+  const { window } = ensureClientDom()
+  const clientEntry = pathToFileURL(
+    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+  ).href
+  const { mount, flushSync } = await import(clientEntry)
+
+  // Both components must exist on disk before either is imported, because the compiled
+  // Accordion imports the compiled Disclosure at module link time.
+  for (const name of ['Accordion', 'Disclosure']) {
+    await writeClientComponent(name, loadComponentSource(name), { stable: true })
+  }
+
+  const Fixture = await loadFixtureComponent(`Fixture-${randomUUID()}`, `<script lang="ts">
+  import Accordion from './Accordion.svelte'
+  import Disclosure from './Disclosure.svelte'
+  ${script}
+</script>
+${markup}`)
+
+  const target = window.document.createElement('div')
+  window.document.body.appendChild(target)
+  const instance = mount(Fixture, { target })
+  flushSync()
+
+  return { window, target, instance, flushSync, details: () => [...target.querySelectorAll('details')] }
+}
+
+/** Simulates a summary activation the way a keyboard or pointer user would trigger it. */
+const activateSummary = (window, details, flushSync, key = 'Enter') => {
+  const summary = details.querySelector('summary')
+  const keydown = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+  summary.dispatchEvent(keydown)
+  summary.click()
+  details.dispatchEvent(new window.Event('toggle', { bubbles: true }))
+  flushSync()
+  return keydown.defaultPrevented
+}
+
 
 const containerModifiers = [
   'rs-container--full-width',
@@ -96,6 +270,34 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid and Typog
   assert.ok(
     pkg.files.includes('src/components'),
     'src/components must be in files[] so the published tarball contains the Svelte components',
+  )
+})
+
+test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Table'],
+    './src/components/Table.svelte',
+    'packages/svelte must export ./components/Table',
+  )
+  assert.ok(
+    !basePkg.exports?.['./components/Table'],
+    'Table is Svelte-first, so the Astro package must not expose it yet',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Table \} from '\.\/components\/Table\.svelte'/,
+    'the barrel must export the Table value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Table\.svelte'/,
+    'the barrel must re-export the Table prop union types',
   )
 })
 
@@ -617,107 +819,803 @@ test('Alert styles compile through the shared barrel and keep every Astro select
   )
 })
 
-/**
- * Client-side harness for the interactive components. Svelte's client runtime needs a
- * DOM before it is imported, so the JSDOM globals are installed lazily and the client
- * build of `svelte` is resolved through its package `browser` entry.
- */
-let clientRuntime
-const ensureClientDom = () => {
-  if (clientRuntime) return clientRuntime
+const tableModifiers = ['rs-table--striped', 'rs-table--compact', 'rs-table--hover']
 
-  const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true })
-  const window = dom.window
+const tableRows = (rows) =>
+  `<thead><tr><th scope="col">Name</th><th scope="col">Role</th></tr></thead><tbody>${rows
+    .map(([name, role]) => `<tr><td>${name}</td><td>${role}</td></tr>`)
+    .join('')}</tbody>`
 
-  globalThis.window = window
-  globalThis.document = window.document
-  Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true })
-  for (const key of Object.getOwnPropertyNames(window)) {
-    if (!/^(HTML|SVG|DOM|Element|Node|Text|Comment|DocumentFragment|Event|MouseEvent|KeyboardEvent|CSS)/.test(key)) continue
-    if (typeof globalThis[key] === 'undefined' && typeof window[key] === 'function') {
-      globalThis[key] = window[key]
+test('Table renders .rs-table-holder around .rs-table with only the modifiers that were set', async () => {
+  const Table = await loadComponent('Table')
+
+  const cases = [
+    { label: 'no modifiers', props: {}, expected: [] },
+    { label: 'striped', props: { striped: true }, expected: ['rs-table--striped'] },
+    { label: 'compact', props: { compact: true }, expected: ['rs-table--compact'] },
+    { label: 'hover', props: { hover: true }, expected: ['rs-table--hover'] },
+    {
+      label: 'striped + compact + hover',
+      props: { striped: true, compact: true, hover: true },
+      expected: tableModifiers,
+    },
+    { label: 'explicit false', props: { striped: false, compact: false, hover: false }, expected: [] },
+  ]
+
+  for (const { label, props, expected } of cases) {
+    const markup = renderMarkup(Table, { ...props, children: snippet(tableRows([])) })
+
+    assert.ok(
+      openingTag(markup, 'div').includes('rs-table-holder'),
+      `Table ${label} must wrap the table in .rs-table-holder`,
+    )
+    assert.ok(
+      markup.indexOf('<div') < markup.indexOf('<table'),
+      `Table ${label} must render the holder before the table`,
+    )
+
+    const classes = classList(markup, 'table')
+    assert.ok(classes.includes('rs-table'), `Table ${label} must render .rs-table`)
+    for (const modifier of tableModifiers) {
+      assert.equal(
+        classes.includes(modifier),
+        expected.includes(modifier),
+        `Table ${label} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
+      )
     }
   }
-  globalThis.requestAnimationFrame = window.requestAnimationFrame
-  globalThis.cancelAnimationFrame = window.cancelAnimationFrame
-  globalThis.getComputedStyle = window.getComputedStyle
+})
 
-  return (clientRuntime = { dom, window })
-}
+test('Table puts consumer classes on the holder and never on the table, per the Svelte rules', async () => {
+  const Table = await loadComponent('Table')
 
-const require = createRequire(import.meta.url)
-const clientCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-svelte-client-tests')
+  const markup = renderMarkup(Table, {
+    striped: true,
+    class: 'consumer-class',
+    children: snippet(tableRows([])),
+  })
 
-/**
- * Compiles a component (or a test fixture) with `generate: 'client'` and writes it to the
- * cache. Relative component imports and the bare `svelte` specifier are rewritten so the
- * generated modules resolve from the cache directory. Shared components use a stable file
- * name so fixtures can import them by path; fixtures get a unique name.
- */
-const writeClientComponent = async (name, source, { stable = false } = {}) => {
-  ensureClientDom()
-  const clientEntry = pathToFileURL(
-    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
-  ).href
+  assert.deepEqual(classList(markup, 'div'), ['rs-table-holder', 'consumer-class'])
+  assert.deepEqual(classList(markup, 'table'), ['rs-table', 'rs-table--striped'])
+})
 
-  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
-  const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
+test('Table renders the caption inside the table so it is exposed as the table name', async () => {
+  const Table = await loadComponent('Table')
 
-  const rewritten = js.code
-    .replace(/(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g, (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`)
-    .replace(/(['"])svelte\1/g, (_, quote) => `${quote}${clientEntry}${quote}`)
+  const withCaption = renderMarkup(Table, {
+    caption: 'Quarterly revenue by region',
+    children: snippet(tableRows([])),
+  })
+  const captionIndex = withCaption.indexOf('<caption>')
+  const closeTableIndex = withCaption.indexOf('</table>')
 
-  mkdirSync(clientCache, { recursive: true })
-  const file = join(clientCache, stable ? `${name}.compiled.mjs` : `${name}-${randomUUID()}.compiled.mjs`)
-  writeFileSync(file, rewritten)
-  return file
-}
+  assert.ok(captionIndex > -1, 'a caption prop must render a <caption>')
+  assert.ok(
+    captionIndex < closeTableIndex,
+    'the caption must sit inside the table so assistive tech reads it as the table name',
+  )
+  assert.match(withCaption, /<caption>Quarterly revenue by region<\/caption>/)
+  assert.equal((withCaption.match(/<caption>/g) ?? []).length, 1)
 
-const importClientComponent = async (file) => (await import(pathToFileURL(file).href)).default
+  const withoutCaption = renderMarkup(Table, { children: snippet(tableRows([])) })
+  assert.ok(!withoutCaption.includes('<caption>'), 'no caption prop must render no <caption>')
+  assert.ok(
+    !openingTag(withCaption, 'table').includes('<caption>'),
+    'the caption must not leak into the table tag itself',
+  )
+})
 
-const loadClientComponent = async (name, source, options) =>
-  importClientComponent(await writeClientComponent(name, source, options))
+test('Table treats a blank caption as absent so no empty name reaches the table', async () => {
+  const Table = await loadComponent('Table')
 
-const loadComponentSource = (name) => readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+  for (const caption of ['', '   ', '\n\t']) {
+    const markup = renderMarkup(Table, { caption, children: snippet(tableRows([])) })
+    assert.ok(
+      !markup.includes('<caption>'),
+      `caption ${JSON.stringify(caption)} must not render an empty <caption>`,
+    )
+  }
+})
 
-const mountFixture = async (markup, script = '') => {
-  const { window } = ensureClientDom()
-  const clientEntry = pathToFileURL(
-    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
-  ).href
-  const { mount, flushSync } = await import(clientEntry)
+test('Table spreads native attributes onto the holder while children render inside the table', async () => {
+  const Table = await loadComponent('Table')
 
-  // Both components must exist on disk before either is imported, because the compiled
-  // Accordion imports the compiled Disclosure at module link time.
-  for (const name of ['Accordion', 'Disclosure']) {
-    await writeClientComponent(name, loadComponentSource(name), { stable: true })
+  const markup = renderMarkup(Table, {
+    id: 'revenue',
+    'data-region': 'finance',
+    children: snippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  const holder = openingTag(markup, 'div')
+  assert.match(holder, /id="revenue"/)
+  assert.match(holder, /data-region="finance"/)
+  assert.ok(
+    markup.includes('<td>Ada Lovelace</td>'),
+    'children must render inside the table, standing in for thead/tbody',
+  )
+  assert.ok(
+    !openingTag(markup, 'table').includes('id="revenue"'),
+    'the table must not take the attributes the holder owns',
+  )
+})
+
+test('Table as renders the requested holder tag while keeping the block class', async () => {
+  const Table = await loadComponent('Table')
+
+  assert.ok(openingTag(renderMarkup(Table, { children: snippet('') }), 'div').startsWith('<div'))
+
+  const section = renderMarkup(Table, { as: 'section', children: snippet('') })
+  assert.ok(openingTag(section, 'section').length > 0, 'as="section" must render a <section>')
+  assert.ok(!openingTag(section, 'div'), 'as="section" must not also render a <div>')
+  assert.ok(classList(section, 'section').includes('rs-table-holder'))
+})
+
+test('Table server-renders no scroll-region semantics, because nothing has been measured yet', async () => {
+  const Table = await loadComponent('Table')
+
+  const markup = renderMarkup(Table, {
+    caption: 'Quarterly revenue by region',
+    children: snippet(tableRows([])),
+  })
+
+  const holder = openingTag(markup, 'div')
+  assert.ok(!/role="/.test(holder), 'SSR must not claim a region before measuring an overflow')
+  assert.ok(!/tabindex/.test(holder), 'SSR must not add a tab stop before measuring an overflow')
+})
+
+test('Table makes the holder keyboard-scrollable only while it overflows, and clears it again', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    caption: 'Quarterly revenue by region',
+    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    assert.ok(holder, 'the holder must be rendered')
+
+    assert.equal(holder.getAttribute('role'), null, 'a table that fits is not a scroll region')
+    assert.equal(holder.getAttribute('tabindex'), null, 'a table that fits stays out of tab order')
+    assert.equal(holder.getAttribute('aria-label'), null, 'a table that fits needs no region name')
+
+    setOverflow(holder, 900, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('tabindex'), '0', 'an overflowing holder must be tabbable')
+    assert.equal(holder.getAttribute('role'), 'region', 'an overflowing holder must be a region')
+    assert.equal(
+      holder.getAttribute('aria-label'),
+      'Quarterly revenue by region',
+      'the region must be named from the caption',
+    )
+
+    setOverflow(holder, 300, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('role'), null, 'the region role must be removed when it fits')
+    assert.equal(holder.getAttribute('tabindex'), null, 'the tab stop must be removed when it fits')
+  } finally {
+    teardown()
+  }
+})
+
+test('Table names the scroll region from label first, then caption, then a generic name', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const cases = [
+    { label: 'label wins', props: { label: 'Revenue', caption: 'Caption text' }, expected: 'Revenue' },
+    { label: 'caption fallback', props: { caption: 'Caption text' }, expected: 'Caption text' },
+    { label: 'generic fallback', props: {}, expected: 'Table' },
+    {
+      label: 'blank label falls through',
+      props: { label: '  ', caption: 'Caption text' },
+      expected: 'Caption text',
+    },
+  ]
+
+  for (const { label, props, expected } of cases) {
+    const { target, unmount: teardown } = await mountComponent(Table, {
+      ...props,
+      children: clientSnippet(tableRows([])),
+    })
+    try {
+      const holder = target.querySelector('.rs-table-holder')
+      setOverflow(holder, 900, 300)
+      resize()
+      await tick()
+      assert.equal(holder.getAttribute('aria-label'), expected, `${label}: wrong region name`)
+    } finally {
+      teardown()
+    }
+  }
+})
+
+test('Table keeps a consumer-supplied role, tabindex and label instead of overwriting them', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    role: 'group',
+    tabindex: -1,
+    'aria-label': 'Custom name',
+    caption: 'Quarterly revenue by region',
+    children: clientSnippet(tableRows([])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    setOverflow(holder, 900, 300)
+    resize()
+    await tick()
+
+    assert.equal(holder.getAttribute('role'), 'group', 'an explicit role must survive')
+    assert.equal(holder.getAttribute('tabindex'), '-1', 'an explicit tabindex must survive')
+    assert.equal(holder.getAttribute('aria-label'), 'Custom name', 'an explicit label must survive')
+  } finally {
+    teardown()
+  }
+})
+
+test('Table re-measures on resize, so a holder that shrinks later becomes scrollable', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
+  })
+
+  try {
+    const holder = target.querySelector('.rs-table-holder')
+    setOverflow(holder, 400, 400)
+    resize()
+    await tick()
+    assert.equal(holder.getAttribute('tabindex'), null, 'no tab stop while the table fits')
+
+    setOverflow(holder, 1200, 400)
+    resize()
+    await tick()
+    assert.equal(holder.getAttribute('tabindex'), '0', 'the tab stop appears once it overflows')
+    assert.equal(holder.getAttribute('aria-label'), 'Table', 'an unnamed region falls back to Table')
+
+    setOverflow(holder, 400, 1200)
+    resize()
+    await tick()
+    assert.equal(
+      holder.getAttribute('tabindex'),
+      null,
+      'growing past the content clears the tab stop',
+    )
+  } finally {
+    teardown()
+  }
+})
+
+test('Table stops observing once unmounted, so a late resize cannot touch a detached holder', async () => {
+  const Table = await loadClientComponent('Table')
+
+  const { target, unmount: teardown } = await mountComponent(Table, {
+    children: clientSnippet(tableRows([])),
+  })
+  const holder = target.querySelector('.rs-table-holder')
+  setOverflow(holder, 900, 300)
+  resize()
+  await tick()
+  assert.equal(holder.getAttribute('tabindex'), '0', 'precondition: the holder overflows')
+
+  teardown()
+
+  assert.equal(observerCallbacks.size, 0, 'unmounting must disconnect the ResizeObserver')
+  assert.doesNotThrow(() => resize(), 'firing a resize after teardown must be a no-op')
+})
+
+test('Table styles compile through the shared barrel and keep every Astro selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Table'))
+
+  for (const selector of [
+    '.rs-table-holder',
+    '.rs-table',
+    '.rs-table--striped',
+    '.rs-table--compact',
+    '.rs-table--hover',
+    '.rs-table caption',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Table CSS must contain ${selector}`)
   }
 
-  const Fixture = await loadClientComponent(`Fixture-${randomUUID()}`, `<script lang="ts">
-  import Accordion from './Accordion.svelte'
-  import Disclosure from './Disclosure.svelte'
-  ${script}
-</script>
-${markup}`)
+  assert.ok(
+    !/@media/.test(css),
+    'Table has no size variants, so it must not reach for viewport media queries',
+  )
+})
 
-  const target = window.document.createElement('div')
-  window.document.body.appendChild(target)
-  const instance = mount(Fixture, { target })
-  flushSync()
+/** Builds a `children` snippet that renders the wiring Field hands to the control. */
+const controlSnippet = () =>
+  createRawSnippet((wiring) => ({
+    render: () => {
+      const props = wiring()
+      const describedBy = props['aria-describedby']
+      const invalid = props['aria-invalid']
+      return [
+        '<input',
+        ` id="${props.id}"`,
+        describedBy ? ` aria-describedby="${describedBy}"` : '',
+        invalid ? ` aria-invalid="${invalid}"` : '',
+        props.required ? ' required' : '',
+        props.disabled ? ' disabled' : '',
+        ' />',
+      ].join('')
+    },
+  }))
 
-  return { window, target, instance, flushSync, details: () => [...target.querySelectorAll('details')] }
-}
+/** Reads an attribute value off the first tag that carries it. */
+const attributeValue = (markup, name) =>
+  markup.match(new RegExp(`${name}="([^"]*)"`))?.[1] ?? undefined
 
-/** Simulates a summary activation the way a keyboard or pointer user would trigger it. */
-const activateSummary = (window, details, flushSync, key = 'Enter') => {
-  const summary = details.querySelector('summary')
-  const keydown = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
-  summary.dispatchEvent(keydown)
-  summary.click()
-  details.dispatchEvent(new window.Event('toggle', { bubbles: true }))
-  flushSync()
-  return keydown.defaultPrevented
-}
+test('Label renders .rs-label, defaults to <label> and only forwards for on a real label', async () => {
+  const Label = await loadComponent('Label')
+
+  const markup = renderMarkup(Label, { for: 'email', children: snippet('Email') })
+  const tag = openingTag(markup, 'label')
+  assert.ok(tag.startsWith('<label'), 'Label defaults to the label tag')
+  assert.match(tag, /for="email"/)
+  assert.deepEqual(classList(markup, 'label'), ['rs-label'])
+  assert.match(markup, />Email</)
+
+  for (const nonLabelTag of ['span', 'div']) {
+    const nonLabel = renderMarkup(Label, { as: nonLabelTag, for: 'email' })
+    assert.ok(
+      openingTag(nonLabel, nonLabelTag).length > 0,
+      `Label as="${nonLabelTag}" must render a <${nonLabelTag}>`,
+    )
+    assert.doesNotMatch(
+      openingTag(nonLabel, nonLabelTag),
+      /for=/,
+      `Label as="${nonLabelTag}" must not render for — only a real label can own it`,
+    )
+    assert.ok(classList(nonLabel, nonLabelTag).includes('rs-label'))
+  }
+})
+
+test('Label required and optional markers stay inside the label element', async () => {
+  const Label = await loadComponent('Label')
+
+  const required = renderMarkup(Label, { required: true, children: snippet('Email') })
+  assert.match(required, /<span class="rs-label__required" aria-hidden="true">\*<\/span>/)
+  assert.match(required, /<span class="rs-label__sr-only">\(required\)<\/span>/)
+  assert.doesNotMatch(required, /rs-label__optional/)
+
+  const optional = renderMarkup(Label, { optional: true, children: snippet('Phone') })
+  assert.match(optional, /<span class="rs-label__optional">\(optional\)<\/span>/)
+  assert.doesNotMatch(optional, /rs-label__required/)
+
+  const both = renderMarkup(Label, { required: true, optional: true, children: snippet('Email') })
+  assert.match(both, /rs-label__required/, 'required wins when both are set')
+  assert.doesNotMatch(
+    both,
+    /rs-label__optional/,
+    'required and optional are exclusive — never both',
+  )
+
+  const custom = renderMarkup(Label, {
+    required: true,
+    requiredText: '(must fill)',
+    optionalText: '(nice to have)',
+  })
+  assert.match(custom, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const customOptional = renderMarkup(Label, {
+    optional: true,
+    requiredText: '(must fill)',
+    optionalText: '(nice to have)',
+  })
+  assert.match(customOptional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
+
+  const plain = renderMarkup(Label, { children: snippet('Notes') })
+  assert.doesNotMatch(plain, /rs-label__required/)
+  assert.doesNotMatch(plain, /rs-label__optional/)
+})
+
+test('Label composes a consumer class and spreads native attributes', async () => {
+  const Label = await loadComponent('Label')
+
+  const markup = renderMarkup(Label, {
+    class: 'consumer-class',
+    id: 'email-label',
+    'data-test': 'label',
+    children: snippet('Email'),
+  })
+
+  assert.deepEqual(classList(markup, 'label'), ['rs-label', 'consumer-class'])
+  const tag = openingTag(markup, 'label')
+  assert.match(tag, /id="email-label"/)
+  assert.match(tag, /data-test="label"/)
+})
+
+test('Field renders the label, control, hint and error blocks it is given', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    label: 'Email',
+    hint: 'We only use this to reach you.',
+    error: 'Enter a valid address.',
+    children: controlSnippet(),
+  })
+
+  assert.ok(classList(markup).includes('rs-field'))
+  assert.match(markup, /class="rs-field__label"/)
+  assert.match(markup, /class="rs-field__control"/)
+  assert.match(markup, /class="rs-field__hint"/)
+  assert.match(markup, /class="rs-field__error"/)
+  assert.match(markup, /We only use this to reach you\./)
+  assert.match(markup, /Enter a valid address\./)
+
+  const bare = renderMarkup(Field, { children: controlSnippet() })
+  assert.doesNotMatch(bare, /rs-field__label/)
+  assert.doesNotMatch(bare, /rs-field__hint/)
+  assert.doesNotMatch(bare, /rs-field__error/)
+  assert.match(bare, /class="rs-field__control"/)
+})
+
+test('Field generates an id, links the label to the control and derives hint and error ids', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+
+  const controlId = attributeValue(openingTag(markup, 'input'), 'id')
+  assert.match(controlId, /^rs-field-/, 'a missing id must be generated with the rs-field prefix')
+
+  assert.equal(
+    attributeValue(openingTag(markup, 'label'), 'for'),
+    controlId,
+    'the generated label for must match the control id',
+  )
+
+  const hintTag = markup.match(/<div class="rs-field__hint" id="([^"]*)"/)?.[1]
+  const errorTag = markup.match(/<div class="rs-field__error" id="([^"]*)"/)?.[1]
+  assert.equal(hintTag, `${controlId}-hint`)
+  assert.equal(errorTag, `${controlId}-error`)
+
+  const describedBy = attributeValue(openingTag(markup, 'input'), 'aria-describedby')
+  assert.equal(describedBy, `${controlId}-hint ${controlId}-error`)
+})
+
+test('Field respects an explicit id and explicit hint and error ids', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'account-email',
+    hintId: 'account-email-help',
+    errorId: 'account-email-error',
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+
+  assert.equal(attributeValue(openingTag(markup, 'input'), 'id'), 'account-email')
+  assert.equal(attributeValue(openingTag(markup, 'label'), 'for'), 'account-email')
+  assert.match(markup, /class="rs-field__hint" id="account-email-help"/)
+  assert.match(markup, /class="rs-field__error" id="account-email-error"/)
+  assert.equal(
+    attributeValue(openingTag(markup, 'input'), 'aria-describedby'),
+    'account-email-help account-email-error',
+  )
+
+  const derived = renderMarkup(Field, {
+    id: 'account-email',
+    label: 'Email',
+    hint: 'Helper',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+  assert.equal(
+    attributeValue(derived, 'aria-describedby'),
+    'account-email-hint account-email-error',
+  )
+})
+
+test('Field only lists the hint and error ids that are actually rendered', async () => {
+  const Field = await loadComponent('Field')
+
+  const hintOnly = renderMarkup(Field, {
+    id: 'f1',
+    hint: 'Helper',
+    children: controlSnippet(),
+  })
+  assert.equal(attributeValue(openingTag(hintOnly, 'input'), 'aria-describedby'), 'f1-hint')
+  assert.doesNotMatch(hintOnly, /aria-invalid/)
+
+  const errorOnly = renderMarkup(Field, {
+    id: 'f2',
+    error: 'Problem',
+    children: controlSnippet(),
+  })
+  assert.equal(attributeValue(openingTag(errorOnly, 'input'), 'aria-describedby'), 'f2-error')
+  assert.equal(attributeValue(openingTag(errorOnly, 'input'), 'aria-invalid'), 'true')
+
+  const neither = renderMarkup(Field, { id: 'f3', children: controlSnippet() })
+  assert.doesNotMatch(neither, /aria-describedby/)
+  assert.doesNotMatch(neither, /aria-invalid/)
+})
+
+test('Field marks an error invalid and clears it once the error is removed', async () => {
+  const Field = await loadComponent('Field')
+
+  const invalid = renderMarkup(Field, { id: 'f1', error: 'Problem', children: controlSnippet() })
+  assert.equal(attributeValue(openingTag(invalid, 'input'), 'aria-invalid'), 'true')
+
+  const valid = renderMarkup(Field, { id: 'f1', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(valid, 'input'), /aria-invalid/)
+})
+
+test('Field propagates required and disabled to the control wiring and label', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'f1',
+    label: 'Email',
+    required: true,
+    disabled: true,
+    children: controlSnippet(),
+  })
+
+  const input = openingTag(markup, 'input')
+  assert.match(input, /\brequired\b/, 'required must reach the control')
+  assert.match(input, /\bdisabled\b/, 'disabled must reach the control')
+  assert.ok(classList(markup).includes('rs-field--disabled'))
+  assert.match(markup, /<span class="rs-label__required" aria-hidden="true">\*<\/span>/)
+
+  const enabled = renderMarkup(Field, { id: 'f1', label: 'Email', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(enabled, 'input'), /\brequired\b/)
+  assert.doesNotMatch(openingTag(enabled, 'input'), /\bdisabled\b/)
+  assert.ok(!classList(enabled).includes('rs-field--disabled'))
+})
+
+test('Field exposes aria-disabled on the wrapper only while disabled', async () => {
+  const Field = await loadComponent('Field')
+
+  const disabled = renderMarkup(Field, { id: 'f1', disabled: true, children: controlSnippet() })
+  assert.match(openingTag(disabled, 'div'), /aria-disabled="true"/)
+
+  const enabled = renderMarkup(Field, { id: 'f1', children: controlSnippet() })
+  assert.doesNotMatch(openingTag(enabled, 'div'), /aria-disabled/)
+
+  const explicit = renderMarkup(Field, {
+    id: 'f1',
+    'aria-disabled': 'true',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(explicit, 'div'),
+    /aria-disabled="true"/,
+    'a consumer aria-disabled must be forwarded while enabled',
+  )
+
+  const override = renderMarkup(Field, {
+    id: 'f1',
+    disabled: true,
+    'aria-disabled': 'false',
+    children: controlSnippet(),
+  })
+  assert.match(
+    openingTag(override, 'div'),
+    /aria-disabled="true"/,
+    'the disabled prop owns aria-disabled on the wrapper',
+  )
+})
+
+test('Field disabled dims the label, control, hint and error together', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Field'))
+  const disabledBlock = css.match(/\.rs-field--disabled[^{]*\{([^}]*)\}/)?.[0] ?? ''
+
+  for (const element of ['__label', '__control', '__hint', '__error']) {
+    assert.match(
+      disabledBlock,
+      new RegExp(`\\.rs-field--disabled\\s+\\.rs-field${element}\\b`),
+      `the disabled modifier must dim .rs-field${element}`,
+    )
+  }
+
+  assert.match(disabledBlock, /opacity:\s*0?\.\d+/, 'dimming must use a reduced opacity')
+})
+
+test('Field forwards requiredText and optionalText to the Label it renders', async () => {
+  const Field = await loadComponent('Field')
+
+  const required = renderMarkup(Field, {
+    id: 'f1',
+    label: 'Email',
+    required: true,
+    requiredText: '(must fill)',
+    children: controlSnippet(),
+  })
+  assert.match(required, /<span class="rs-label__sr-only">\(must fill\)<\/span>/)
+
+  const optional = renderMarkup(Field, {
+    id: 'f2',
+    label: 'Referral code',
+    optional: true,
+    optionalText: '(nice to have)',
+    children: controlSnippet(),
+  })
+  assert.match(optional, /<span class="rs-label__optional">\(nice to have\)<\/span>/)
+})
+
+test('Field passes its control id into the labelSlot so for cannot drift', async () => {
+  const Field = await loadComponent('Field')
+  const labelSlot = createRawSnippet((id) => ({
+    render: () => `<label class="custom-label" for="${id()}">Custom</label>`,
+  }))
+
+  const markup = renderMarkup(Field, {
+    id: 'account-name',
+    labelSlot,
+    children: controlSnippet(),
+  })
+
+  const controlId = attributeValue(openingTag(markup, 'input'), 'id')
+  assert.equal(controlId, 'account-name')
+  assert.equal(
+    attributeValue(openingTag(markup, 'label'), 'for'),
+    controlId,
+    'the labelSlot id must be the control id Field generated or received',
+  )
+
+  const generated = renderMarkup(Field, { labelSlot, children: controlSnippet() })
+  const generatedId = attributeValue(openingTag(generated, 'input'), 'id')
+  assert.match(generatedId, /^rs-field-/, 'a missing id must still be generated for the slot')
+  assert.equal(attributeValue(openingTag(generated, 'label'), 'for'), generatedId)
+})
+
+test('Field gives each instance a distinct generated id', async () => {
+  const TwoFields = await loadInline(`<script>
+    import Field from './Field.svelte'
+  </script>
+  <Field label="One">
+    {#snippet children(control)}
+      <input {...control} />
+    {/snippet}
+  </Field>
+  <Field label="Two">
+    {#snippet children(control)}
+      <input {...control} />
+    {/snippet}
+  </Field>`)
+
+  const markup = renderMarkup(TwoFields)
+  const ids = [...markup.matchAll(/<input id="([^"]*)"/g)].map((match) => match[1])
+
+  assert.equal(ids.length, 2, 'both fields must render a control')
+  assert.notEqual(ids[0], ids[1], 'two Field instances must not share a generated id')
+
+  const fors = [...markup.matchAll(/<label[^>]*for="([^"]*)"/g)].map((match) => match[1])
+  assert.deepEqual(fors, ids, 'each label for must follow its own control id')
+})
+
+test('Field keeps hint and error ids in sync when they come from snippets', async () => {
+  const Field = await loadComponent('Field')
+
+  const markup = renderMarkup(Field, {
+    id: 'custom',
+    hintId: 'custom-hint',
+    hintSlot: snippet('Custom helper'),
+    errorSlot: snippet('Custom problem'),
+    children: controlSnippet(),
+  })
+
+  assert.match(markup, /Custom helper/)
+  assert.match(markup, /Custom problem/)
+  assert.match(markup, /class="rs-field__hint" id="custom-hint"/)
+  assert.match(markup, /class="rs-field__error" id="custom-error"/)
+  assert.equal(
+    attributeValue(openingTag(markup, 'input'), 'aria-describedby'),
+    'custom-hint custom-error',
+  )
+})
+
+test('Field as and class mirror the Astro component and spread native attributes', async () => {
+  const Field = await loadComponent('Field')
+
+  assert.ok(openingTag(renderMarkup(Field), 'div').startsWith('<div'))
+
+  const markup = renderMarkup(Field, {
+    as: 'section',
+    class: 'consumer-class',
+    'data-region': 'account',
+    children: controlSnippet(),
+  })
+  assert.ok(openingTag(markup, 'section').length > 0, 'Field as="section" must render a <section>')
+  assert.deepEqual(classList(markup, 'section'), ['rs-field', 'consumer-class'])
+  assert.match(openingTag(markup, 'section'), /data-region="account"/)
+
+  const wrapped = renderMarkup(Field, { id: 'field-section', children: controlSnippet() })
+  assert.equal(
+    attributeValue(openingTag(wrapped, 'input'), 'id'),
+    'field-section',
+    'Field id is the control id, not a wrapper attribute',
+  )
+})
+
+test('Field styles compile through the shared barrel and keep the Astro selectors', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Field'))
+
+  for (const selector of [
+    '.rs-field',
+    '.rs-field__control',
+    '.rs-field__hint',
+    '.rs-field__error',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Field CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Field restates its gap at the sm container query',
+  )
+})
+
+test('Label styles compile through the shared barrel and keep the Astro selectors', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Label'))
+
+  for (const selector of [
+    '.rs-label',
+    '.rs-label__required',
+    '.rs-label__optional',
+    '.rs-label__sr-only',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Label CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Label restates its type scale at the sm container query',
+  )
+})
+
+test('packages/svelte/src/index.ts re-exports Field and Label with their prop union types', () => {
+  const index = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+
+  const unions = {
+    Field: ['FieldTag', 'FieldControlProps'],
+    Label: ['LabelTag'],
+  }
+
+  for (const [name, exportedTypes] of Object.entries(unions)) {
+    assert.match(
+      index,
+      new RegExp(`export \\{ default as ${name} \\} from './components/${name}\\.svelte'`),
+      `index.ts must export the ${name} component`,
+    )
+    assert.match(
+      index,
+      new RegExp(`export type \\* from './components/${name}\\.svelte'`),
+      `index.ts must re-export the ${name} prop union types`,
+    )
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `package.json must expose ./components/${name}`,
+    )
+
+    const source = readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+    for (const exportedType of exportedTypes) {
+      assert.match(
+        source,
+        new RegExp(`export type ${exportedType}\\b`),
+        `${name}.svelte must export the ${exportedType} union`,
+      )
+    }
+  }
+})
 
 test('Disclosure and Accordion are exported with subpaths and exported prop union types', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))

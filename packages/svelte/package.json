@@ -26,6 +26,7 @@
     "./components/Field": "./src/components/Field.svelte",
     "./components/Grid": "./src/components/Grid.svelte",
     "./components/Label": "./src/components/Label.svelte",
+    "./components/Table": "./src/components/Table.svelte",
     "./components/Typography": "./src/components/Typography.svelte"
   },
   "files": [
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "jsdom": "^30.1.2",
     "sass": "^1.105.1",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.6",

@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { JSDOM } from 'jsdom'
@@ -59,6 +59,13 @@ const loadInline = async (source) => compileComponent(source, `inline-${randomUU
 /** Renders a component and returns the server-rendered body markup. */
 const renderMarkup = (Component, props = {}) => render(Component, { props }).body
 
+/**
+ * Strips the Svelte server-render anchor comments (`<!--[0-->`, `<!--]-->`) so assertions can
+ * read the markup the way a consumer sees it. Blocks left empty by a false `{#if}` become `<!---->`,
+ * which is removed too.
+ */
+const visible = (markup) => markup.replace(/<!--[\s\S]*?-->/g, '')
+
 /** Returns the opening tag for the first element with the given name. */
 const openingTag = (markup, name) => markup.match(new RegExp(`<${name}\\b[^>]*>`))?.[0] ?? ''
 
@@ -91,7 +98,11 @@ const setupDom = async () => {
     }
   }
 
-  const clientEntry = join(dirname(require.resolve('svelte/package.json')), 'src', 'index-client.js')
+  const clientEntry = join(
+    dirname(require.resolve('svelte/package.json')),
+    'src',
+    'index-client.js',
+  )
   const client = await import(pathToFileURL(clientEntry).href)
   return { ...client, dom }
 }
@@ -182,18 +193,27 @@ const loadComponentSource = (name) => readFileSync(join(componentsDir, `${name}.
 const writeClientComponent = async (name, source, { stable = false } = {}) => {
   ensureClientDom()
   const clientEntry = pathToFileURL(
-    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+    join(
+      dirname(require.resolve('svelte/package.json')),
+      require('svelte/package.json').exports['.'].browser,
+    ),
   ).href
 
   const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
   const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
 
   const rewritten = js.code
-    .replace(/(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g, (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`)
+    .replace(
+      /(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g,
+      (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`,
+    )
     .replace(/(['"])svelte\1/g, (_, quote) => `${quote}${clientEntry}${quote}`)
 
   mkdirSync(clientCache, { recursive: true })
-  const file = join(clientCache, stable ? `${name}.compiled.mjs` : `${name}-${randomUUID()}.compiled.mjs`)
+  const file = join(
+    clientCache,
+    stable ? `${name}.compiled.mjs` : `${name}-${randomUUID()}.compiled.mjs`,
+  )
   writeFileSync(file, rewritten)
   return file
 }
@@ -206,7 +226,10 @@ const loadFixtureComponent = async (name, source, options) =>
 const mountFixture = async (markup, script = '') => {
   const { window } = ensureClientDom()
   const clientEntry = pathToFileURL(
-    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+    join(
+      dirname(require.resolve('svelte/package.json')),
+      require('svelte/package.json').exports['.'].browser,
+    ),
   ).href
   const { mount, flushSync } = await import(clientEntry)
 
@@ -216,19 +239,28 @@ const mountFixture = async (markup, script = '') => {
     await writeClientComponent(name, loadComponentSource(name), { stable: true })
   }
 
-  const Fixture = await loadFixtureComponent(`Fixture-${randomUUID()}`, `<script lang="ts">
+  const Fixture = await loadFixtureComponent(
+    `Fixture-${randomUUID()}`,
+    `<script lang="ts">
   import Accordion from './Accordion.svelte'
   import Disclosure from './Disclosure.svelte'
   ${script}
 </script>
-${markup}`)
+${markup}`,
+  )
 
   const target = window.document.createElement('div')
   window.document.body.appendChild(target)
   const instance = mount(Fixture, { target })
   flushSync()
 
-  return { window, target, instance, flushSync, details: () => [...target.querySelectorAll('details')] }
+  return {
+    window,
+    target,
+    instance,
+    flushSync,
+    details: () => [...target.querySelectorAll('details')],
+  }
 }
 
 /** Simulates a summary activation the way a keyboard or pointer user would trigger it. */
@@ -241,7 +273,6 @@ const activateSummary = (window, details, flushSync, key = 'Enter') => {
   flushSync()
   return keydown.defaultPrevented
 }
-
 
 const containerModifiers = [
   'rs-container--full-width',
@@ -839,7 +870,11 @@ test('Table renders .rs-table-holder around .rs-table with only the modifiers th
       props: { striped: true, compact: true, hover: true },
       expected: tableModifiers,
     },
-    { label: 'explicit false', props: { striped: false, compact: false, hover: false }, expected: [] },
+    {
+      label: 'explicit false',
+      props: { striped: false, compact: false, hover: false },
+      expected: [],
+    },
   ]
 
   for (const { label, props, expected } of cases) {
@@ -1006,7 +1041,11 @@ test('Table names the scroll region from label first, then caption, then a gener
   const Table = await loadClientComponent('Table')
 
   const cases = [
-    { label: 'label wins', props: { label: 'Revenue', caption: 'Caption text' }, expected: 'Revenue' },
+    {
+      label: 'label wins',
+      props: { label: 'Revenue', caption: 'Caption text' },
+      expected: 'Revenue',
+    },
     { label: 'caption fallback', props: { caption: 'Caption text' }, expected: 'Caption text' },
     { label: 'generic fallback', props: {}, expected: 'Table' },
     {
@@ -1076,7 +1115,11 @@ test('Table re-measures on resize, so a holder that shrinks later becomes scroll
     resize()
     await tick()
     assert.equal(holder.getAttribute('tabindex'), '0', 'the tab stop appears once it overflows')
-    assert.equal(holder.getAttribute('aria-label'), 'Table', 'an unnamed region falls back to Table')
+    assert.equal(
+      holder.getAttribute('aria-label'),
+      'Table',
+      'an unnamed region falls back to Table',
+    )
 
     setOverflow(holder, 400, 1200)
     resize()
@@ -1627,8 +1670,16 @@ test('Disclosure and Accordion are exported with subpaths and exported prop unio
       `./src/components/${name}.svelte`,
       `packages/svelte must export ./components/${name}`,
     )
-    assert.match(index, new RegExp(`export \\{ default as ${name} \\}`), `${name} must be re-exported`)
-    assert.match(index, new RegExp(`export type \\* from './components/${name}.svelte'`), `${name} prop types must be re-exported`)
+    assert.match(
+      index,
+      new RegExp(`export \\{ default as ${name} \\}`),
+      `${name} must be re-exported`,
+    )
+    assert.match(
+      index,
+      new RegExp(`export type \\* from './components/${name}.svelte'`),
+      `${name} prop types must be re-exported`,
+    )
   }
 
   const disclosure = loadComponentSource('Disclosure')
@@ -1648,22 +1699,41 @@ test('Disclosure renders native details/summary, the rs-disclosure classes, and 
   })
 
   const root = openingTag(markup, 'details')
-  assert.ok(classList(markup, 'details').includes('rs-disclosure'), 'the root must be a details element with rs-disclosure')
+  assert.ok(
+    classList(markup, 'details').includes('rs-disclosure'),
+    'the root must be a details element with rs-disclosure',
+  )
   assert.match(root, /id="notes"/, 'native attributes must spread onto the root')
   assert.match(root, /data-testid="notes"/, 'data attributes must spread onto the root')
-  assert.ok(markup.includes('<summary class="rs-disclosure__summary"'), 'the summary must carry its element class')
-  assert.ok(markup.includes('rs-disclosure__label'), 'the summary label must carry its element class')
+  assert.ok(
+    markup.includes('<summary class="rs-disclosure__summary"'),
+    'the summary must carry its element class',
+  )
+  assert.ok(
+    markup.includes('rs-disclosure__label'),
+    'the summary label must carry its element class',
+  )
   assert.ok(
     markup.includes('<span class="rs-disclosure__indicator" aria-hidden="true">'),
     'the indicator must be decorative',
   )
-  assert.ok(markup.includes('<div class="rs-disclosure__panel">'), 'the panel must carry its element class')
+  assert.ok(
+    markup.includes('<div class="rs-disclosure__panel">'),
+    'the panel must carry its element class',
+  )
 
   const closed = renderMarkup(Disclosure, { summary: 'Release notes' })
-  assert.ok(!openingTag(closed, 'details').includes('open'), 'a closed disclosure must not render the open attribute')
+  assert.ok(
+    !openingTag(closed, 'details').includes('open'),
+    'a closed disclosure must not render the open attribute',
+  )
 
   const opened = renderMarkup(Disclosure, { summary: 'Release notes', open: true })
-  assert.match(openingTag(opened, 'details'), /\bopen\b/, 'an open disclosure must render the open attribute')
+  assert.match(
+    openingTag(opened, 'details'),
+    /\bopen\b/,
+    'an open disclosure must render the open attribute',
+  )
 })
 
 test('Disclosure falls back to the summary snippet when no summary string is given', async () => {
@@ -1673,14 +1743,20 @@ test('Disclosure falls back to the summary snippet when no summary string is giv
     children: snippet('<p>Body</p>'),
   })
 
-  assert.ok(markup.includes('<strong>Custom</strong> label'), 'the summary snippet must render inside the summary')
+  assert.ok(
+    markup.includes('<strong>Custom</strong> label'),
+    'the summary snippet must render inside the summary',
+  )
 
   const preferred = renderMarkup(Disclosure, {
     summary: 'Plain label',
     summarySlot: snippet('<strong>Custom</strong> label'),
   })
   assert.ok(preferred.includes('Plain label'), 'the summary string wins when both are provided')
-  assert.ok(!preferred.includes('<strong>Custom</strong>'), 'the snippet must not render when a summary string exists')
+  assert.ok(
+    !preferred.includes('<strong>Custom</strong>'),
+    'the snippet must not render when a summary string exists',
+  )
 })
 
 test('bind:open stays in sync with the native details state in both directions', async () => {
@@ -1716,12 +1792,18 @@ test('a programmatic open prop drives the element and a native toggle reports ba
   element.dispatchEvent(new window.Event('toggle', { bubbles: true }))
   flushSync()
 
-  assert.equal(target.querySelector('[data-state]').textContent, 'true', 'a native toggle must reach the bound state')
+  assert.equal(
+    target.querySelector('[data-state]').textContent,
+    'true',
+    'a native toggle must reach the bound state',
+  )
   assert.equal(element.open, true)
 })
 
 test('keyboard activation toggles a summary and leaves the native behaviour intact', async () => {
-  const { window, flushSync, details } = await mountFixture(`<Disclosure summary="Keyboard">body</Disclosure>`)
+  const { window, flushSync, details } = await mountFixture(
+    `<Disclosure summary="Keyboard">body</Disclosure>`,
+  )
   const element = details()[0]
 
   for (const key of ['Enter', ' ']) {
@@ -1743,7 +1825,10 @@ test('single-open mode closes the sibling that was open', async () => {
 
   const [first, second, third] = details()
   activateSummary(window, first, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [true, false, false])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true, false, false],
+  )
 
   activateSummary(window, second, flushSync)
   assert.deepEqual(
@@ -1753,7 +1838,10 @@ test('single-open mode closes the sibling that was open', async () => {
   )
 
   activateSummary(window, third, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [false, false, true])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, false, true],
+  )
 
   activateSummary(window, third, flushSync)
   assert.deepEqual(
@@ -1772,10 +1860,16 @@ test('multiple mode keeps siblings open independently', async () => {
   const [first, second] = details()
   activateSummary(window, first, flushSync)
   activateSummary(window, second, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [true, true])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true, true],
+  )
 
   activateSummary(window, first, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [false, true])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, true],
+  )
 })
 
 test('Accordion renders rs-accordion and marks single mode, and spreads attrs', async () => {
@@ -1784,7 +1878,10 @@ test('Accordion renders rs-accordion and marks single mode, and spreads attrs', 
   const multipleTag = openingTag(multiple, 'div')
   assert.ok(classList(multiple, 'div').includes('rs-accordion'))
   assert.match(multipleTag, /data-testid="faq"/)
-  assert.ok(!multiple.includes('rs-accordion--single'), 'multiple mode must not render the single modifier')
+  assert.ok(
+    !multiple.includes('rs-accordion--single'),
+    'multiple mode must not render the single modifier',
+  )
 
   const single = renderMarkup(Accordion, { mode: 'single' })
   assert.deepEqual(classList(single, 'div'), ['rs-accordion', 'rs-accordion--single'])
@@ -1821,7 +1918,10 @@ test('mode can change at runtime and a second single-mode accordion stays isolat
   const [first, second, x, y] = details()
   activateSummary(window, first, flushSync)
   activateSummary(window, second, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [true, true, false, false])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true, true, false, false],
+  )
 
   activateSummary(window, x, flushSync)
   assert.deepEqual(
@@ -1857,7 +1957,10 @@ test('an item removed from a single-open accordion stops receiving sibling updat
   )
 
   activateSummary(window, details()[0], flushSync)
-  assert.deepEqual(details().map((element) => element.open), [true, false])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true, false],
+  )
 
   instance.setShowA(false)
   flushSync()
@@ -1866,7 +1969,10 @@ test('an item removed from a single-open accordion stops receiving sibling updat
   const remaining = details()[0]
   assert.equal(remaining.open, false, 'the surviving item must stay closed')
   activateSummary(window, remaining, flushSync)
-  assert.deepEqual(details().map((element) => element.open), [true])
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true],
+  )
 })
 
 test('Disclosure and Accordion styles compile through the shared barrel with the expected selectors', async () => {
@@ -1902,4 +2008,318 @@ test('Disclosure and Accordion styles compile through the shared barrel with the
   for (const selector of ['.rs-accordion', '.rs-accordion--single']) {
     assert.ok(accordion.includes(selector), `compiled Accordion CSS must contain ${selector}`)
   }
+})
+
+test('the README Astro-original column matches what is actually on disk', () => {
+  const readme = readFileSync(join(packageRoot, 'README.md'), 'utf8')
+  const astroDir = join(repoRoot, 'packages', 'base', 'src', 'components')
+
+  const rows = [...readme.matchAll(/^\|\s*`([A-Za-z]+)`\s*\|[^|]*\|\s*([^|]+?)\s*\|$/gm)].map(
+    ([, component, provenance]) => ({ component, provenance }),
+  )
+
+  assert.ok(rows.length > 0, 'the README component table must list components')
+
+  for (const { component, provenance } of rows) {
+    // The claim must track the filesystem, so an unmerged Astro PR cannot be cited as the
+    // original and a later port cannot leave a stale `— (Svelte-first)` behind.
+    const hasAstroOriginal = existsSync(join(astroDir, `${component}.astro`))
+    if (hasAstroOriginal) {
+      assert.equal(
+        provenance,
+        `\`${component}.astro\``,
+        `README must name \`${component}.astro\` as the original because it exists on disk`,
+      )
+    } else {
+      assert.equal(
+        provenance,
+        '— (Svelte-first)',
+        `README must mark ${component} as Svelte-first because packages/base/src/components/${component}.astro does not exist`,
+      )
+    }
+  }
+})
+
+test('Figure is exported from the barrel, as a subpath, with its prop union types', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Figure'],
+    './src/components/Figure.svelte',
+    'packages/svelte must export ./components/Figure',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Figure \} from '\.\/components\/Figure\.svelte'/,
+    'the barrel must export the Figure value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Figure\.svelte'/,
+    'the barrel must re-export the Figure prop union types',
+  )
+
+  const source = loadComponentSource('Figure')
+  for (const union of ['FigureTag', 'FigureVariant', 'FigureCaptionAlign']) {
+    assert.match(source, new RegExp(`export type ${union}\\b`), `Figure must export ${union}`)
+  }
+})
+
+test('Figure renders a figure root with the media wrapper and no caption by default', async () => {
+  const Figure = await loadComponent('Figure')
+
+  const markup = renderMarkup(Figure, { children: snippet('<img alt="" src="x.png" />') })
+
+  assert.ok(openingTag(markup, 'figure').length > 0, 'Figure must default to a <figure> root')
+  assert.deepEqual(classList(markup, 'figure'), ['rs-figure'])
+  assert.ok(markup.includes('rs-figure__media'), 'Figure always renders the media wrapper')
+  assert.match(markup, /<img[^>]*src="x\.png"/, 'children render inside the media wrapper')
+  assert.ok(
+    markup.indexOf('rs-figure__media') < markup.indexOf('<img'),
+    'children must render inside the media wrapper, not beside it',
+  )
+  assert.ok(
+    !markup.includes('figcaption'),
+    'no caption prop or snippet must render no <figcaption>',
+  )
+  assert.ok(
+    !markup.includes('rs-figure__caption'),
+    'no caption prop or snippet must render no caption element at all',
+  )
+})
+
+test('Figure renders the caption prop as a figcaption inside the figure root', async () => {
+  const Figure = await loadComponent('Figure')
+
+  const markup = visible(
+    renderMarkup(Figure, {
+      caption: 'Deployment pipeline stages',
+      children: snippet('<img alt="" src="x.png" />'),
+    }),
+  )
+
+  assert.match(
+    markup,
+    /<figcaption class="rs-figure__caption">Deployment pipeline stages<\/figcaption>/,
+    'the caption prop must render inside a figcaption',
+  )
+  assert.ok(
+    markup.indexOf('</figure>') > markup.indexOf('</figcaption>'),
+    'the figcaption must sit inside the figure so assistive tech associates it',
+  )
+  assert.equal((markup.match(/<figcaption/g) ?? []).length, 1, 'exactly one figcaption renders')
+})
+
+test('Figure renders the caption snippet and combines it with the caption prop', async () => {
+  const Figure = await loadComponent('Figure')
+
+  const slotOnly = visible(
+    renderMarkup(Figure, {
+      captionSlot: snippet('Fig. 1 — <em>Edge</em> reads.'),
+      children: snippet('<img alt="" src="x.png" />'),
+    }),
+  )
+  assert.ok(
+    slotOnly.includes('rs-figure__caption'),
+    'a caption snippet alone must render the caption element',
+  )
+  assert.match(slotOnly, /Fig\. 1 — <em>Edge<\/em> reads\./)
+
+  const both = visible(
+    renderMarkup(Figure, {
+      caption: 'Fig. 1',
+      captionSlot: snippet(' — Edge reads.'),
+      children: snippet('<img alt="" src="x.png" />'),
+    }),
+  )
+  assert.equal((both.match(/<figcaption/g) ?? []).length, 1, 'prop and snippet share one caption')
+  assert.match(
+    both,
+    /<figcaption class="rs-figure__caption">Fig\. 1\s*— Edge reads\.<\/figcaption>/,
+    'the caption prop renders before the snippet, in source order',
+  )
+  assert.ok(
+    both.indexOf('Fig. 1') < both.indexOf('— Edge reads.'),
+    'the prop text must precede the snippet text',
+  )
+})
+
+test('Figure treats a blank caption as absent, but a snippet still renders the caption element', async () => {
+  const Figure = await loadComponent('Figure')
+
+  for (const caption of ['', '   ', '\n\t']) {
+    const markup = visible(
+      renderMarkup(Figure, {
+        caption,
+        children: snippet('<img alt="" src="x.png" />'),
+      }),
+    )
+    assert.ok(
+      !markup.includes('rs-figure__caption'),
+      `caption ${JSON.stringify(caption)} must not render a caption element`,
+    )
+  }
+
+  const withSlot = visible(
+    renderMarkup(Figure, {
+      caption: '   ',
+      captionSlot: snippet('From the snippet.'),
+      children: snippet('<img alt="" src="x.png" />'),
+    }),
+  )
+  assert.match(
+    withSlot,
+    /<figcaption class="rs-figure__caption">From the snippet\.<\/figcaption>/,
+    'a blank prop is dropped while the snippet still renders',
+  )
+})
+
+test('Figure as="div" swaps figcaption for a role="note" caption, keeping the block classes', async () => {
+  const Figure = await loadComponent('Figure')
+
+  const markup = visible(
+    renderMarkup(Figure, {
+      as: 'div',
+      caption: 'Rendered as a plain container',
+      children: snippet('<img alt="" src="x.png" />'),
+    }),
+  )
+
+  assert.ok(openingTag(markup, 'div').length > 0, 'as="div" must render a <div> root')
+  assert.ok(!openingTag(markup, 'figure'), 'as="div" must not also render a <figure>')
+  assert.deepEqual(classList(markup, 'div'), ['rs-figure'])
+  assert.ok(
+    !markup.includes('<figcaption'),
+    'a <figcaption> outside a <figure> is invalid, so the div root must not render one',
+  )
+  assert.match(
+    markup,
+    /<div class="rs-figure__caption" role="note">Rendered as a plain container<\/div>/,
+    'the div root pairs the caption with role="note"',
+  )
+})
+
+test('Figure renders exactly the bordered and caption-align modifiers that were set', async () => {
+  const Figure = await loadComponent('Figure')
+  const variants = ['rs-figure--bordered']
+  const alignments = ['rs-figure__caption--center']
+
+  const cases = [
+    { label: 'defaults', props: { caption: 'C' }, expected: [] },
+    { label: 'default variant', props: { variant: 'default', caption: 'C' }, expected: [] },
+    {
+      label: 'bordered',
+      props: { variant: 'bordered', caption: 'C' },
+      expected: ['rs-figure--bordered'],
+    },
+  ]
+
+  for (const { label, props, expected } of cases) {
+    const classes = classList(renderMarkup(Figure, props), 'figure')
+    for (const modifier of variants) {
+      assert.equal(
+        classes.includes(modifier),
+        expected.includes(modifier),
+        `Figure ${label} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
+      )
+    }
+  }
+
+  const alignCases = [
+    { label: 'default alignment', props: { caption: 'C' }, expected: [] },
+    { label: 'start', props: { captionAlign: 'start', caption: 'C' }, expected: [] },
+    {
+      label: 'center',
+      props: { captionAlign: 'center', caption: 'C' },
+      expected: ['rs-figure__caption--center'],
+    },
+  ]
+
+  for (const { label, props, expected } of alignCases) {
+    const classes = classList(renderMarkup(Figure, props), 'figcaption')
+    assert.ok(classes.includes('rs-figure__caption'), `Figure ${label} must keep the caption class`)
+    for (const modifier of alignments) {
+      assert.equal(
+        classes.includes(modifier),
+        expected.includes(modifier),
+        `Figure ${label} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
+      )
+    }
+  }
+})
+
+test('Figure spreads native attributes and composes a consumer class on the root only', async () => {
+  const Figure = await loadComponent('Figure')
+
+  const markup = renderMarkup(Figure, {
+    id: 'pipeline',
+    'data-region': 'docs',
+    class: 'consumer-class',
+    variant: 'bordered',
+    caption: 'Pipeline',
+    children: snippet('<img alt="" src="x.png" />'),
+  })
+
+  const root = openingTag(markup, 'figure')
+  assert.match(root, /id="pipeline"/)
+  assert.match(root, /data-region="docs"/)
+  assert.deepEqual(classList(markup, 'figure'), [
+    'rs-figure',
+    'rs-figure--bordered',
+    'consumer-class',
+  ])
+  assert.ok(
+    !root.includes('rs-figure__media'),
+    'the media wrapper must not take the attributes the root owns',
+  )
+  assert.ok(
+    !openingTag(markup, 'figcaption').includes('consumer-class'),
+    'the consumer class belongs to the root, not the caption',
+  )
+})
+
+test('Figure styles compile through the shared barrel and keep every selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Figure'))
+
+  for (const selector of [
+    '.rs-figure',
+    '.rs-figure--bordered',
+    '.rs-figure__media',
+    '.rs-figure__caption',
+    '.rs-figure__caption--center',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Figure CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'the caption type scale must restate at the sm container query',
+  )
+  assert.ok(
+    !/@media/.test(css),
+    'Figure sizes with container queries, so it must not reach for viewport media queries',
+  )
+  assert.match(
+    css,
+    /var\(--rs-figure-caption-color, var\(--rs-color-muted,/,
+    'the caption colour keeps the opt-in hook over the token over the literal',
+  )
+  assert.ok(
+    /\.rs-figure--bordered\s+\.rs-figure__media\s*\{[^}]*border:\s*var\(--rs-figure-media-border-width/ms.test(
+      css,
+    ),
+    'only the bordered modifier frames the media',
+  )
+
+  const baseMedia = css.match(/^\s*:global\s+\.rs-figure__media\s*\{([^}]*)\}/m)?.[1] ?? ''
+  assert.ok(
+    baseMedia.length > 0,
+    'the compiled CSS must contain a standalone .rs-figure__media rule',
+  )
+  assert.ok(
+    !/(^|[\s;])border:/.test(baseMedia),
+    'the default variant must not draw a media border at all',
+  )
 })

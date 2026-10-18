@@ -27,8 +27,14 @@ globalThis.window = window
 globalThis.document = window.document
 Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true })
 for (const key of Object.getOwnPropertyNames(window)) {
-  if (!/^(HTML|SVG|DOM|Element|Node|Text|Comment|DocumentFragment|Event|MouseEvent|KeyboardEvent|CSS)/.test(key)) continue
-  if (typeof globalThis[key] === 'undefined' && typeof window[key] === 'function') globalThis[key] = window[key]
+  if (
+    !/^(HTML|SVG|DOM|Element|Node|Text|Comment|DocumentFragment|Event|MouseEvent|KeyboardEvent|CSS)/.test(
+      key,
+    )
+  )
+    continue
+  if (typeof globalThis[key] === 'undefined' && typeof window[key] === 'function')
+    globalThis[key] = window[key]
 }
 globalThis.requestAnimationFrame = window.requestAnimationFrame
 globalThis.cancelAnimationFrame = window.cancelAnimationFrame
@@ -51,7 +57,10 @@ const compileToCache = async (name, source) => {
   const { code } = await preprocess(normalised, vitePreprocess(), { filename: `${name}.svelte` })
   const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
   const rewritten = js.code
-    .replace(/(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g, (_, q, base) => `${q}./${base}.compiled.mjs${q}`)
+    .replace(
+      /(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g,
+      (_, q, base) => `${q}./${base}.compiled.mjs${q}`,
+    )
     .replace(/(['"])svelte\1/g, (_, q) => `${q}${clientEntry}${q}`)
   mkdirSync(cache, { recursive: true })
   const file = join(cache, `${name}.compiled.mjs`)
@@ -64,6 +73,10 @@ const storyFixtures = [
   { label: 'DisclosureSnippets', file: 'DisclosureSnippets.svelte' },
   { label: 'AccordionMultiple', file: 'AccordionMultiple.svelte' },
   { label: 'AccordionSingle', file: 'AccordionSingle.svelte' },
+  { label: 'FigureDefault', file: 'FigureDefault.svelte' },
+  { label: 'FigureBordered', file: 'FigureBordered.svelte' },
+  { label: 'FigureCaption', file: 'FigureCaption.svelte' },
+  { label: 'FigureCaptionAlign', file: 'FigureCaptionAlign.svelte' },
 ]
 
 const runAxe = (target) =>
@@ -90,7 +103,7 @@ test('the axe harness reports real violations', async () => {
 
 test('the story examples render without axe violations', async () => {
   // Components must be on disk before the stories that import them are linked.
-  for (const name of ['Accordion', 'Container', 'Disclosure']) {
+  for (const name of ['Accordion', 'Container', 'Disclosure', 'Figure']) {
     await compileToCache(name, readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'))
   }
 
@@ -108,9 +121,11 @@ test('the story examples render without axe violations', async () => {
 
     const results = await runAxe(target)
     for (const violation of results.violations) {
-      failures.push(`${label}: ${violation.id} (${violation.nodes.length} node(s)) — ${violation.help}`)
+      failures.push(
+        `${label}: ${violation.id} (${violation.nodes.length} node(s)) — ${violation.help}`,
+      )
     }
   }
 
-  assert.deepEqual(failures, [], 'every Disclosure and Accordion story must pass axe')
+  assert.deepEqual(failures, [], 'every story fixture must pass axe')
 })

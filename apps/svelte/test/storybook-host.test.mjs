@@ -107,6 +107,42 @@ test('the Table variants share one story file with a11y enabled', () => {
   }
 })
 
+test('the Figure variants share one story file with a11y enabled', () => {
+  const figureStories = readdirSync(storiesDir).filter((name) =>
+    /^Figure.*\.stories\.ts$/.test(name),
+  )
+  assert.deepEqual(
+    figureStories,
+    ['Figure.stories.ts'],
+    'all Figure variants belong in Figure.stories.ts',
+  )
+
+  const story = read(join(storiesDir, 'Figure.stories.ts'))
+  assert.match(story, /title:\s*'Components\/Figure'/)
+  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Figure stories must enable a11y')
+  for (const variant of ['Default', 'Bordered', 'Caption', 'CaptionAlign']) {
+    assert.match(
+      story,
+      new RegExp(`export const ${variant}: Story =`),
+      `Figure.stories.ts must export the ${variant} variant`,
+    )
+  }
+})
+
+test('the Figure stories cover every caption state, including no caption at all', () => {
+  const caption = read(join(storiesDir, 'components', 'FigureCaption.svelte'))
+  const align = read(join(storiesDir, 'components', 'FigureCaptionAlign.svelte'))
+
+  assert.match(caption, /captionSlot/, 'one Figure story must exercise the caption snippet')
+  assert.match(
+    caption,
+    /<Figure\s*>/,
+    'the caption story must include a Figure with no caption at all',
+  )
+  assert.match(align, /captionAlign="start"/, 'the align story must show the start alignment')
+  assert.match(align, /captionAlign="center"/, 'the align story must show the center alignment')
+})
+
 test('the Astro host is left unchanged', () => {
   assert.equal(astroPkg.name, '@rocketship/frontend')
   assert.match(astroPkg.scripts.storybook, /6006\b/, 'the Astro host keeps port 6006')

@@ -1,7 +1,11 @@
 /// <reference types="svelte" />
+export { default as Accordion } from './components/Accordion.svelte'
+export { default as Disclosure } from './components/Disclosure.svelte'
 export { default as Field } from './components/Field.svelte'
 export { default as Label } from './components/Label.svelte'
 export { default as Table } from './components/Table.svelte'
+export type * from './components/Accordion.svelte'
+export type * from './components/Disclosure.svelte'
 export type * from './components/Field.svelte'
 export type * from './components/Label.svelte'
 export type * from './components/Table.svelte'

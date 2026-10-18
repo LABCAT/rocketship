@@ -161,6 +161,88 @@ const mountComponent = async (Component, props = {}) => {
   }
 }
 
+/**
+ * Client-side fixture harness for the interactive components (Accordion/Disclosure). It shares
+ * the jsdom globals and Svelte client runtime installed by setupDom above, so both harnesses run
+ * against one DOM. Components are compiled with `generate: 'client'` and their relative component
+ * imports and the bare `svelte` specifier are rewritten to resolve from the cache directory.
+ */
+const ensureClientDom = () => ({ window: globalThis.window, dom: globalThis.document })
+
+const clientCache = join(packageRoot, 'node_modules', '.cache', 'rocketship-svelte-client-tests')
+
+/** Reads a component's raw source so it can be compiled for the client. */
+const loadComponentSource = (name) => readFileSync(join(componentsDir, `${name}.svelte`), 'utf8')
+
+/**
+ * Compiles a component (or a test fixture) with `generate: 'client'` and writes it to the cache.
+ * Shared components use a stable file name so fixtures can import them by path; fixtures get a
+ * unique name.
+ */
+const writeClientComponent = async (name, source, { stable = false } = {}) => {
+  ensureClientDom()
+  const clientEntry = pathToFileURL(
+    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+  ).href
+
+  const { code } = await preprocess(source, vitePreprocess(), { filename: `${name}.svelte` })
+  const { js } = compile(code, { generate: 'client', filename: `${name}.svelte` })
+
+  const rewritten = js.code
+    .replace(/(['"])\.\/([A-Za-z0-9_.]+)\.svelte\1/g, (_, quote, base) => `${quote}./${base}.compiled.mjs${quote}`)
+    .replace(/(['"])svelte\1/g, (_, quote) => `${quote}${clientEntry}${quote}`)
+
+  mkdirSync(clientCache, { recursive: true })
+  const file = join(clientCache, stable ? `${name}.compiled.mjs` : `${name}-${randomUUID()}.compiled.mjs`)
+  writeFileSync(file, rewritten)
+  return file
+}
+
+const importClientComponent = async (file) => (await import(pathToFileURL(file).href)).default
+
+const loadFixtureComponent = async (name, source, options) =>
+  importClientComponent(await writeClientComponent(name, source, options))
+
+const mountFixture = async (markup, script = '') => {
+  const { window } = ensureClientDom()
+  const clientEntry = pathToFileURL(
+    join(dirname(require.resolve('svelte/package.json')), require('svelte/package.json').exports['.'].browser),
+  ).href
+  const { mount, flushSync } = await import(clientEntry)
+
+  // Both components must exist on disk before either is imported, because the compiled
+  // Accordion imports the compiled Disclosure at module link time.
+  for (const name of ['Accordion', 'Disclosure']) {
+    await writeClientComponent(name, loadComponentSource(name), { stable: true })
+  }
+
+  const Fixture = await loadFixtureComponent(`Fixture-${randomUUID()}`, `<script lang="ts">
+  import Accordion from './Accordion.svelte'
+  import Disclosure from './Disclosure.svelte'
+  ${script}
+</script>
+${markup}`)
+
+  const target = window.document.createElement('div')
+  window.document.body.appendChild(target)
+  const instance = mount(Fixture, { target })
+  flushSync()
+
+  return { window, target, instance, flushSync, details: () => [...target.querySelectorAll('details')] }
+}
+
+/** Simulates a summary activation the way a keyboard or pointer user would trigger it. */
+const activateSummary = (window, details, flushSync, key = 'Enter') => {
+  const summary = details.querySelector('summary')
+  const keydown = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+  summary.dispatchEvent(keydown)
+  summary.click()
+  details.dispatchEvent(new window.Event('toggle', { bubbles: true }))
+  flushSync()
+  return keydown.defaultPrevented
+}
+
+
 const containerModifiers = [
   'rs-container--full-width',
   'rs-container--wide',
@@ -1532,5 +1614,292 @@ test('packages/svelte/src/index.ts re-exports Field and Label with their prop un
         `${name}.svelte must export the ${exportedType} union`,
       )
     }
+  }
+})
+
+test('Disclosure and Accordion are exported with subpaths and exported prop union types', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const index = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['Accordion', 'Disclosure']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.match(index, new RegExp(`export \\{ default as ${name} \\}`), `${name} must be re-exported`)
+    assert.match(index, new RegExp(`export type \\* from './components/${name}.svelte'`), `${name} prop types must be re-exported`)
+  }
+
+  const disclosure = loadComponentSource('Disclosure')
+  assert.match(disclosure, /export type DisclosureTag = 'details'/)
+  const accordion = loadComponentSource('Accordion')
+  assert.match(accordion, /export type AccordionMode = 'multiple' \| 'single'/)
+  assert.match(accordion, /export type AccordionTag = 'div' \| 'section' \| 'article' \| 'ul'/)
+})
+
+test('Disclosure renders native details/summary, the rs-disclosure classes, and spreads attrs', async () => {
+  const Disclosure = await loadComponent('Disclosure')
+  const markup = renderMarkup(Disclosure, {
+    summary: 'Release notes',
+    id: 'notes',
+    'data-testid': 'notes',
+    children: snippet('<p>Body</p>'),
+  })
+
+  const root = openingTag(markup, 'details')
+  assert.ok(classList(markup, 'details').includes('rs-disclosure'), 'the root must be a details element with rs-disclosure')
+  assert.match(root, /id="notes"/, 'native attributes must spread onto the root')
+  assert.match(root, /data-testid="notes"/, 'data attributes must spread onto the root')
+  assert.ok(markup.includes('<summary class="rs-disclosure__summary"'), 'the summary must carry its element class')
+  assert.ok(markup.includes('rs-disclosure__label'), 'the summary label must carry its element class')
+  assert.ok(
+    markup.includes('<span class="rs-disclosure__indicator" aria-hidden="true">'),
+    'the indicator must be decorative',
+  )
+  assert.ok(markup.includes('<div class="rs-disclosure__panel">'), 'the panel must carry its element class')
+
+  const closed = renderMarkup(Disclosure, { summary: 'Release notes' })
+  assert.ok(!openingTag(closed, 'details').includes('open'), 'a closed disclosure must not render the open attribute')
+
+  const opened = renderMarkup(Disclosure, { summary: 'Release notes', open: true })
+  assert.match(openingTag(opened, 'details'), /\bopen\b/, 'an open disclosure must render the open attribute')
+})
+
+test('Disclosure falls back to the summary snippet when no summary string is given', async () => {
+  const Disclosure = await loadComponent('Disclosure')
+  const markup = renderMarkup(Disclosure, {
+    summarySlot: snippet('<strong>Custom</strong> label'),
+    children: snippet('<p>Body</p>'),
+  })
+
+  assert.ok(markup.includes('<strong>Custom</strong> label'), 'the summary snippet must render inside the summary')
+
+  const preferred = renderMarkup(Disclosure, {
+    summary: 'Plain label',
+    summarySlot: snippet('<strong>Custom</strong> label'),
+  })
+  assert.ok(preferred.includes('Plain label'), 'the summary string wins when both are provided')
+  assert.ok(!preferred.includes('<strong>Custom</strong>'), 'the snippet must not render when a summary string exists')
+})
+
+test('bind:open stays in sync with the native details state in both directions', async () => {
+  const { window, target, flushSync, details } = await mountFixture(
+    `<Disclosure summary="Bound" bind:open>body</Disclosure>
+  <p data-state>{open}</p>`,
+    `let { open = $bindable(false) } = $props()`,
+  )
+
+  const element = details()[0]
+  const state = () => target.querySelector('[data-state]').textContent
+  assert.equal(element.open, false)
+  assert.equal(state(), 'false')
+
+  activateSummary(window, element, flushSync)
+  assert.equal(element.open, true, 'activating the summary must open the element')
+  assert.equal(state(), 'true', 'the bound parent state must follow the element')
+
+  activateSummary(window, element, flushSync)
+  assert.equal(element.open, false, 'activating again must close the element')
+  assert.equal(state(), 'false', 'the bound parent state must follow the element on close')
+})
+
+test('a programmatic open prop drives the element and a native toggle reports back', async () => {
+  const { window, target, flushSync, details } = await mountFixture(
+    `<Disclosure summary="Controlled" bind:open>body</Disclosure>
+  <p data-state>{open}</p>`,
+    `let { open = $bindable(false) } = $props()`,
+  )
+
+  const element = details()[0]
+  element.open = true
+  element.dispatchEvent(new window.Event('toggle', { bubbles: true }))
+  flushSync()
+
+  assert.equal(target.querySelector('[data-state]').textContent, 'true', 'a native toggle must reach the bound state')
+  assert.equal(element.open, true)
+})
+
+test('keyboard activation toggles a summary and leaves the native behaviour intact', async () => {
+  const { window, flushSync, details } = await mountFixture(`<Disclosure summary="Keyboard">body</Disclosure>`)
+  const element = details()[0]
+
+  for (const key of ['Enter', ' ']) {
+    const prevented = activateSummary(window, element, flushSync, key)
+    assert.equal(prevented, false, `the ${key} keydown must not be prevented`)
+    assert.equal(element.open, true, `the ${key} key must open the disclosure`)
+
+    activateSummary(window, element, flushSync, key)
+    assert.equal(element.open, false, `the ${key} key must close the disclosure again`)
+  }
+})
+
+test('single-open mode closes the sibling that was open', async () => {
+  const { window, flushSync, details } = await mountFixture(`<Accordion mode="single">
+    <Disclosure summary="A">a</Disclosure>
+    <Disclosure summary="B">b</Disclosure>
+    <Disclosure summary="C">c</Disclosure>
+  </Accordion>`)
+
+  const [first, second, third] = details()
+  activateSummary(window, first, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [true, false, false])
+
+  activateSummary(window, second, flushSync)
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, true, false],
+    'opening a sibling must close the previously open disclosure',
+  )
+
+  activateSummary(window, third, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [false, false, true])
+
+  activateSummary(window, third, flushSync)
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, false, false],
+    'closing the open disclosure must leave every sibling closed',
+  )
+})
+
+test('multiple mode keeps siblings open independently', async () => {
+  const { window, flushSync, details } = await mountFixture(`<Accordion>
+    <Disclosure summary="A">a</Disclosure>
+    <Disclosure summary="B">b</Disclosure>
+  </Accordion>`)
+
+  const [first, second] = details()
+  activateSummary(window, first, flushSync)
+  activateSummary(window, second, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [true, true])
+
+  activateSummary(window, first, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [false, true])
+})
+
+test('Accordion renders rs-accordion and marks single mode, and spreads attrs', async () => {
+  const Accordion = await loadComponent('Accordion')
+  const multiple = renderMarkup(Accordion, { 'data-testid': 'faq', children: snippet('<p>x</p>') })
+  const multipleTag = openingTag(multiple, 'div')
+  assert.ok(classList(multiple, 'div').includes('rs-accordion'))
+  assert.match(multipleTag, /data-testid="faq"/)
+  assert.ok(!multiple.includes('rs-accordion--single'), 'multiple mode must not render the single modifier')
+
+  const single = renderMarkup(Accordion, { mode: 'single' })
+  assert.deepEqual(classList(single, 'div'), ['rs-accordion', 'rs-accordion--single'])
+})
+
+test('two initially-open items in single mode settle to one open disclosure', async () => {
+  const { details } = await mountFixture(`<Accordion mode="single">
+    <Disclosure summary="A" open>a</Disclosure>
+    <Disclosure summary="B" open>b</Disclosure>
+    <Disclosure summary="C">c</Disclosure>
+  </Accordion>`)
+
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, true, false],
+    'the last registered open disclosure wins',
+  )
+})
+
+test('mode can change at runtime and a second single-mode accordion stays isolated', async () => {
+  const { window, flushSync, details, instance } = await mountFixture(
+    `<Accordion {mode}>
+    <Disclosure summary="A">a</Disclosure>
+    <Disclosure summary="B">b</Disclosure>
+  </Accordion>
+  <Accordion mode="single">
+    <Disclosure summary="X">x</Disclosure>
+    <Disclosure summary="Y">y</Disclosure>
+  </Accordion>`,
+    `let mode = $state('multiple')
+  export const setMode = (value: 'multiple' | 'single') => { mode = value }`,
+  )
+
+  const [first, second, x, y] = details()
+  activateSummary(window, first, flushSync)
+  activateSummary(window, second, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [true, true, false, false])
+
+  activateSummary(window, x, flushSync)
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [true, true, true, false],
+    'a separate accordion must not close disclosures in another accordion',
+  )
+
+  instance.setMode('single')
+  flushSync()
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, true, true, false],
+    'switching to single mode must collapse the first accordion to its most recent panel and leave the other alone',
+  )
+
+  activateSummary(window, y, flushSync)
+  assert.deepEqual(
+    details().map((element) => element.open),
+    [false, true, false, true],
+    'the two accordions must stay isolated from each other',
+  )
+})
+
+test('an item removed from a single-open accordion stops receiving sibling updates', async () => {
+  const { window, flushSync, details, instance } = await mountFixture(
+    `<Accordion mode="single">
+    {#if showA}<Disclosure summary="A">a</Disclosure>{/if}
+    <Disclosure summary="B">b</Disclosure>
+  </Accordion>`,
+    `let showA = $state(true)
+  export const setShowA = (value: boolean) => { showA = value }`,
+  )
+
+  activateSummary(window, details()[0], flushSync)
+  assert.deepEqual(details().map((element) => element.open), [true, false])
+
+  instance.setShowA(false)
+  flushSync()
+  assert.equal(details().length, 1, 'the removed item must leave the DOM')
+
+  const remaining = details()[0]
+  assert.equal(remaining.open, false, 'the surviving item must stay closed')
+  activateSummary(window, remaining, flushSync)
+  assert.deepEqual(details().map((element) => element.open), [true])
+})
+
+test('Disclosure and Accordion styles compile through the shared barrel with the expected selectors', async () => {
+  const disclosure = await compileStyleBlock(styleBlockOf('Disclosure'))
+  for (const selector of [
+    '.rs-disclosure',
+    '.rs-disclosure__summary',
+    '.rs-disclosure__label',
+    '.rs-disclosure__indicator',
+    '.rs-disclosure__panel',
+    '.rs-disclosure[open]',
+  ]) {
+    assert.ok(disclosure.includes(selector), `compiled Disclosure CSS must contain ${selector}`)
+  }
+  assert.match(
+    disclosure,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Disclosure type scale must restate at the sm container query',
+  )
+  assert.match(
+    disclosure,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)/,
+    'Disclosure must respect reduced motion',
+  )
+  assert.match(
+    disclosure,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*:global \.rs-disclosure \.rs-disclosure__indicator,\s*:global \.rs-disclosure \.rs-disclosure__panel \{\s*transition: none;/,
+    'reduced motion must drop the indicator and panel transitions',
+  )
+  assert.ok(!/@keyframes/.test(disclosure), 'Disclosure must not depend on keyframes animations')
+
+  const accordion = await compileStyleBlock(styleBlockOf('Accordion'))
+  for (const selector of ['.rs-accordion', '.rs-accordion--single']) {
+    assert.ok(accordion.includes(selector), `compiled Accordion CSS must contain ${selector}`)
   }
 })

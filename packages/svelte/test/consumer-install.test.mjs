@@ -30,8 +30,10 @@ const componentSubpaths = [
   'Field',
   'Figure',
   'Grid',
+  'Input',
   'Label',
   'Table',
+  'Textarea',
   'Typography',
 ]
 

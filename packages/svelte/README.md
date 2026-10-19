@@ -17,6 +17,8 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | — (Svelte-first)   |
 | `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | — (Svelte-first)   |
 | `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
+| `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | — (Svelte-first)   |
+| `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | — (Svelte-first)   |
 | `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
 | `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
@@ -56,6 +58,8 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
 | `Alert`      | `as` (`div`, `section`, `aside`, `article`), `variant` (`info`, `success`, `warning`, `error`), `title`, `titleSlot` snippet, `role`, `class` |
+| `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
+| `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
 
 ### `Typography` `html` prop
@@ -63,6 +67,35 @@ Each component spreads unknown attributes onto its rendered element and composes
 `Typography` keeps the `html` prop: pass a string and it renders as raw markup inside the wrapper, taking precedence over the `children` snippet. It is the Svelte equivalent of the Astro component's `set:html`.
 
 **Sanitize before you pass it.** The prop renders trusted HTML verbatim and does not sanitize its input, so it is only safe for content you control or content already sanitized at the boundary. Never pass unsanitized user input, request data, or third-party HTML through it — run it through a sanitizer (for example DOMPurify) first, or render structured markup with the `children` snippet instead.
+
+### `Field`, `Input` and `Textarea`
+
+`Field` hands each control its wiring through the `children` snippet: `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled`. Spread that object onto `Input` or `Textarea` so the label, hint and error text stay linked to the control.
+
+```svelte
+<script lang="ts">
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
+  import Input from '@labcat2020/rocketship-svelte/components/Input'
+  import Textarea from '@labcat2020/rocketship-svelte/components/Textarea'
+
+  let email = $state('')
+  let notes = $state('')
+</script>
+
+<Field label="Work email" hint="We send deployment alerts here.">
+  {#snippet children(control)}
+    <Input {...control} type="email" bind:value={email} />
+  {/snippet}
+</Field>
+
+<Field label="Release notes" error="Add at least ten characters.">
+  {#snippet children(control)}
+    <Textarea {...control} rows="3" bind:value={notes} />
+  {/snippet}
+</Field>
+```
+
+Both controls also work standalone. `invalid` raises `aria-invalid` and applies the error styling, and a size modifier (`sm`, `md`, `lg`) sets the type scale and control height. A `Field` error flows into the control's `aria-invalid` and its modifier, so the styling follows the error text Field renders.
 
 ## Install
 

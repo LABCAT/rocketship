@@ -77,6 +77,12 @@ const storyFixtures = [
   { label: 'FigureBordered', file: 'FigureBordered.svelte' },
   { label: 'FigureCaption', file: 'FigureCaption.svelte' },
   { label: 'FigureCaptionAlign', file: 'FigureCaptionAlign.svelte' },
+  { label: 'InputDefault', file: 'InputDefault.svelte' },
+  { label: 'InputSizes', file: 'InputSizes.svelte' },
+  { label: 'InputStates', file: 'InputStates.svelte' },
+  { label: 'TextareaDefault', file: 'TextareaDefault.svelte' },
+  { label: 'TextareaSizes', file: 'TextareaSizes.svelte' },
+  { label: 'TextareaStates', file: 'TextareaStates.svelte' },
 ]
 
 const runAxe = (target) =>
@@ -103,7 +109,16 @@ test('the axe harness reports real violations', async () => {
 
 test('the story examples render without axe violations', async () => {
   // Components must be on disk before the stories that import them are linked.
-  for (const name of ['Accordion', 'Container', 'Disclosure', 'Figure']) {
+  for (const name of [
+    'Accordion',
+    'Container',
+    'Disclosure',
+    'Field',
+    'Figure',
+    'Input',
+    'Label',
+    'Textarea',
+  ]) {
     await compileToCache(name, readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'))
   }
 

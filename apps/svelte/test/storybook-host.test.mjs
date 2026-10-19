@@ -178,3 +178,55 @@ test('the Field stories live in one file exporting Default, Disabled and Snippet
     'the extra Field story files must be collapsed into Field.stories.ts',
   )
 })
+
+test('the Input and Textarea variants each share one story file with a11y enabled', () => {
+  for (const [component, variants] of [
+    ['Input', ['Default', 'Sizes', 'States']],
+    ['Textarea', ['Default', 'Sizes', 'States']],
+  ]) {
+    const files = readdirSync(storiesDir).filter((name) =>
+      new RegExp(`^${component}.*\\.stories\\.ts$`).test(name),
+    )
+    assert.deepEqual(
+      files,
+      [`${component}.stories.ts`],
+      `all ${component} variants belong in ${component}.stories.ts`,
+    )
+
+    const source = read(join(storiesDir, `${component}.stories.ts`))
+    assert.match(source, new RegExp(`title:\\s*'Components/${component}'`))
+    assert.match(
+      source,
+      /a11y:\s*\{\s*disable:\s*false\s*\}/,
+      `the ${component} stories must enable a11y`,
+    )
+    for (const variant of variants) {
+      assert.match(
+        source,
+        new RegExp(`export const ${variant}: Story =`),
+        `${component}.stories.ts must export the ${variant} variant`,
+      )
+    }
+  }
+})
+
+test('the Input and Textarea stories compose Field and Label rather than a bare control', () => {
+  for (const component of ['Input', 'Textarea']) {
+    const defaultStory = read(join(storiesDir, 'components', `${component}Default.svelte`))
+    assert.match(
+      defaultStory,
+      /<Field\b/,
+      `the ${component} default story must show the Field composition`,
+    )
+    assert.match(
+      defaultStory,
+      /<Label\b|label="/,
+      `the ${component} default story must give its controls a label`,
+    )
+    assert.match(
+      defaultStory,
+      /bind:value=/,
+      `the ${component} default story must exercise bind:value`,
+    )
+  }
+})

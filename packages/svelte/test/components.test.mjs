@@ -274,6 +274,58 @@ const activateSummary = (window, details, flushSync, key = 'Enter') => {
   return keydown.defaultPrevented
 }
 
+/**
+ * Mounts a fixture that composes the form controls with Field and Label, so the wiring Field
+ * hands to a control can be exercised against the real components rather than a stub. The
+ * controls are compiled to stable siblings first, because the fixture links them at import time.
+ */
+const mountControlFixture = async (markup, script = '') => {
+  const { window } = ensureClientDom()
+  const clientEntry = pathToFileURL(
+    join(
+      dirname(require.resolve('svelte/package.json')),
+      require('svelte/package.json').exports['.'].browser,
+    ),
+  ).href
+  const { mount, flushSync } = await import(clientEntry)
+
+  for (const name of ['Field', 'Input', 'Label', 'Textarea']) {
+    await writeClientComponent(name, loadComponentSource(name), { stable: true })
+  }
+
+  const Fixture = await loadFixtureComponent(
+    `ControlFixture-${randomUUID()}`,
+    `<script lang="ts">
+  import Field from './Field.svelte'
+  import Input from './Input.svelte'
+  import Label from './Label.svelte'
+  import Textarea from './Textarea.svelte'
+  ${script}
+</script>
+${markup}`,
+  )
+
+  const target = window.document.createElement('div')
+  window.document.body.appendChild(target)
+  const instance = mount(Fixture, { target })
+  flushSync()
+
+  return {
+    window,
+    target,
+    instance,
+    flushSync,
+    input: () => target.querySelector('input'),
+    textarea: () => target.querySelector('textarea'),
+  }
+}
+
+/** Types into a control the way a user would, so the bound state is what the test reads. */
+const typeInto = (window, element, next) => {
+  element.value = next
+  element.dispatchEvent(new window.Event('input', { bubbles: true }))
+}
+
 const containerModifiers = [
   'rs-container--full-width',
   'rs-container--wide',
@@ -2322,4 +2374,412 @@ test('Figure styles compile through the shared barrel and keep every selector', 
     !/(^|[\s;])border:/.test(baseMedia),
     'the default variant must not draw a media border at all',
   )
+})
+
+test('Input and Textarea are exported from the barrel, as subpaths, with their prop union types', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['Input', 'Textarea']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export \\{ default as ${name} \\} from '\\./components/${name}\\.svelte'`),
+      `the barrel must export the ${name} value`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export type \\* from '\\./components/${name}\\.svelte'`),
+      `the barrel must re-export the ${name} prop union types`,
+    )
+  }
+
+  const input = loadComponentSource('Input')
+  assert.match(
+    input,
+    /export type InputType = 'text' \| 'email' \| 'password' \| 'number' \| 'search' \| 'url' \| 'tel'/,
+  )
+  assert.match(input, /export type InputSize = 'sm' \| 'md' \| 'lg'/)
+
+  const textarea = loadComponentSource('Textarea')
+  assert.match(textarea, /export type TextareaSize = 'sm' \| 'md' \| 'lg'/)
+})
+
+test('Input renders .rs-input with the default text type and one size modifier', async () => {
+  const Input = await loadComponent('Input')
+
+  const bare = classList(renderMarkup(Input), 'input')
+  assert.deepEqual(bare, ['rs-input', 'rs-input--md'], 'the default size is md')
+  assert.match(openingTag(renderMarkup(Input), 'input'), /type="text"/, 'the default type is text')
+
+  for (const size of ['sm', 'md', 'lg']) {
+    const classes = classList(renderMarkup(Input, { size }), 'input')
+    assert.deepEqual(classes, ['rs-input', `rs-input--${size}`])
+  }
+})
+
+test('Input renders every supported native input type', async () => {
+  const Input = await loadComponent('Input')
+
+  for (const type of ['text', 'email', 'password', 'number', 'search', 'url', 'tel']) {
+    const tag = openingTag(renderMarkup(Input, { type }), 'input')
+    assert.match(
+      tag,
+      new RegExp(`type="${type}"`),
+      `Input type="${type}" must render on the element`,
+    )
+  }
+})
+
+test('Input invalid raises aria-invalid and the invalid class, but an explicit attribute wins', async () => {
+  const Input = await loadComponent('Input')
+
+  const invalid = openingTag(renderMarkup(Input, { invalid: true }), 'input')
+  assert.match(invalid, /aria-invalid="true"/)
+  assert.ok(
+    classList(renderMarkup(Input, { invalid: true }), 'input').includes('rs-input--invalid'),
+    'the invalid state must add the modifier',
+  )
+
+  const valid = openingTag(renderMarkup(Input), 'input')
+  assert.doesNotMatch(valid, /aria-invalid/, 'a valid control must not announce aria-invalid')
+  assert.ok(
+    !classList(renderMarkup(Input), 'input').includes('rs-input--invalid'),
+    'a valid control must not carry the invalid modifier',
+  )
+
+  const overridden = renderMarkup(Input, { invalid: true, 'aria-invalid': 'false' })
+  assert.match(
+    openingTag(overridden, 'input'),
+    /aria-invalid="false"/,
+    'an explicit aria-invalid must win over the invalid prop',
+  )
+  assert.ok(
+    !classList(overridden, 'input').includes('rs-input--invalid'),
+    'the modifier must follow the effective aria-invalid, not the prop alone',
+  )
+})
+
+test('Textarea renders .rs-textarea with one size modifier', async () => {
+  const Textarea = await loadComponent('Textarea')
+
+  const bare = classList(renderMarkup(Textarea), 'textarea')
+  assert.deepEqual(bare, ['rs-textarea', 'rs-textarea--md'], 'the default size is md')
+
+  for (const size of ['sm', 'md', 'lg']) {
+    const classes = classList(renderMarkup(Textarea, { size }), 'textarea')
+    assert.deepEqual(classes, ['rs-textarea', `rs-textarea--${size}`])
+  }
+})
+
+test('Textarea invalid raises aria-invalid and the invalid class, but an explicit attribute wins', async () => {
+  const Textarea = await loadComponent('Textarea')
+
+  assert.match(
+    openingTag(renderMarkup(Textarea, { invalid: true }), 'textarea'),
+    /aria-invalid="true"/,
+  )
+  assert.ok(
+    classList(renderMarkup(Textarea, { invalid: true }), 'textarea').includes(
+      'rs-textarea--invalid',
+    ),
+    'the invalid state must add the modifier',
+  )
+  assert.doesNotMatch(
+    openingTag(renderMarkup(Textarea), 'textarea'),
+    /aria-invalid/,
+    'a valid textarea must not announce aria-invalid',
+  )
+
+  const overridden = renderMarkup(Textarea, { invalid: true, 'aria-invalid': 'false' })
+  assert.match(openingTag(overridden, 'textarea'), /aria-invalid="false"/)
+  assert.ok(!classList(overridden, 'textarea').includes('rs-textarea--invalid'))
+})
+
+test('the controls spread native attributes and compose a consumer class with the block', async () => {
+  const Input = await loadComponent('Input')
+  const Textarea = await loadComponent('Textarea')
+
+  const input = openingTag(
+    renderMarkup(Input, {
+      name: 'email',
+      placeholder: 'you@example.com',
+      autocomplete: 'email',
+      class: 'consumer-class',
+    }),
+    'input',
+  )
+  assert.match(input, /name="email"/)
+  assert.match(input, /placeholder="you@example.com"/)
+  assert.match(input, /autocomplete="email"/)
+  assert.deepEqual(classList(renderMarkup(Input, { class: 'consumer-class' }), 'input'), [
+    'rs-input',
+    'rs-input--md',
+    'consumer-class',
+  ])
+
+  const textarea = openingTag(
+    renderMarkup(Textarea, { rows: 4, placeholder: 'Notes', class: 'consumer-class' }),
+    'textarea',
+  )
+  assert.match(textarea, /rows="4"/)
+  assert.match(textarea, /placeholder="Notes"/)
+  assert.deepEqual(classList(renderMarkup(Textarea, { class: 'consumer-class' }), 'textarea'), [
+    'rs-textarea',
+    'rs-textarea--md',
+    'consumer-class',
+  ])
+})
+
+test('bind:value round-trips for Input in both directions', async () => {
+  const { window, target, instance, flushSync, input } = await mountControlFixture(
+    `<Input bind:value={text} />
+  <p data-echo>{text}</p>`,
+    `let text = $state('initial')
+  export const read = () => text
+  export const write = (next: string) => { text = next }`,
+  )
+
+  const element = input()
+  assert.equal(element.value, 'initial', 'the initial state must reach the element')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'initial')
+
+  typeInto(window, element, 'typed by the user')
+  flushSync()
+  assert.equal(instance.read(), 'typed by the user', 'typing must update the bound state')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'typed by the user')
+
+  instance.write('set from the parent')
+  flushSync()
+  assert.equal(element.value, 'set from the parent', 'a parent update must reach the element')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'set from the parent')
+})
+
+test('bind:value round-trips for Textarea in both directions', async () => {
+  const { window, target, instance, flushSync, textarea } = await mountControlFixture(
+    `<Textarea bind:value={notes} />
+  <p data-echo>{notes}</p>`,
+    `let notes = $state('draft')
+  export const read = () => notes
+  export const write = (next: string) => { notes = next }`,
+  )
+
+  const element = textarea()
+  assert.equal(element.value, 'draft', 'the initial state must reach the element')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'draft')
+
+  typeInto(window, element, 'multi\nline\nnotes')
+  flushSync()
+  assert.equal(instance.read(), 'multi\nline\nnotes', 'typing must update the bound state')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'multi\nline\nnotes')
+
+  instance.write('rewritten by the parent')
+  flushSync()
+  assert.equal(element.value, 'rewritten by the parent', 'a parent update must reach the element')
+})
+
+test('the invalid state Field derives from its error reaches the Input control', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Work email" error="Enter a valid email address.">
+    {#snippet children(control)}
+      <Input {...control} type="email" />
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('input')
+  const errorId = target.querySelector('.rs-field__error').id
+  assert.equal(
+    element.getAttribute('aria-invalid'),
+    'true',
+    'the error must mark the control invalid',
+  )
+  assert.equal(
+    element.getAttribute('aria-describedby'),
+    errorId,
+    'the control must point at the error text',
+  )
+  assert.ok(
+    element.classList.contains('rs-input--invalid'),
+    'the Field error must reach the control styling',
+  )
+})
+
+test('the invalid state Field derives from its error reaches the Textarea control', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Release notes" error="Add at least ten characters.">
+    {#snippet children(control)}
+      <Textarea {...control} rows="3" />
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('textarea')
+  assert.equal(element.getAttribute('aria-invalid'), 'true')
+  assert.ok(element.classList.contains('rs-textarea--invalid'))
+})
+
+test('a Field without an error leaves its control valid', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Work email" hint="We send deployment alerts here.">
+    {#snippet children(control)}
+      <Input {...control} type="email" />
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('input')
+  assert.equal(element.getAttribute('aria-invalid'), null, 'no error must mean no aria-invalid')
+  assert.ok(!element.classList.contains('rs-input--invalid'))
+  assert.equal(
+    element.getAttribute('aria-describedby'),
+    target.querySelector('.rs-field__hint').id,
+    'the control must still point at the hint',
+  )
+})
+
+test('Field wires the control id to the label and the described-by ids to the control', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Workspace" hint="Shown in the dashboard header." error="This name is taken.">
+    {#snippet children(control)}
+      <Input {...control} />
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('input')
+  const label = target.querySelector('label')
+  assert.equal(label.getAttribute('for'), element.id, 'the label must point at the control id')
+  assert.equal(
+    element.getAttribute('aria-describedby'),
+    `${target.querySelector('.rs-field__hint').id} ${target.querySelector('.rs-field__error').id}`,
+    'both the hint and the error must be described',
+  )
+})
+
+test('a disabled Field disables the control and blocks interaction, while an enabled one stays focusable', async () => {
+  const { window, target } = await mountControlFixture(
+    `<Field label="Region" disabled>
+    {#snippet children(control)}
+      <Input {...control} />
+    {/snippet}
+  </Field>
+  <Field label="Workspace">
+    {#snippet children(control)}
+      <Input {...control} />
+    {/snippet}
+  </Field>`,
+  )
+
+  const [disabled, enabled] = target.querySelectorAll('input')
+  assert.equal(disabled.disabled, true, 'the disabled Field must disable its control')
+
+  disabled.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a disabled control must not take focus, so it cannot receive typed input',
+  )
+
+  enabled.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'INPUT',
+    'precondition: an enabled control takes focus, so the disabled assertion is meaningful',
+  )
+})
+
+test('a standalone disabled control blocks focus while the enabled one stays focusable', async () => {
+  const { window, target } = await mountControlFixture(
+    `<Input disabled />
+  <Textarea disabled rows="2" />
+  <Input />`,
+  )
+
+  const [disabledInput, disabledTextarea, enabledInput] = target.querySelectorAll('input, textarea')
+  assert.equal(disabledInput.disabled, true)
+  assert.equal(disabledTextarea.disabled, true)
+
+  // Other tests in this file share one jsdom document and may leave a control focused.
+  if (window.document.activeElement instanceof window.HTMLElement) {
+    window.document.activeElement.blur()
+  }
+
+  disabledInput.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a disabled Input must not take focus, so it cannot receive typed input',
+  )
+
+  disabledTextarea.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a disabled Textarea must not take focus, so it cannot receive typed input',
+  )
+
+  enabledInput.focus()
+  assert.equal(window.document.activeElement.tagName, 'INPUT')
+})
+
+test('a disabled Field disables a Textarea control too', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Frozen transcript" disabled>
+    {#snippet children(control)}
+      <Textarea {...control} rows="2" />
+    {/snippet}
+  </Field>`,
+  )
+
+  assert.equal(target.querySelector('textarea').disabled, true)
+})
+
+test('Input and Textarea styles compile through the shared barrel with container queries', async () => {
+  const input = await compileStyleBlock(styleBlockOf('Input'))
+  for (const selector of [
+    '.rs-input',
+    '.rs-input--sm',
+    '.rs-input--md',
+    '.rs-input--lg',
+    '.rs-input--invalid',
+  ]) {
+    assert.ok(input.includes(selector), `compiled Input CSS must contain ${selector}`)
+  }
+  assert.match(
+    input,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Input must restate its type scale at the sm container query',
+  )
+  assert.ok(
+    !/@media\s*\(min-width/.test(input),
+    'Input sizes with container queries, so it must not use viewport min-width media queries',
+  )
+  assert.match(
+    input,
+    /var\(--rs-input-bg, var\(--rs-color-surface,/,
+    'the invalid modifier keeps the opt-in hook over the token over the literal',
+  )
+
+  const textarea = await compileStyleBlock(styleBlockOf('Textarea'))
+  for (const selector of [
+    '.rs-textarea',
+    '.rs-textarea--sm',
+    '.rs-textarea--md',
+    '.rs-textarea--lg',
+    '.rs-textarea--invalid',
+  ]) {
+    assert.ok(textarea.includes(selector), `compiled Textarea CSS must contain ${selector}`)
+  }
+  assert.match(
+    textarea,
+    /resize:\s*var\(--rs-textarea-resize,\s*vertical\)/,
+    'the resize default is a token hook, so a consumer can override it',
+  )
+  assert.match(textarea, /@container\s+rs-component\s*\(min-width:\s*500px\)/)
+  assert.ok(!/@media\s*\(min-width/.test(textarea), 'Textarea must not use viewport media queries')
 })

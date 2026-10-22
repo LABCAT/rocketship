@@ -230,3 +230,57 @@ test('the Input and Textarea stories compose Field and Label rather than a bare 
     )
   }
 })
+
+test('the Select variants share one story file with a11y enabled', () => {
+  const selectStories = readdirSync(storiesDir).filter((name) =>
+    /^Select.*\.stories\.ts$/.test(name),
+  )
+  assert.deepEqual(
+    selectStories,
+    ['Select.stories.ts'],
+    'all Select variants belong in Select.stories.ts',
+  )
+
+  const story = read(join(storiesDir, 'Select.stories.ts'))
+  assert.match(story, /title:\s*'Components\/Select'/)
+  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Select stories must enable a11y')
+  for (const variant of ['Default', 'Sizes', 'States']) {
+    assert.match(
+      story,
+      new RegExp(`export const ${variant}: Story =`),
+      `Select.stories.ts must export the ${variant} variant`,
+    )
+  }
+})
+
+test('the Select stories compose Field, exercise bind:value, and cover sizes, placeholder and disabled', () => {
+  const defaultStory = read(join(storiesDir, 'components', 'SelectDefault.svelte'))
+  const sizes = read(join(storiesDir, 'components', 'SelectSizes.svelte'))
+  const states = read(join(storiesDir, 'components', 'SelectStates.svelte'))
+
+  assert.match(defaultStory, /<Field\b/, 'the Select default story must show the Field composition')
+  assert.match(defaultStory, /bind:value=/, 'the default story must exercise bind:value')
+  assert.match(defaultStory, /placeholder="/, 'the default story must show a placeholder option')
+  assert.match(
+    defaultStory,
+    /<optgroup\b/,
+    'the default story must show grouping, which the children snippet has to carry',
+  )
+
+  for (const size of ['sm', 'md', 'lg']) {
+    assert.match(sizes, new RegExp(`size="${size}"|size: '${size}'`), `sizes must show ${size}`)
+  }
+  assert.match(states, /invalid/, 'the states story must show the invalid state')
+  assert.match(states, /disabled/, 'the states story must show the disabled state')
+
+  for (const [name, source] of [
+    ['SelectDefault', defaultStory],
+    ['SelectSizes', sizes],
+    ['SelectStates', states],
+  ]) {
+    assert.ok(
+      !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
+      `${name} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+})

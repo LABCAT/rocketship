@@ -1,15 +1,17 @@
 ---
 import Container from '@labcat2020/rocketship/components/Container'
 import Field from '@labcat2020/rocketship/components/Field'
+import Input from '@labcat2020/rocketship/components/Input'
 import Label from '@labcat2020/rocketship/components/Label'
 import Stack from '@labcat2020/rocketship/components/Stack'
+import Textarea from '@labcat2020/rocketship/components/Textarea'
 ---
 
 <Container size="content" padded>
   <Stack>
     <Field>
       <Label for="field-username">Username</Label>
-      <input id="field-username" type="text" aria-describedby="field-username-hint" />
+      <Input id="field-username" aria-describedby="field-username-hint" />
       <p class="rs-field__hint" id="field-username-hint">Your handle is public.</p>
     </Field>
     <Field>
@@ -23,8 +25,7 @@ import Stack from '@labcat2020/rocketship/components/Stack'
     </Field>
     <Field>
       <Label for="field-notes">Notes</Label>
-      <textarea id="field-notes" rows="3" aria-invalid="true" aria-describedby="field-notes-error"
-      ></textarea>
+      <Textarea id="field-notes" rows="3" aria-invalid="true" aria-describedby="field-notes-error" />
       <p class="rs-field__error" id="field-notes-error">Add a note of at least ten characters.</p>
     </Field>
   </Stack>

@@ -38,7 +38,10 @@ const consumeExample = `.rs-card {
 <Container>
   <Typography as="article">
     <h2>Surfaces</h2>
-    <p>The page, the panels that sit on it, and the lines that separate them.</p>
+    <p>
+      The page, the panels that sit on it, and the lines that separate them. Borders are decorative;
+      control borders mark where to type and keep 3:1 against every surface.
+    </p>
   </Typography>
 </Container>
 <Container padded>
@@ -66,6 +69,12 @@ const consumeExample = `.rs-card {
       <p class="rs-card__title">Border</p>
       <p class="rs-card__description">Hairlines and dividers</p>
       <span slot="meta" class="rs-card__token">--rs-color-border</span>
+    </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-border-control);">
+      <div slot="media"></div>
+      <p class="rs-card__title">Control border</p>
+      <p class="rs-card__description">Edges of inputs (3:1)</p>
+      <span slot="meta" class="rs-card__token">--rs-color-border-control</span>
     </Card>
   </Grid>
 </Container>

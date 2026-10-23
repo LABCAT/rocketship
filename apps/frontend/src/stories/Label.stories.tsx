@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html'
 import LabelMarkers from './components/LabelMarkers.astro'
 import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Field'
+import '@labcat2020/rocketship/components/Input'
 import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 

@@ -10,7 +10,7 @@ alwaysApply: false
 - **Source of truth**
   - Astro (`packages/base`) is the source of truth. Every rule in `.agents/skills/rocketship-component/SKILL.md`, `rocketship-bem-scss.mdc` and `rocketship-a11y.mdc` applies to Svelte unchanged. Decisions are recorded in `_planning/component-review-decisions.md`.
   - **Port path**: a reviewed Astro original exists. Copy its API and its style block exactly.
-  - **Svelte-first path**: no Astro original on `main`. Design from the decisions and the reviewed references (Alert, Stack, Field, Label, Input, Textarea). The component is provisional; Astro wins on divergence.
+  - **Svelte-first path**: no Astro original on `main`. Design from the decisions and the reviewed references (Alert, Stack, Field, Label, Input, Textarea, Select). The component is provisional; Astro wins on divergence.
   - Open Astro PRs are unreviewed: never port from them. Components not listed as reviewed predate the review: never copy their patterns.
   - Svelte components live in `packages/svelte`; their Storybook is `apps/svelte`.
 

@@ -5,7 +5,7 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field**, **Label**, **Input** and **Textarea** are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring, Input and Textarea for form controls. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
+Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field**, **Label**, **Input**, **Textarea** and **Select** are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring, Input, Textarea and Select for form controls. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
 
 The reasoning behind every rule is recorded in `_planning/component-review-decisions.md`.
 
@@ -115,5 +115,6 @@ Existing components cover: polymorphic tags, BEM elements/modifiers, consumer-ow
 - **Lists keep their semantics.** A component rendered as `ul`/`ol` with `list-style: none` adds `role="list"`, because Safari/VoiceOver drops list semantics otherwise.
 - **Headings** come from the consumer at the level the outline needs; never hard-code a heading level in a component.
 - **Meaning is not colour alone.** Status variants rely on the consumer's title text to say what happened; make sure examples do.
-- **Form controls** (Input, Textarea) set `font: inherit` (native controls do not inherit the page font), have one size with padding hooks for density, and derive their `--invalid` modifier from the control's own `aria-invalid="true"`; never add an `invalid` or `size` prop.
+- **Form controls** (Input, Textarea, Select) set `font: inherit` (native controls do not inherit the page font), have one size with padding hooks for density, and derive their `--invalid` modifier from the control's own `aria-invalid="true"`; never add an `invalid` or `size` prop, and never style `:invalid`. They have no hover state.
+- **A control is one element.** `class`, `id` and `aria-*` land on the native control; no wrapper span. Decoration such as Select's chevron is painted with `background-image` from a token colour, not added as an element, and an `@media (forced-colors: active)` block restores `appearance: auto`. States that change the decoration (Select's list box) are derived modifiers, never attribute selectors.
 - **Forms.** A label is always a `<label>` (no `as`); captions for a group of controls are `<fieldset>` + `<legend>`. The control's own `required` attribute is the source of truth for required state, so never add visually hidden "(required)" text. The invalid state is `aria-invalid="true"` on the control.

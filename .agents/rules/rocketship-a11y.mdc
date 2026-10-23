@@ -34,6 +34,8 @@ alwaysApply: false
   - A control in error sets `aria-invalid="true"`. Error text is not signalled by colour alone (weight plus words).
   - A control's visible edge keeps 3:1 against every surface (WCAG 1.4.11): use `color-border-control`, never the decorative `color-border`.
   - Text controls never go below the page's font size; under 16px iOS Safari zooms the page on focus.
+  - A control that sets `appearance: none` restores `appearance: auto` under `@media (forced-colors: active)`, so high-contrast users keep native affordances.
+  - Error styling comes from `aria-invalid`, never `:invalid` (which matches required fields before the user has touched them).
 
 - **Contrast safety**
   - Any element that sits on a component-owned background sets its own `color`, so host-page rules cannot break contrast.

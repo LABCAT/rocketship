@@ -3,6 +3,7 @@ import Container from '@labcat2020/rocketship/components/Container'
 import Field from '@labcat2020/rocketship/components/Field'
 import Input from '@labcat2020/rocketship/components/Input'
 import Label from '@labcat2020/rocketship/components/Label'
+import Select from '@labcat2020/rocketship/components/Select'
 import Stack from '@labcat2020/rocketship/components/Stack'
 import Textarea from '@labcat2020/rocketship/components/Textarea'
 ---
@@ -16,12 +17,12 @@ import Textarea from '@labcat2020/rocketship/components/Textarea'
     </Field>
     <Field>
       <Label for="field-plan">Billing plan</Label>
-      <select id="field-plan">
-        <option value="">Choose a plan</option>
+      <Select id="field-plan">
+        <option value="" disabled selected>Choose a plan</option>
         <option>Starter</option>
         <option>Pro</option>
         <option>Enterprise</option>
-      </select>
+      </Select>
     </Field>
     <Field>
       <Label for="field-notes">Notes</Label>

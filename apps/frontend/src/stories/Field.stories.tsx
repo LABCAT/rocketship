@@ -4,6 +4,7 @@ import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Field'
 import '@labcat2020/rocketship/components/Input'
 import '@labcat2020/rocketship/components/Label'
+import '@labcat2020/rocketship/components/Select'
 import '@labcat2020/rocketship/components/Stack'
 import '@labcat2020/rocketship/components/Textarea'
 

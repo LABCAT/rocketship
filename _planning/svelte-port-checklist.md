@@ -12,7 +12,7 @@ These are settled. A component PR does not reopen them.
 - **Target:** Svelte 5 with runes and TypeScript. One component per `.svelte` file.
 - **Source of truth:** Astro. Every rule in `.agents/skills/rocketship-component/SKILL.md` and the decisions in `_planning/component-review-decisions.md` apply to Svelte.
 - **Styles:** a copy of the Astro style block inside `:global { }` (port), or authored by the same rules (Svelte-first). Tokens only through `#{rs-token()}`; no hex, px or rem fallbacks; container queries only for layout changes.
-- **References:** reviewed components only (Alert, Stack, Field, Label, Input, Textarea). Open Astro PRs and pre-review components are never copied.
+- **References:** reviewed components only (Alert, Stack, Field, Label, Input, Textarea, Select). Open Astro PRs and pre-review components are never copied.
 - **Shared design system:** tokens and mixins come from `@labcat2020/rocketship/styles` and the `./styles/mixins` barrel; nothing is duplicated.
 - **Location:** `packages/svelte`; Storybook in `apps/svelte`.
 - **Versions:** component PRs never bump `version`; merging to `main` publishes bumped packages.

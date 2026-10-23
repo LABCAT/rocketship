@@ -156,6 +156,20 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Density is opt-in through the padding hooks (`--rs-input-padding-block`, `--rs-input-padding-inline`) on any ancestor.
 - The Svelte Input/Textarea (RCL-53) have `sm`/`md`/`lg`, hex fallbacks, `font-family` and container queries; they are realigned in a follow-up port.
 
+### 22. A control is one element; decoration is painted, not added
+
+- Select renders a single `<select {...attrs} class="rs-select">`, like Input: `class`, `id` and `aria-*` all land on the control. No wrapper span, no `__control` element, no SVG icon element.
+- The chevron is two `linear-gradient` background layers coloured by `--rs-select-icon-color` (`color-muted`), so it follows the theme and dims with the control's own `opacity` when disabled. No sibling selector (decision 3).
+- When `multiple` or a numeric `size` makes it a list box, the frontmatter adds the derived modifier `rs-select--list`, which removes the chevron. No attribute selectors.
+- `@media (forced-colors: active)` inside the rule restores `appearance: auto`, because forced-colours mode can drop background images; high-contrast users get the native arrow.
+- No `:invalid` styling: a required select with an empty placeholder matches `:invalid` on load. The error state comes only from `aria-invalid` (decision 20).
+
+### 23. Form controls have no hover state
+
+- Rest is `color-border-control`, focus is the focus ring, error is the danger border. Nothing changes on hover.
+- A hover border reads as focus, sticks on touch screens after a tap, and made Select behave differently from Input and Textarea in the same form.
+- The affordance for Select is `cursor: pointer` and the chevron.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -177,7 +191,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Alert rebuilt with decisions 1–12 (padding 16/20px, gap 8px) and its story moved onto Stack. `container-query-up` now queries the nearest container of any kind. Astro and Svelte skills plus the bem-scss, layout, a11y and themes rules updated. `Alert.svelte` is now out of date and needs porting (step 5).
 - Authoring rule: always interpolate, `#{rs-token(space-4)}`, because Sass does not evaluate functions inside custom property values.
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
-- Parked: there is no Astro Input/Textarea, so form stories show browser-styled native controls.
+- PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

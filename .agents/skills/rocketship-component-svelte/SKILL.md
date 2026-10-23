@@ -19,9 +19,9 @@ Copy the shape of these, in Astro (`packages/base/src/components/`) and their Sv
 - **Alert**: content block with variants and consumer-owned element classes
 - **Stack**: layout primitive with a polymorphic `as`
 - **Field**, **Label**: form wrapper and caption
-- **Input**, **Textarea**: form controls
+- **Input**, **Textarea**, **Select**: form controls
 
-Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Select, Table and the existing Svelte Field, Label, Input and Textarea, do **not** follow every rule. Never copy their deviations.
+Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. Never copy their deviations.
 
 **Open Astro PRs are unreviewed.** Never port from one, and never treat one as a reference. If an open Astro PR exists for the component you are building, note its number in your PR and follow the decisions instead.
 

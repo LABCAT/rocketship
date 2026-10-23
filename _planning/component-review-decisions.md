@@ -198,11 +198,18 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - One gap, `--rs-fieldset-gap` defaulting to `space-4`, the same as Stack's default. A fieldset of Fields reads like the Stack of Fields around it, with the legend 16px above the first part.
 - The gap spaces the fieldset's parts. Tighter spacing between options (radios, checkboxes) comes from wrapping them in `<Stack gap="small">`, not from a second Fieldset value or a modifier. Whether option groups need that wrapper is settled in the Checkbox/Radio review.
 
-### 29. States are one story; a state is not an aspect
+### 29. A state is not an aspect; the story is named for what it shows
 
-- Extends the story-scope rule (one aspect per story file). Enabled, disabled, error and required examples of one component go in a single `States` story, side by side, because a state is judged against the default next to it. Select set the precedent; Fieldset follows: `Components/Fieldset` → `States` (an enabled and a disabled address group), no separate `Disabled` file.
+- Extends the story-scope rule (one aspect per story file). A state (disabled, required, error) sits beside the default in the same story, never in its own file, because a state is judged against the default next to it.
+- The name says what the story shows. A control with several states is a states comparison (`Components/Select` → `States`). A component whose only extra state is native behaviour shows its normal use as `Default`, with the state as one example inside it: `Components/Fieldset` → `Default` (an address group and a disabled one), no separate `Disabled` file.
 - Aspects that are separate comparisons (Button sizes, Stack gaps) keep their own story files.
 - Stories show only library controls once they exist for the example; a group that needs a control still under review waits for that review rather than showing native stand-ins.
+
+### 30. Groups are further apart than their parts
+
+- Extends decisions 13 and 28. Space between groups must exceed space within them, or the groups run together: two fieldsets in a default Stack (16px) sit as far apart as the Fields inside each (16px), and a legend's weight alone does not separate them.
+- The placer owns that space, not Fieldset (no outer margin): consecutive fieldsets go in `<Stack gap="large">` (`space-6`, 24px).
+- The legend stays inherit-size and semibold. A design that wants a larger group caption puts a heading inside the legend (HTML allows it), styled by its own class.
 
 ## Parked for later
 
@@ -226,7 +233,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Authoring rule: always interpolate, `#{rs-token(space-4)}`, because Sass does not evaluate functions inside custom property values.
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
 - PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
-- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–29 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `States`. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
+- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–30 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `Default`, groups in a large Stack. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

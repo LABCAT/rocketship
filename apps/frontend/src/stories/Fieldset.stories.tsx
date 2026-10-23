@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import FieldsetStates from './components/FieldsetStates.astro'
+import FieldsetDefault from './components/FieldsetDefault.astro'
 import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Field'
 import '@labcat2020/rocketship/components/Fieldset'
@@ -7,15 +7,15 @@ import '@labcat2020/rocketship/components/Input'
 import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 
-const meta: Meta<typeof FieldsetStates> = {
+const meta: Meta<typeof FieldsetDefault> = {
   title: 'Components/Fieldset',
-  component: FieldsetStates,
+  component: FieldsetDefault,
   parameters: {
     a11y: { disable: false },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof FieldsetStates>
+type Story = StoryObj<typeof FieldsetDefault>
 
-export const States: Story = {}
+export const Default: Story = {}

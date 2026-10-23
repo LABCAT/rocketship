@@ -39,7 +39,8 @@
     "./components/Field": "./src/components/Field.astro",
     "./components/Label": "./src/components/Label.astro",
     "./components/Input": "./src/components/Input.astro",
-    "./components/Textarea": "./src/components/Textarea.astro"
+    "./components/Textarea": "./src/components/Textarea.astro",
+    "./components/Select": "./src/components/Select.astro"
   },
   "files": [
     "dist",

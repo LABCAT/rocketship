@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import TableDefault from './components/TableDefault.astro'
-import '@labcat/rocketship/components/Table'
-import '@labcat/rocketship/components/Container'
-import '@labcat/rocketship/components/Typography'
+import '@labcat2020/rocketship/components/Table'
+import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Typography'
 
 const meta: Meta<typeof TableDefault> = {
   title: 'Components/Table',

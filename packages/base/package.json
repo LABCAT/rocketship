@@ -35,7 +35,9 @@
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Stack": "./src/components/Stack.astro",
     "./components/Typography": "./src/components/Typography.astro",
-    "./components/Alert": "./src/components/Alert.astro"
+    "./components/Alert": "./src/components/Alert.astro",
+    "./components/FileInput": "./src/components/FileInput.astro",
+    "./components/RangeInput": "./src/components/RangeInput.astro"
   },
   "files": [
     "dist",

@@ -89,6 +89,9 @@ const storyFixtures = [
   { label: 'SelectDefault', file: 'SelectDefault.svelte' },
   { label: 'SelectSizes', file: 'SelectSizes.svelte' },
   { label: 'SelectStates', file: 'SelectStates.svelte' },
+  { label: 'AlertVariants', file: 'AlertVariants.svelte' },
+  { label: 'StackDefault', file: 'StackDefault.svelte' },
+  { label: 'StackGaps', file: 'StackGaps.svelte' },
 ]
 
 const runAxe = (target) =>
@@ -117,6 +120,8 @@ test('the story examples render without axe violations', async () => {
   // Components must be on disk before the stories that import them are linked.
   for (const name of [
     'Accordion',
+    'Alert',
+    'Card',
     'Container',
     'Disclosure',
     'Field',
@@ -124,6 +129,7 @@ test('the story examples render without axe violations', async () => {
     'Input',
     'Label',
     'Select',
+    'Stack',
     'Textarea',
   ]) {
     await compileToCache(name, readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'))

@@ -284,3 +284,73 @@ test('the Select stories compose Field, exercise bind:value, and cover sizes, pl
     )
   }
 })
+
+test('the Alert and Stack stories mirror the Astro story structure', () => {
+  const alert = read(join(storiesDir, 'components', 'AlertVariants.svelte'))
+  const stackDefault = read(join(storiesDir, 'components', 'StackDefault.svelte'))
+  const stackGaps = read(join(storiesDir, 'components', 'StackGaps.svelte'))
+
+  assert.match(alert, /<Container size="content" padded>/, 'alerts go in one content Container')
+  assert.match(alert, /<Stack>/, 'alerts are stacked rather than spaced with nested Containers')
+  assert.doesNotMatch(
+    alert,
+    /<Alert[^>]*title=/,
+    'Alert takes no title prop; the story writes the heading itself',
+  )
+  for (const variant of ['info', 'success', 'warning', 'error']) {
+    assert.ok(
+      variant === 'info' ? /<Alert>/.test(alert) : alert.includes(`variant="${variant}"`),
+      `the Alert story must show the ${variant} variant`,
+    )
+  }
+  assert.ok(
+    alert.includes('<h2 class="rs-alert__title">'),
+    'the story writes a real heading on the consumer-owned title class',
+  )
+  assert.ok(
+    alert.includes('<p class="rs-alert__description">'),
+    'the story writes a block element on the consumer-owned description class',
+  )
+
+  assert.match(stackDefault, /<Container size="content" padded>/, 'Stack sits in one Container')
+  assert.match(stackDefault, /<Stack>/, 'the default Stack story shows the default gap')
+
+  assert.match(stackGaps, /<Container size="content" padded>/)
+  assert.match(stackGaps, /<Stack gap="large">/, 'the gaps story separates the groups')
+  for (const gap of ['small', 'medium', 'large']) {
+    assert.ok(stackGaps.includes(`'${gap}'`), `the gaps story must document the ${gap} gap`)
+  }
+
+  for (const [name, source] of [
+    ['AlertVariants', alert],
+    ['StackDefault', stackDefault],
+    ['StackGaps', stackGaps],
+  ]) {
+    assert.ok(
+      !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
+      `${name} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+})
+
+test('the Stack stories share the Base/Stack title with one story per gap aspect', () => {
+  const files = readdirSync(storiesDir).filter((name) => /^Stack.*\.stories\.ts$/.test(name))
+  assert.deepEqual(files.sort(), ['Stack.gaps.stories.ts', 'Stack.stories.ts'])
+
+  for (const file of files) {
+    const source = read(join(storiesDir, file))
+    assert.match(source, /title:\s*'Base\/Stack'/, `${file} keeps the Base/Stack title`)
+    assert.match(source, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+  }
+
+  assert.match(
+    read(join(storiesDir, 'Stack.stories.ts')),
+    /export const Default: Story =/,
+    'the single-example Stack story exports Default',
+  )
+  assert.match(
+    read(join(storiesDir, 'Stack.gaps.stories.ts')),
+    /export const Gaps: Story =/,
+    'the comparison Stack story exports Gaps',
+  )
+})

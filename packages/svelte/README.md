@@ -14,6 +14,7 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Typography` | `@labcat2020/rocketship-svelte/components/Typography` | `Typography.astro` |
 | `Button`     | `@labcat2020/rocketship-svelte/components/Button`     | `Button.astro`     |
 | `Alert`      | `@labcat2020/rocketship-svelte/components/Alert`      | `Alert.astro`      |
+| `Stack`      | `@labcat2020/rocketship-svelte/components/Stack`      | `Stack.astro`      |
 | `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | — (Svelte-first)   |
 | `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | — (Svelte-first)   |
 | `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
@@ -58,7 +59,8 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Card`       | `as` (`article`, `section`, `div`, `li`), `media` snippet, `meta` snippet, `class`                                                            |
 | `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
-| `Alert`      | `as` (`div`, `section`, `aside`, `article`), `variant` (`info`, `success`, `warning`, `error`), `title`, `titleSlot` snippet, `role`, `class` |
+| `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                |
+| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`), `class`                                                                         |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
@@ -98,6 +100,32 @@ Each component spreads unknown attributes onto its rendered element and composes
 ```
 
 Both controls also work standalone. `invalid` raises `aria-invalid` and applies the error styling, and a size modifier (`sm`, `md`, `lg`) sets the type scale and control height. A `Field` error flows into the control's `aria-invalid` and its modifier, so the styling follows the error text Field renders.
+
+### `Alert`
+
+`Alert` is a fixed `div` styling the message, never the markup inside it. It takes no title prop, title snippet or content wrapper: write the elements yourself and apply `rs-alert__title` and `rs-alert__description`, choosing the heading level the page outline needs.
+
+```svelte
+<Alert variant="warning">
+  <h2 class="rs-alert__title">Check your quota</h2>
+  <p class="rs-alert__description">
+    You have used 85% of your build minutes. Upgrade or wait for the next cycle.
+  </p>
+</Alert>
+```
+
+`role` is opt-in and is never derived from the variant: pass `alert` or `status` when the content is injected dynamically. The default `info` variant emits no modifier class, because the base class is the default.
+
+### `Stack`
+
+`Stack` is a flex column whose `gap` owns the space between its children, so components keep no outer margins and the page decides the rhythm. `gap` accepts `small` (8px), `medium` (16px, the default, which emits no modifier) and `large` (24px). Render it as `ul` or `ol` to get list semantics, and it adds `role="list"` so Safari/VoiceOver keep them despite `list-style: none`.
+
+```svelte
+<Stack as="ul" gap="small">
+  <li>Deploy the preview.</li>
+  <li>Run the smoke tests.</li>
+</Stack>
+```
 
 ### `Select`
 

@@ -5,7 +5,7 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field** and **Label** (`Field.astro`, `Label.astro`) are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
+Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field**, **Label**, **Input** and **Textarea** are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring, Input and Textarea for form controls. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
 
 The reasoning behind every rule is recorded in `_planning/component-review-decisions.md`.
 

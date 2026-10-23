@@ -1,0 +1,63 @@
+{
+  "name": "@labcat2020/rocketship-svelte",
+  "version": "0.3.0",
+  "private": false,
+  "type": "module",
+  "description": "Rocketship Svelte port — Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LABCAT/rocketship.git",
+    "directory": "packages/svelte"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./components/Alert": "./src/components/Alert.svelte",
+    "./components/Accordion": "./src/components/Accordion.svelte",
+    "./components/Button": "./src/components/Button.svelte",
+    "./components/Card": "./src/components/Card.svelte",
+    "./components/Container": "./src/components/Container.svelte",
+    "./components/Disclosure": "./src/components/Disclosure.svelte",
+    "./components/Field": "./src/components/Field.svelte",
+    "./components/Figure": "./src/components/Figure.svelte",
+    "./components/Grid": "./src/components/Grid.svelte",
+    "./components/Input": "./src/components/Input.svelte",
+    "./components/Label": "./src/components/Label.svelte",
+    "./components/Select": "./src/components/Select.svelte",
+    "./components/Table": "./src/components/Table.svelte",
+    "./components/Textarea": "./src/components/Textarea.svelte",
+    "./components/Typography": "./src/components/Typography.svelte"
+  },
+  "files": [
+    "dist",
+    "src/components",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@labcat2020/rocketship": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "axe-core": "4.11.1",
+    "jsdom": "^30.1.2",
+    "sass": "^1.105.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
+    "vite": "^8.2.1"
+  }
+}

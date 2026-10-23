@@ -3,6 +3,7 @@ description: TypeScript functions use arrow syntax and documentation blocks.
 globs:
   - "**/*.ts"
   - "**/*.tsx"
+  - "**/*.svelte"
 alwaysApply: false
 ---
 

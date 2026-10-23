@@ -119,10 +119,10 @@ No new packages, Storybook app, or components in this phase.
   - `.rs-container--content`
   - `.rs-container--narrow`
 - Breakpoints use `media-breakpoint-up` only:
-  - `sm: 36rem`
-  - `md: 48rem`
-  - `lg: 62rem`
-  - `xl: 75rem`
+  - `sm: 576px`
+  - `md: 768px`
+  - `lg: 992px`
+  - `xl: 1200px`
 - Width behavior:
   - `wide`: `1200px`
   - `content`: `600px`, then `800px` at `lg`

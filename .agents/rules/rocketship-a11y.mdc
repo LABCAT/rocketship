@@ -21,6 +21,15 @@ alwaysApply: false
 - **ARIA and roles**
   - Add ARIA attributes only when needed to express semantics that HTML cannot represent alone.
   - Do not overuse roles; prefer native elements over re-creating them with ARIA.
+  - Live-region roles (`alert`, `status`) are opt-in for genuinely dynamic content. Statically rendered components have no role by default, a component's name never implies a role, and visual variants never map to live-region roles.
+  - Lists styled with `list-style: none` add `role="list"` so Safari/VoiceOver keeps announcing them as lists.
+
+- **Headings**
+  - Components never hard-code a heading level. The consumer writes the heading at the level the page outline needs and applies the component's `__title` class; the class, not the level, sets the look.
+
+- **Contrast safety**
+  - Any element that sits on a component-owned background sets its own `color`, so host-page rules cannot break contrast.
+  - Status meaning is never conveyed by colour alone; titles say what happened.
 
 - **Storybook usage**
   - All interactive components should have stories that include:

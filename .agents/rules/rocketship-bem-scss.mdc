@@ -19,9 +19,15 @@ alwaysApply: false
   - Elements are structural parts of a block (e.g. `rs-button__label`, `rs-card__media`).
   - Modifiers represent visual/behavioral variants (e.g. `rs-button--secondary`, `rs-button--outline`).
 
+- **Tokens**
+  - `$rs-tokens` in `styles/mixins/tokens.scss` is the single source of truth. Each token is a plain value, a `(light: …, dark: …)` pair, or an `(alias: other-token)`.
+  - `variables.scss` is generated from the map with `rs-token-properties`. Edit values in the map, never in `variables.scss`.
+  - Colour pairs compile to `light-dark()`; shadow pairs compile to layered shadows whose inactive mode is transparent, so each mode's shadow keeps its exact shape. Dark mode follows `color-scheme`.
+  - Components reference tokens only through `#{rs-token(name)}`, which falls back to the default value. Never hand-write hex, px or rem token fallbacks. Unknown names fail the build.
+
 - **Variables files (e.g. `variables.scss`)**
   - Must **never** contain class selectors (or any selectors other than `:root` and `@media`).
-  - Only define CSS custom properties on `:root` and inside `@media (prefers-color-scheme: …)`. Component-specific tokens and class-based overrides belong in the component that owns them.
+  - Only define CSS custom properties on `:root` and inside `@media`. Component-specific tokens and class-based overrides belong in the component that owns them.
 
 - **SCSS usage**
   - Prefer SCSS for authoring styles; compile to CSS for consumers.
@@ -32,6 +38,8 @@ alwaysApply: false
   - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
   - Use `to-rem($px)` (from the mixins barrel) for every `font-size` authored in SCSS (design-token `--rs-font-size-*`, component fallbacks, body copy in `base.scss`, etc.), so sizes are defined from px and emitted as `rem`. Typography mixins already use `to-rem()`. Exception: print styles may use `pt` where appropriate.
   - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
+  - `rem` is for font sizes only. No `em` font sizes; use `font-size: inherit` when an element should follow its context.
+  - Always interpolate token calls, `#{rs-token(space-4)}`: Sass does not evaluate functions inside custom property values.
 
 - **Declaration order (per rule block)**
   - **CSS custom properties (`--rs-*`) always first** in the block.
@@ -50,8 +58,16 @@ alwaysApply: false
   - Do not use inline `style="..."` attributes for anything related to design or theming.
   - Use classes + `--rs-*` variables instead so themes and consumers can override styles cleanly.
 
-- **Selector style**
-  - Prefer class-based selectors; avoid element-tag or ID-based styling in reusable components.
-  - Keep selector nesting shallow in SCSS; rely on BEM structure rather than deep descendant chains.
-  - Write BEM modifiers nested under their owning block or element selector using `&--modifier` (and `&__element` where appropriate).
+- **Selector style (hardcore BEM)**
+  - Every compiled selector is a **single BEM class**, plus pseudo-classes or pseudo-elements on that same class (`:hover`, `:focus-visible`, `::before`).
+  - Never descendant, child, sibling or compound-class selectors (`.rs-a .rs-b`, `.rs-a > *`, `.rs-a--x .rs-a__y`). Never tag or ID selectors in components.
+  - A modifier changes its elements only by reassigning `--rs-*` variables on the block; elements read those variables.
+  - Parent state a child must react to (e.g. parent hover) uses a style query: the parent sets a custom property and the child uses `@container style(--rs-x-state: value)`.
+  - Write elements and modifiers nested under their owning block with `&__element` / `&--modifier`. This is source organisation; it compiles flat.
+  - The base class is the default: a default variant has no modifier class or rule, and no class appears in markup without a rule.
+
+- **Component boundaries**
+  - A component never sets its own outer margin; whoever places it owns the spacing (Stack, Grid, the page).
+  - Components never set `font-family`; they inherit the page's typeface.
+  - Element classes the consumer applies set `margin: 0`, and set their own `color` when they sit on a component-owned background.
 

@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import FieldVariants from './components/FieldVariants.astro'
-import '@labcat/rocketship/components/Container'
-import '@labcat/rocketship/components/Field'
-import '@labcat/rocketship/components/Label'
-import '@labcat/rocketship/components/Typography'
+import FieldDefault from './components/FieldDefault.astro'
+import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Field'
+import '@labcat2020/rocketship/components/Label'
+import '@labcat2020/rocketship/components/Stack'
 
-const meta: Meta<typeof FieldVariants> = {
+const meta: Meta<typeof FieldDefault> = {
   title: 'Components/Field',
-  component: FieldVariants,
+  component: FieldDefault,
   parameters: {
     a11y: { disable: false },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof FieldVariants>
+type Story = StoryObj<typeof FieldDefault>
 
-export const Variants: Story = {}
+export const Default: Story = {}

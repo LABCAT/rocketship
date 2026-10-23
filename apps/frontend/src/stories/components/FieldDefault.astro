@@ -1,0 +1,31 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Label from '@labcat2020/rocketship/components/Label'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack>
+    <Field>
+      <Label for="field-username">Username</Label>
+      <input id="field-username" type="text" aria-describedby="field-username-hint" />
+      <p class="rs-field__hint" id="field-username-hint">Your handle is public.</p>
+    </Field>
+    <Field>
+      <Label for="field-plan">Billing plan</Label>
+      <select id="field-plan">
+        <option value="">Choose a plan</option>
+        <option>Starter</option>
+        <option>Pro</option>
+        <option>Enterprise</option>
+      </select>
+    </Field>
+    <Field>
+      <Label for="field-notes">Notes</Label>
+      <textarea id="field-notes" rows="3" aria-invalid="true" aria-describedby="field-notes-error"
+      ></textarea>
+      <p class="rs-field__error" id="field-notes-error">Add a note of at least ten characters.</p>
+    </Field>
+  </Stack>
+</Container>

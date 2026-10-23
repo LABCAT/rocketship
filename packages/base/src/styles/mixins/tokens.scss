@@ -40,6 +40,7 @@ $rs-tokens: (
   color-danger-border: (light: #f0a8b0, dark: #8a2a30),
   color-danger-fg: (light: #3d0a08, dark: #ffe2e4),
   color-danger-accent: (light: #c5221f, dark: #ff6b6b),
+  color-danger-text: (alias: color-danger-accent),
 
   font-family-sans: ('Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif),
   font-family-mono: (ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace),

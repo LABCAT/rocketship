@@ -5,7 +5,7 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`) and **Stack** (`packages/base/src/components/Stack.astro`) are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
+Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field** and **Label** (`Field.astro`, `Label.astro`) are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
 
 The reasoning behind every rule is recorded in `_planning/component-review-decisions.md`.
 
@@ -25,6 +25,7 @@ The reasoning behind every rule is recorded in `_planning/component-review-decis
 2. Read the closest reference component:
    - Content block with variants and element classes → `Alert.astro`
    - Layout primitive with a polymorphic tag → `Stack.astro`
+   - Form wrapper or caption → `Field.astro`, `Label.astro`
    - Interactive control → `Button.astro` (pre-review: see the Button notes in the decisions file)
 3. Check whether the pattern is genuinely new (no `:has()`, `[open]`, `::backdrop`, popover attributes exist anywhere yet). If so, flag it: novel patterns need a hand-written reference example before delegation.
 
@@ -50,6 +51,8 @@ Follow this structure (see [component-template.md](./references/component-templa
 - **The base class is the default.** The default variant emits no modifier class: `['rs-alert', variant !== 'info' && \`rs-alert--${variant}\`, className]`. No class may appear in markup unless a rule exists for it.
 - **Consumers own content elements.** Do not render titles, descriptions or content wrappers, and do not take title/heading props or slots. The consumer writes the element and applies the BEM element class, choosing the heading level for the page outline: `<h3 class="rs-alert__title">`. The root renders `<slot />` directly.
 - **Content is block elements.** A flex block splits bare inline text into separate items, so stories and docs always show content inside elements.
+- **No id props for a11y wiring.** When one element points at another (`aria-describedby` → hint, `for` → control), the consumer writes both ends in their own markup. Field takes no `hintId`/`errorId`; the consumer writes `<p class="rs-field__hint" id="…">`.
+- **Components never render words.** Text is content and belongs to the consumer, in their language: no `requiredText`/`optionalText` props. A component may render decoration (Label's `aria-hidden` asterisk).
 
 #### Styles
 
@@ -63,10 +66,12 @@ Follow this structure (see [component-template.md](./references/component-templa
   - **Opt-in hooks** (spacing, radius, borders, type): never assigned on the block; used as the first fallback: `border-radius: var(--rs-alert-border-radius, #{rs-token(radius-md)})`. Adopters set them on `:root` or any ancestor.
   - **Variant-owned locals** (colours that variants swap as a set): assigned on the block, reassigned in modifiers, read by properties: `--rs-alert-bg: #{rs-token(color-surface-elevated)}` then `background: var(--rs-alert-bg)`.
 - **Variant names describe the message; token names describe the palette role.** Alert's `error` variant reads the `danger` tokens. The modifier translates between them; never rename one to match the other.
+- **Use a token only for the role its name states.** `color-danger-fg` is text *on* `danger-bg`; `color-danger-accent` is a stroke (3:1). Red text on a page surface is `color-danger-text` (4.5:1). If no token states the role you need, stop and ask: the answer may be a new alias token.
 - **Declaration order per rule block**: `--rs-*` custom properties first → reset (`all: unset`) if needed → `box-sizing` if reset → everything else (layout, then appearance).
 - **No outer margin.** A component styles its inside only. Spacing between components belongs to whoever places them (Stack, Grid, the page).
+- **Inline components set no `display`.** Label is blockified inside Field's flex column and stays inline beside a checkbox; the parent decides. Never make a text container a flex row: it splits text from its markers and drops whitespace.
 - **Never set `font-family`.** Components inherit the typeface of the page so they blend into any theme.
-- **Body copy inherits size and line height.** Elements such as `__description` set only `color` and `margin: 0`.
+- **Body copy inherits size and line height.** Elements such as `__description`, `__hint` and `__error` set only `color` (plus weight where hierarchy needs it) and `margin: 0`. Hints and errors never shrink.
 - **Heading level is semantics; the class is the look.** A title class sets `font-size: inherit` (cancelling tag defaults and host heading styles), its weight, line height, colour and `margin: 0`, so `h2` and `h4` render identically.
 - **Every element class sets `margin: 0`**, because consumer-written elements arrive with browser margins and the block's `gap` owns spacing.
 - **Any element on a component-owned background sets its own `color`**, so host rules like `p { color: grey }` cannot break contrast.
@@ -87,6 +92,7 @@ Two files, matching `Alert.stories.tsx` / `components/AlertVariants.astro`:
 - `components/<Name><Aspect>.astro`: imports only `@labcat2020/rocketship` components. Examples go in a `<Stack>` inside a single `<Container size="content" padded>`. **No `<style>` blocks, no story-only CSS, and never Containers used as spacers.**
 - **Content**: show real headings on `__title` (use `h2`, since the story canvas has no other headings) and block elements for body text.
 - **Roles**: only show a live-region role where the example would genuinely be dynamic.
+- **Forms**: every control has a `<Label for>`; error examples set `aria-invalid="true"` and `aria-describedby` on the control; a story with a required asterisk also shows the "Fields marked * are required." line. Native `<input>`/`<select>`/`<textarea>` stand in until the library has the control component.
 - **Scope**: one aspect per story file. A second aspect (sizes, list usage) is a separate story file.
 - **Naming**: a single-story file exports `Default`; a multi-example comparison exports `Variants` (or `<Aspect>`). Add the story to `apps/frontend/.storybook/preview.ts` sort order when it sits in `Base/`.
 
@@ -108,3 +114,4 @@ Existing components cover: polymorphic tags, BEM elements/modifiers, consumer-ow
 - **Lists keep their semantics.** A component rendered as `ul`/`ol` with `list-style: none` adds `role="list"`, because Safari/VoiceOver drops list semantics otherwise.
 - **Headings** come from the consumer at the level the outline needs; never hard-code a heading level in a component.
 - **Meaning is not colour alone.** Status variants rely on the consumer's title text to say what happened; make sure examples do.
+- **Forms.** A label is always a `<label>` (no `as`); captions for a group of controls are `<fieldset>` + `<legend>`. The control's own `required` attribute is the source of truth for required state, so never add visually hidden "(required)" text. The invalid state is `aria-invalid="true"` on the control.

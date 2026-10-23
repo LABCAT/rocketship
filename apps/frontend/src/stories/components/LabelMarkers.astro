@@ -1,0 +1,24 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Label from '@labcat2020/rocketship/components/Label'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack>
+    <p>Fields marked * are required.</p>
+    <Field>
+      <Label for="label-name">Full name</Label>
+      <input id="label-name" type="text" autocomplete="name" />
+    </Field>
+    <Field>
+      <Label for="label-email" required>Email address</Label>
+      <input id="label-email" type="email" autocomplete="email" required />
+    </Field>
+    <Field>
+      <Label for="label-phone">Phone <span class="rs-label__optional">(optional)</span></Label>
+      <input id="label-phone" type="tel" autocomplete="tel" />
+    </Field>
+  </Stack>
+</Container>

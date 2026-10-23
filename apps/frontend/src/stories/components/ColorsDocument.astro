@@ -243,7 +243,10 @@ const consumeExample = `.rs-card {
 <Container>
   <Typography as="article">
     <h3>Danger</h3>
-    <p>The full danger palette, following the same background, border, foreground structure.</p>
+    <p>
+      The full danger palette, following the same background, border, foreground structure, plus
+      danger text for red text that sits on page surfaces, such as form errors.
+    </p>
   </Typography>
 </Container>
 <Container padded>
@@ -265,6 +268,12 @@ const consumeExample = `.rs-card {
       <p class="rs-card__title">Danger foreground</p>
       <p class="rs-card__description">Text on danger surfaces</p>
       <span slot="meta" class="rs-card__token">--rs-color-danger-fg</span>
+    </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-text);">
+      <div slot="media"></div>
+      <p class="rs-card__title">Danger text</p>
+      <p class="rs-card__description">Error text on page surfaces</p>
+      <span slot="meta" class="rs-card__token">--rs-color-danger-text</span>
     </Card>
   </Grid>
 </Container>

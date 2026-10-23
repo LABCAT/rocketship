@@ -23,6 +23,7 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
 | `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
+| `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | — (Svelte-first)   |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 
@@ -63,6 +64,7 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
+| `Fieldset`   | `as` (`fieldset`), `legend`, `legendSlot` snippet, `disabled`, `children` snippet, `class`                                                    |
 
 ### `Typography` `html` prop
 
@@ -119,6 +121,30 @@ Both controls also work standalone. `invalid` raises `aria-invalid` and applies 
 ```
 
 `placeholder` renders a disabled option with an empty value, so it reads as an unset field. Once a real option is chosen the placeholder cannot be selected again; a parent can still reset the field by writing `''`. `size` accepts `sm`, `md` or `lg`; a number is passed through to the native `size` attribute, which renders a listbox instead of a dropdown, in which case no chevron is drawn.
+
+### `Fieldset`
+
+`Fieldset` wraps a native `<fieldset>` so a group of controls shares one name and one disabled state. The legend comes from the `legend` prop or the `legendSlot` snippet and always renders as the fieldset's first child, which is the only position the browser accepts. When neither is set the group renders no legend, so it can be named by an external heading through `aria-labelledby`.
+
+```svelte
+<script lang="ts">
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
+  import Fieldset from '@labcat2020/rocketship-svelte/components/Fieldset'
+  import Input from '@labcat2020/rocketship-svelte/components/Input'
+
+  let name = $state('Ada Lovelace')
+</script>
+
+<Fieldset legend="Billing contact">
+  <Field label="Full name" hint="Appears on every invoice.">
+    {#snippet children(control)}
+      <Input {...control} bind:value={name} />
+    {/snippet}
+  </Field>
+</Fieldset>
+```
+
+`disabled` sets the native attribute rather than a per-control prop, so every control inside the group is disabled and left out of the submitted form data, with no wiring of its own. The browser exempts controls inside the legend from that state, so an action there stays operable.
 
 ## Install
 

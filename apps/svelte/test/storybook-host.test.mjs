@@ -284,3 +284,59 @@ test('the Select stories compose Field, exercise bind:value, and cover sizes, pl
     )
   }
 })
+
+test('the Fieldset variants share one story file with a11y enabled', () => {
+  const fieldsetStories = readdirSync(storiesDir).filter((name) =>
+    /^Fieldset.*\.stories\.ts$/.test(name),
+  )
+  assert.deepEqual(
+    fieldsetStories,
+    ['Fieldset.stories.ts'],
+    'all Fieldset variants belong in Fieldset.stories.ts',
+  )
+
+  const story = read(join(storiesDir, 'Fieldset.stories.ts'))
+  assert.match(story, /title:\s*'Components\/Fieldset'/)
+  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Fieldset stories must enable a11y')
+  for (const variant of ['Default', 'Disabled', 'Legend']) {
+    assert.match(
+      story,
+      new RegExp(`export const ${variant}: Story =`),
+      `Fieldset.stories.ts must export the ${variant} variant`,
+    )
+  }
+})
+
+test('the Fieldset stories group real controls and show the disabled group and the legend snippet', () => {
+  const defaultStory = read(join(storiesDir, 'components', 'FieldsetDefault.svelte'))
+  const disabledStory = read(join(storiesDir, 'components', 'FieldsetDisabled.svelte'))
+  const legendStory = read(join(storiesDir, 'components', 'FieldsetLegend.svelte'))
+
+  assert.match(defaultStory, /<Fieldset legend="/, 'the default story shows the legend prop')
+  assert.match(defaultStory, /<Field\b/, 'the default story groups Field controls')
+  assert.match(defaultStory, /bind:value=/, 'the default story exercises bind:value')
+
+  assert.match(
+    disabledStory,
+    /<Fieldset[^>]*\sdisabled\b/s,
+    'the disabled story disables the group',
+  )
+  for (const [name, pattern] of [
+    ['Input', /<Input\b/],
+    ['Select', /<Select\b/],
+    ['Textarea', /<Textarea\b/],
+  ]) {
+    assert.match(disabledStory, pattern, `the disabled story groups ${name} inside the fieldset`)
+  }
+  assert.match(
+    disabledStory,
+    /<Fieldset legend="Shipping contact">/,
+    'the disabled story pairs the locked group with an enabled one, so the difference is visible',
+  )
+
+  assert.match(
+    legendStory,
+    /{#snippet legendSlot\(\)}/,
+    'the legend story exercises the legend snippet',
+  )
+})

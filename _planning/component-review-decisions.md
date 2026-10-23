@@ -170,6 +170,40 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - A hover border reads as focus, sticks on touch screens after a tap, and made Select behave differently from Input and Textarea in the same form.
 - The affordance for Select is `cursor: pointer` and the chevron.
 
+### 24. A prop never re-declares a native attribute
+
+- Extends decision 1 (props only where they mean something). Fieldset loses its `disabled` prop: `HTMLAttributes<'fieldset'>` already types it, and it flows through `...attrs` like `disabled` on Input, Textarea and Select.
+- The native attribute does the work: a disabled `<fieldset>` disables every descendant control (except those in its first `<legend>`), they match `:disabled` and dim through their own rules, and assistive tech announces them as unavailable.
+
+### 25. Fieldset groups; it does not box
+
+- Extends decisions 13 and 14. Fieldset is Field's counterpart for several controls: it gives them a shared name (the legend) and nothing visual beyond spacing. No background, border, radius or padding, and no hooks for them.
+- Visual containment is composition: a consumer who wants a panel puts the Fieldset in a Card. A boxed group would make radio and checkbox groups heavier than the plain Fields beside them.
+- The block resets the native chrome (`border: 0`, `margin: 0`, `padding: 0`, `min-inline-size: 0` so it can shrink below its content) and is a flex column whose `gap` owns the spacing.
+
+### 26. The legend is a flex item: `float: inline-start`
+
+- A fieldset's first non-floated legend is laid out in the border area, outside the anonymous content box that `display: flex` and `gap` apply to. Without a border, it sits flush on the first control and the gap cannot reach it.
+- `rs-fieldset__legend` sets `float: inline-start`, which opts it out of that layout. It becomes an ordinary flex item (flex items ignore `float`, so nothing floats), stretches like Label in Field, and the block's `gap` owns its spacing. No `margin-block-end` patch (decision 11).
+- Semantics are unchanged: the accessible name and the disabled exemption both come from the first `<legend>` child, not its layout.
+
+### 27. The legend is a group caption: weight over Label, readable when disabled
+
+- Extends decisions 12 and 17. `rs-fieldset__legend`: `font-size: inherit`, semibold through `--rs-fieldset-legend-font-weight` (over Label's medium, so the group caption outranks the control captions inside it), `line-height-tight` with no hook, its own `color` through `--rs-fieldset-legend-color` (`color-fg`), `margin: 0`, `padding: 0`.
+- No disabled legend style. A disabled fieldset dims its controls through their own `:disabled` rules and the caption stays readable, as a Label does beside a disabled control.
+- The PR's `&:disabled { &__legend }` was a parent-state descendant rule (forbidden by decision 3) that compiled to the invalid `.rs-fieldset:disabled__legend` and never matched. Nesting an element under a pseudo-class is never valid; parent state is a block variable or a style query.
+
+### 28. Fieldset's gap is the form rhythm; option spacing is composition
+
+- One gap, `--rs-fieldset-gap` defaulting to `space-4`, the same as Stack's default. A fieldset of Fields reads like the Stack of Fields around it, with the legend 16px above the first part.
+- The gap spaces the fieldset's parts. Tighter spacing between options (radios, checkboxes) comes from wrapping them in `<Stack gap="small">`, not from a second Fieldset value or a modifier. Whether option groups need that wrapper is settled in the Checkbox/Radio review.
+
+### 29. States are one story; a state is not an aspect
+
+- Extends the story-scope rule (one aspect per story file). Enabled, disabled, error and required examples of one component go in a single `States` story, side by side, because a state is judged against the default next to it. Select set the precedent; Fieldset follows: `Components/Fieldset` → `States` (an enabled and a disabled address group), no separate `Disabled` file.
+- Aspects that are separate comparisons (Button sizes, Stack gaps) keep their own story files.
+- Stories show only library controls once they exist for the example; a group that needs a control still under review waits for that review rather than showing native stand-ins.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -192,6 +226,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Authoring rule: always interpolate, `#{rs-token(space-4)}`, because Sass does not evaluate functions inside custom property values.
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
 - PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
+- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–29 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `States`. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

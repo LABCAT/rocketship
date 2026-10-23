@@ -5,7 +5,7 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field**, **Label**, **Input**, **Textarea** and **Select** are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field and Label for form wiring, Input, Textarea and Select for form controls. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
+Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`), **Stack** (`packages/base/src/components/Stack.astro`), **Field**, **Label**, **Fieldset**, **Input**, **Textarea** and **Select** are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`, Field, Label and Fieldset for form wiring and grouping, Input, Textarea and Select for form controls. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
 
 The reasoning behind every rule is recorded in `_planning/component-review-decisions.md`.
 
@@ -25,7 +25,7 @@ The reasoning behind every rule is recorded in `_planning/component-review-decis
 2. Read the closest reference component:
    - Content block with variants and element classes → `Alert.astro`
    - Layout primitive with a polymorphic tag → `Stack.astro`
-   - Form wrapper or caption → `Field.astro`, `Label.astro`
+   - Form wrapper, caption or group → `Field.astro`, `Label.astro`, `Fieldset.astro`
    - Interactive control → `Button.astro` (pre-review: see the Button notes in the decisions file)
 3. Check whether the pattern is genuinely new (no `:has()`, `[open]`, `::backdrop`, popover attributes exist anywhere yet). If so, flag it: novel patterns need a hand-written reference example before delegation.
 
@@ -48,6 +48,7 @@ Follow this structure (see [component-template.md](./references/component-templa
 - **Exported union types** for each axis (`export type AlertVariant = ...`), a `Props` type extending `HTMLAttributes<'...'>` of the root tag, `class?: string`, defaults in the destructure, and `...attrs` spread onto the root.
 - **`as?` only when more than one root tag is semantically valid.** Restrict it to a union of those tags (Stack: `'div' | 'ul' | 'ol'`). Omit it when only one tag is correct (Alert is always a `div`).
 - **Never shadow a native attribute with a prop.** A prop named `title` hijacks the tooltip attribute; choose another name or, better, let the consumer write the element.
+- **Never re-declare a native attribute as a prop.** `HTMLAttributes<'fieldset'>` already types `disabled`; it flows through `...attrs`, as on Input, Textarea and Select.
 - **The base class is the default.** The default variant emits no modifier class: `['rs-alert', variant !== 'info' && \`rs-alert--${variant}\`, className]`. No class may appear in markup unless a rule exists for it.
 - **Consumers own content elements.** Do not render titles, descriptions or content wrappers, and do not take title/heading props or slots. The consumer writes the element and applies the BEM element class, choosing the heading level for the page outline: `<h3 class="rs-alert__title">`. The root renders `<slot />` directly.
 - **Content is block elements.** A flex block splits bare inline text into separate items, so stories and docs always show content inside elements.
@@ -70,6 +71,8 @@ Follow this structure (see [component-template.md](./references/component-templa
 - **Use a token only for the role its name states.** `color-danger-fg` is text *on* `danger-bg`; `color-danger-accent` is a stroke (3:1). Red text on a page surface is `color-danger-text` (4.5:1). `color-border` is a decorative hairline; the edge of a control (input, select, checkbox) is `color-border-control` (3:1, WCAG 1.4.11). If no token states the role you need, stop and ask: the answer may be a new alias token.
 - **Declaration order per rule block**: `--rs-*` custom properties first → reset (`all: unset`) if needed → `box-sizing` if reset → everything else (layout, then appearance).
 - **No outer margin.** A component styles its inside only. Spacing between components belongs to whoever places them (Stack, Grid, the page).
+- **Grouping is not boxing.** A semantic group (Fieldset) adds no background, border, radius or padding; a consumer who wants a panel composes it in a Card. Reset the native chrome you do not want (`border: 0`, `margin: 0`, `padding: 0`, `min-inline-size: 0` on a fieldset) rather than restyling it.
+- **Parent state never nests an element under a pseudo-class.** `&:disabled { &__legend {} }` compiles to the invalid `.rs-fieldset:disabled__legend`. Parent state is a block variable or a style query; usually the child needs no state at all (a disabled fieldset's legend stays readable, like a Label beside a disabled control).
 - **Inline components set no `display`.** Label is blockified inside Field's flex column and stays inline beside a checkbox; the parent decides. Never make a text container a flex row: it splits text from its markers and drops whitespace.
 - **Never set `font-family`.** Components inherit the typeface of the page so they blend into any theme.
 - **Body copy inherits size and line height.** Elements such as `__description`, `__hint` and `__error` set only `color` (plus weight where hierarchy needs it) and `margin: 0`. Hints and errors never shrink.
@@ -94,8 +97,8 @@ Two files, matching `Alert.stories.tsx` / `components/AlertVariants.astro`:
 - **Content**: show real headings on `__title` (use `h2`, since the story canvas has no other headings) and block elements for body text.
 - **Roles**: only show a live-region role where the example would genuinely be dynamic.
 - **Forms**: every control has a `<Label for>`; error examples set `aria-invalid="true"` and `aria-describedby` on the control; a story with a required asterisk also shows the "Fields marked * are required." line. Native `<input>`/`<select>`/`<textarea>` stand in until the library has the control component.
-- **Scope**: one aspect per story file. A second aspect (sizes, list usage) is a separate story file.
-- **Naming**: a single-story file exports `Default`; a multi-example comparison exports `Variants` (or `<Aspect>`). Add the story to `apps/frontend/.storybook/preview.ts` sort order when it sits in `Base/`.
+- **Scope**: one aspect per story file. A second aspect (sizes, gaps) is a separate story file. States are not aspects: enabled, disabled, required and error examples sit side by side in one `States` story (Select, Fieldset).
+- **Naming**: a single-story file exports `Default`; a multi-example comparison exports `Variants`, `States` (or `<Aspect>`). Add the story to `apps/frontend/.storybook/preview.ts` sort order when it sits in `Base/`.
 
 Story copy follows `.agents/rules/rocketship-story-copy.mdc`: present tense, adopter voice, no roadmap mentions.
 
@@ -117,4 +120,4 @@ Existing components cover: polymorphic tags, BEM elements/modifiers, consumer-ow
 - **Meaning is not colour alone.** Status variants rely on the consumer's title text to say what happened; make sure examples do.
 - **Form controls** (Input, Textarea, Select) set `font: inherit` (native controls do not inherit the page font), have one size with padding hooks for density, and derive their `--invalid` modifier from the control's own `aria-invalid="true"`; never add an `invalid` or `size` prop, and never style `:invalid`. They have no hover state.
 - **A control is one element.** `class`, `id` and `aria-*` land on the native control; no wrapper span. Decoration such as Select's chevron is painted with `background-image` from a token colour, not added as an element, and an `@media (forced-colors: active)` block restores `appearance: auto`. States that change the decoration (Select's list box) are derived modifiers, never attribute selectors.
-- **Forms.** A label is always a `<label>` (no `as`); captions for a group of controls are `<fieldset>` + `<legend>`. The control's own `required` attribute is the source of truth for required state, so never add visually hidden "(required)" text. The invalid state is `aria-invalid="true"` on the control.
+- **Forms.** A label is always a `<label>` (no `as`); captions for a group of controls are `<Fieldset>` with a consumer-written `<legend class="rs-fieldset__legend">` as its first child (no `legend` prop or slot). The legend sets `float: inline-start` so it leaves the native border-notch layout and becomes a flex item the block's `gap` spaces; the accessible name still comes from the first `<legend>`. The legend is semibold over Label's medium. Fieldset's gap is `space-4`; tighter option spacing is a `<Stack gap="small">` inside it. The control's own `required` attribute is the source of truth for required state, so never add visually hidden "(required)" text. The invalid state is `aria-invalid="true"` on the control.

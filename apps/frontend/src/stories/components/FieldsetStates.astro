@@ -1,0 +1,35 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Fieldset from '@labcat2020/rocketship/components/Fieldset'
+import Input from '@labcat2020/rocketship/components/Input'
+import Label from '@labcat2020/rocketship/components/Label'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack>
+    <Fieldset>
+      <legend class="rs-fieldset__legend">Billing address</legend>
+      <Field>
+        <Label for="billing-name">Name</Label>
+        <Input id="billing-name" name="billing-name" autocomplete="name" />
+      </Field>
+      <Field>
+        <Label for="billing-street">Street address</Label>
+        <Input id="billing-street" name="billing-street" autocomplete="street-address" />
+      </Field>
+    </Fieldset>
+    <Fieldset disabled>
+      <legend class="rs-fieldset__legend">Shipping address</legend>
+      <Field>
+        <Label for="shipping-name">Name</Label>
+        <Input id="shipping-name" name="shipping-name" />
+      </Field>
+      <Field>
+        <Label for="shipping-street">Street address</Label>
+        <Input id="shipping-street" name="shipping-street" />
+      </Field>
+    </Fieldset>
+  </Stack>
+</Container>

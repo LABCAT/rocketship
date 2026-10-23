@@ -1,1 +1,1 @@
-declare module '@labcat/rocketship/styles'
+declare module '@labcat2020/rocketship/styles'

@@ -10,7 +10,7 @@ alwaysApply: false
 
 - **Default theme**
   - Implement a “rocketship / space-station” visual identity as the default theme.
-  - Default theme lives in the base package (e.g. `@labcat/rocketship`) and provides fallback values for all `--rs-*` variables.
+  - Default theme lives in the base package (e.g. `@labcat2020/rocketship`) and provides fallback values for all `--rs-*` variables.
   - Components should look good and be accessible using only the default theme values.
 
 - **Planet themes**
@@ -27,8 +27,13 @@ alwaysApply: false
   - Default theme = variable definitions; planet themes = overrides.
 
 - **Light / dark modes**
-  - Each theme should support light and dark variants guided by user preference (e.g. `prefers-color-scheme` or a root attribute).
+  - Modes follow `color-scheme`. Tokens hold both values via `light-dark()`, and `:root` sets `color-scheme: light dark` so the OS preference applies by default.
+  - A theme picker forces a mode by setting `color-scheme` on `:root` (or any subtree); no media queries or root classes are needed.
+  - Shadows keep a distinct shape per mode through layered shadows (see `rocketship-bem-scss.mdc`).
   - Use the same variable names across modes; only values change.
+
+- **Standalone components**
+  - Components work without importing Rocketship's styles: every token reference carries its default (light and dark) as a fallback. A standalone consumer only needs `:root { color-scheme: light dark; }` for dark mode.
 
 - **Consumer experience**
   - Consumers should be able to:

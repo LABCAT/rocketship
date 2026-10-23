@@ -1,0 +1,21 @@
+---
+description: Where a new component belongs — Rocketship (packages/base) vs the consuming app — and who reviews Rocketship PRs.
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Rocketship Component Placement
+
+- **Rocketship (packages/base) or the app**
+  - A new component belongs in Rocketship (`packages/base`) only when **all** of these hold:
+    - It is reusable across apps.
+    - It has no app-specific business logic.
+    - It can expose a stable public API.
+  - Otherwise it belongs in the consuming app.
+
+- **State the decision**
+  - Every OpenHands task that adds a component must state the placement decision (Rocketship vs app) and why.
+
+- **Review**
+  - The founder reviews and merges all Rocketship PRs.

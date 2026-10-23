@@ -21,6 +21,25 @@ alwaysApply: false
 - **ARIA and roles**
   - Add ARIA attributes only when needed to express semantics that HTML cannot represent alone.
   - Do not overuse roles; prefer native elements over re-creating them with ARIA.
+  - Live-region roles (`alert`, `status`) are opt-in for genuinely dynamic content. Statically rendered components have no role by default, a component's name never implies a role, and visual variants never map to live-region roles.
+  - Lists styled with `list-style: none` add `role="list"` so Safari/VoiceOver keeps announcing them as lists.
+
+- **Headings**
+  - Components never hard-code a heading level. The consumer writes the heading at the level the page outline needs and applies the component's `__title` class; the class, not the level, sets the look.
+
+- **Forms**
+  - Every control has a `<label for>`; a label is always a `<label>` element. Captions for a group of controls are `<fieldset>` + `<legend>`.
+  - Hint and error text is linked with `aria-describedby` on the control, and the consumer writes both ends (no id props on components).
+  - The control's `required` attribute is the source of truth. A visual asterisk is `aria-hidden`; never add visually hidden "(required)" text, which doubles the announcement. Explaining the asterisk is form-level copy (WCAG 3.3.2).
+  - A control in error sets `aria-invalid="true"`. Error text is not signalled by colour alone (weight plus words).
+  - A control's visible edge keeps 3:1 against every surface (WCAG 1.4.11): use `color-border-control`, never the decorative `color-border`.
+  - Text controls never go below the page's font size; under 16px iOS Safari zooms the page on focus.
+  - A control that sets `appearance: none` restores `appearance: auto` under `@media (forced-colors: active)`, so high-contrast users keep native affordances.
+  - Error styling comes from `aria-invalid`, never `:invalid` (which matches required fields before the user has touched them).
+
+- **Contrast safety**
+  - Any element that sits on a component-owned background sets its own `color`, so host-page rules cannot break contrast.
+  - Status meaning is never conveyed by colour alone; titles say what happened.
 
 - **Storybook usage**
   - All interactive components should have stories that include:

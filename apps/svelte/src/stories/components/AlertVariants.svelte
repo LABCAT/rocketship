@@ -1,0 +1,32 @@
+<script lang="ts">
+  import Alert from '@labcat2020/rocketship-svelte/components/Alert'
+  import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+</script>
+
+<Container size="content" padded>
+  <Stack>
+    <Alert>
+      <h2 class="rs-alert__title">Heads up</h2>
+      <p class="rs-alert__description">
+        This change takes effect on your next deployment. Review the notes before you continue.
+      </p>
+    </Alert>
+    <Alert variant="success">
+      <h2 class="rs-alert__title">Deployed</h2>
+      <p class="rs-alert__description">Your site is live. The new theme is now serving traffic.</p>
+    </Alert>
+    <Alert variant="warning">
+      <h2 class="rs-alert__title">Check your quota</h2>
+      <p class="rs-alert__description">
+        You have used 85% of your build minutes. Upgrade or wait for the next cycle.
+      </p>
+    </Alert>
+    <Alert variant="error">
+      <h2 class="rs-alert__title">Build failed</h2>
+      <p class="rs-alert__description">
+        The build stopped because a required token is missing. Add it and try again.
+      </p>
+    </Alert>
+  </Stack>
+</Container>

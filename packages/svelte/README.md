@@ -19,6 +19,7 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
 | `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | — (Svelte-first)   |
 | `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | — (Svelte-first)   |
+| `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | — (Svelte-first)   |
 | `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
 | `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
@@ -60,6 +61,7 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Alert`      | `as` (`div`, `section`, `aside`, `article`), `variant` (`info`, `success`, `warning`, `error`), `title`, `titleSlot` snippet, `role`, `class` |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
+| `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
 
 ### `Typography` `html` prop
@@ -96,6 +98,27 @@ Each component spreads unknown attributes onto its rendered element and composes
 ```
 
 Both controls also work standalone. `invalid` raises `aria-invalid` and applies the error styling, and a size modifier (`sm`, `md`, `lg`) sets the type scale and control height. A `Field` error flows into the control's `aria-invalid` and its modifier, so the styling follows the error text Field renders.
+
+### `Select`
+
+`Select` wraps a native `<select>` and takes its options through the `children` snippet, plain `<option>` and `<optgroup>` included. There is no custom listbox, so keyboard, screen-reader and mobile behaviour are the platform's.
+
+```svelte
+<script lang="ts">
+  import Select from '@labcat2020/rocketship-svelte/components/Select'
+
+  let team = $state('')
+</script>
+
+<Select bind:value={team} placeholder="Choose a team" name="team">
+  <optgroup label="Engineering">
+    <option value="frontend">Frontend</option>
+    <option value="backend">Backend</option>
+  </optgroup>
+</Select>
+```
+
+`placeholder` renders a disabled option with an empty value, so it reads as an unset field. Once a real option is chosen the placeholder cannot be selected again; a parent can still reset the field by writing `''`. `size` accepts `sm`, `md` or `lg`; a number is passed through to the native `size` attribute, which renders a listbox instead of a dropdown, in which case no chevron is drawn.
 
 ## Install
 

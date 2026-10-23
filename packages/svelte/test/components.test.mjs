@@ -289,7 +289,7 @@ const mountControlFixture = async (markup, script = '') => {
   ).href
   const { mount, flushSync } = await import(clientEntry)
 
-  for (const name of ['Field', 'Input', 'Label', 'Textarea']) {
+  for (const name of ['Field', 'Input', 'Label', 'Select', 'Textarea']) {
     await writeClientComponent(name, loadComponentSource(name), { stable: true })
   }
 
@@ -299,6 +299,7 @@ const mountControlFixture = async (markup, script = '') => {
   import Field from './Field.svelte'
   import Input from './Input.svelte'
   import Label from './Label.svelte'
+  import Select from './Select.svelte'
   import Textarea from './Textarea.svelte'
   ${script}
 </script>
@@ -317,6 +318,7 @@ ${markup}`,
     flushSync,
     input: () => target.querySelector('input'),
     textarea: () => target.querySelector('textarea'),
+    select: () => target.querySelector('select'),
   }
 }
 
@@ -324,6 +326,12 @@ ${markup}`,
 const typeInto = (window, element, next) => {
   element.value = next
   element.dispatchEvent(new window.Event('input', { bubbles: true }))
+}
+
+/** Picks an option the way the native dropdown does: the browser sets the value, then fires change. */
+const chooseOption = (window, element, next) => {
+  element.value = next
+  element.dispatchEvent(new window.Event('change', { bubbles: true }))
 }
 
 const containerModifiers = [
@@ -2782,4 +2790,394 @@ test('Input and Textarea styles compile through the shared barrel with container
   )
   assert.match(textarea, /@container\s*\(min-width:\s*500px\)/)
   assert.ok(!/@media\s*\(min-width/.test(textarea), 'Textarea must not use viewport media queries')
+})
+
+test('Select is exported from the barrel, as a subpath, with its prop union types', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(pkg.exports['./components/Select'], './src/components/Select.svelte')
+  assert.ok(
+    !basePkg.exports?.['./components/Select'],
+    'Select is Svelte-first, so the Astro package must not expose it yet',
+  )
+  assert.match(barrel, /export \{ default as Select \} from '\.\/components\/Select\.svelte'/)
+  assert.match(barrel, /export type \* from '\.\/components\/Select\.svelte'/)
+  assert.match(loadComponentSource('Select'), /export type SelectSize = 'sm' \| 'md' \| 'lg'/)
+})
+
+test('Select is a native select inside .rs-select with one size modifier and the chevron', async () => {
+  const Select = await loadComponent('Select')
+
+  const markup = renderMarkup(Select)
+  assert.ok(
+    /<span class="rs-select rs-select--md">\s*<select/.test(visible(markup)),
+    'the select must sit inside the .rs-select block, so the chevron can be positioned',
+  )
+  assert.deepEqual(classList(renderMarkup(Select, { size: 'md' }), 'select'), [
+    'rs-select__control',
+  ])
+  assert.match(openingTag(markup, 'select'), /class="rs-select__control"/)
+  assert.match(markup, /class="rs-select__icon"/, 'the chevron is part of the block')
+  assert.match(openingTag(markup, 'svg'), /aria-hidden="true"/, 'the chevron is decorative')
+  assert.match(openingTag(markup, 'svg'), /focusable="false"/)
+
+  for (const size of ['sm', 'md', 'lg']) {
+    const classes = classList(renderMarkup(Select, { size }), 'span')
+    assert.deepEqual(classes, ['rs-select', `rs-select--${size}`])
+  }
+})
+
+test('Select forwards a numeric native size and drops the chevron for a listbox', async () => {
+  const Select = await loadComponent('Select')
+
+  const markup = renderMarkup(Select, { size: 4 })
+  assert.match(
+    openingTag(markup, 'select'),
+    /size="4"/,
+    'a numeric size is the native visible-row count, not a variant',
+  )
+  assert.ok(
+    classList(markup, 'span').includes('rs-select--md'),
+    'a listbox still carries the default size modifier',
+  )
+  assert.doesNotMatch(
+    markup,
+    /rs-select__icon/,
+    'a listbox has no dropdown affordance, so the chevron must not render',
+  )
+})
+
+test('Select invalid raises aria-invalid and the invalid class, but an explicit attribute wins', async () => {
+  const Select = await loadComponent('Select')
+
+  const invalid = renderMarkup(Select, { invalid: true })
+  assert.match(openingTag(invalid, 'select'), /aria-invalid="true"/)
+  assert.deepEqual(classList(invalid, 'span'), ['rs-select', 'rs-select--md', 'rs-select--invalid'])
+
+  const valid = renderMarkup(Select)
+  assert.doesNotMatch(openingTag(valid, 'select'), /aria-invalid/)
+  assert.ok(!classList(valid, 'span').includes('rs-select--invalid'))
+
+  const overridden = renderMarkup(Select, { invalid: true, 'aria-invalid': 'false' })
+  assert.match(openingTag(overridden, 'select'), /aria-invalid="false"/)
+  assert.ok(
+    !classList(overridden, 'span').includes('rs-select--invalid'),
+    'the modifier must follow the effective aria-invalid, not the prop alone',
+  )
+})
+
+test('Select renders the placeholder as a disabled empty-valued option and leaves it out when absent', async () => {
+  const Select = await loadComponent('Select')
+
+  const withPlaceholder = renderMarkup(Select, { placeholder: 'Choose a team' })
+  const option = withPlaceholder.match(/<option\b[^>]*>[^<]*<\/option>/)?.[0] ?? ''
+  assert.match(option, /value=""/, 'the placeholder must own the empty value')
+  assert.match(option, /disabled/, 'the placeholder must not be selectable')
+  assert.match(option, /Choose a team/)
+
+  assert.doesNotMatch(
+    renderMarkup(Select, { placeholder: '   ' }),
+    /<option/,
+    'a whitespace-only placeholder is no placeholder',
+  )
+  assert.doesNotMatch(
+    renderMarkup(Select),
+    /<option/,
+    'without a placeholder the component renders no option of its own',
+  )
+})
+
+test('Select renders the options handed to it through the children snippet, optgroups included', async () => {
+  const Select = await loadComponent('Select')
+
+  const markup = visible(
+    renderMarkup(Select, {
+      placeholder: 'Choose a team',
+      children: snippet(
+        '<optgroup label="Design"><option value="product">Product design</option></optgroup>' +
+          '<option value="platform">Platform</option>',
+      ),
+    }),
+  )
+
+  assert.match(markup, /<optgroup label="Design">/)
+  assert.match(markup, /<option value="product">Product design<\/option>/)
+  assert.ok(
+    markup.indexOf('Choose a team') < markup.indexOf('Product design'),
+    'the placeholder renders before the snippet options',
+  )
+})
+
+test('Select composes a consumer class and spreads native attributes onto the select', async () => {
+  const Select = await loadComponent('Select')
+
+  const markup = renderMarkup(Select, {
+    name: 'region',
+    required: true,
+    class: 'consumer-class',
+  })
+  const tag = openingTag(markup, 'select')
+
+  assert.match(tag, /name="region"/)
+  assert.match(tag, /required/, 'native attributes land on the control, not the wrapper')
+  assert.deepEqual(classList(markup, 'select'), ['rs-select__control'])
+  assert.deepEqual(classList(markup, 'span'), ['rs-select', 'rs-select--md', 'consumer-class'])
+})
+
+test('bind:value round-trips for Select in both directions', async () => {
+  const { window, target, instance, flushSync, select } = await mountControlFixture(
+    `<Select bind:value={team} placeholder="Choose a team">
+    <option value="product">Product design</option>
+    <option value="platform">Platform</option>
+  </Select>
+  <p data-echo>{team}</p>`,
+    `let team = $state('product')
+  export const read = () => team
+  export const write = (next: string) => { team = next }`,
+  )
+
+  const element = select()
+  assert.equal(element.value, 'product', 'the initial state must reach the element')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'product')
+
+  chooseOption(window, element, 'platform')
+  flushSync()
+  assert.equal(instance.read(), 'platform', 'a user pick must update the bound state')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'platform')
+
+  instance.write('product')
+  flushSync()
+  assert.equal(element.value, 'product', 'a parent update must reach the element')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'product')
+})
+
+test('Select keeps the placeholder unreachable once a real option is chosen', async () => {
+  const { window, target, instance, flushSync, select } = await mountControlFixture(
+    `<Select bind:value={team} placeholder="Choose a team">
+    <option value="product">Product design</option>
+    <option value="platform">Platform</option>
+  </Select>
+  <p data-echo>{team}</p>`,
+    `let team = $state('')
+  export const read = () => team
+  export const write = (next: string) => { team = next }`,
+  )
+
+  const element = select()
+  const [placeholder, product, platform] = element.options
+
+  assert.ok(
+    placeholder.disabled,
+    'the placeholder must be a disabled option, so the dropdown cannot offer it again',
+  )
+  assert.equal(placeholder.value, '')
+  assert.equal(element.value, '', 'an empty value starts on the placeholder')
+  assert.equal(target.querySelector('[data-echo]').textContent, '')
+
+  chooseOption(window, element, 'platform')
+  flushSync()
+
+  assert.equal(instance.read(), 'platform', 'a user pick must reach the bound state')
+  assert.equal(element.value, 'platform')
+  assert.equal(placeholder.selected, false, 'the chosen option owns the selection')
+  assert.equal(platform.selected, true)
+  assert.ok(
+    placeholder.disabled,
+    'the placeholder stays disabled after a pick, so it cannot be chosen back',
+  )
+
+  // The placeholder's `selected` attribute is reactive, so it has to leave the placeholder once a
+  // value is set. Otherwise a form reset, and the first paint after hydration, would return to it.
+  assert.ok(
+    !placeholder.hasAttribute('selected'),
+    'the placeholder must drop selected once a value is set',
+  )
+  assert.equal(
+    platform.selected,
+    true,
+    'the element reports the chosen option as selected, so a reset target exists',
+  )
+
+  // A parent reset is still allowed to move the control back to the placeholder.
+  instance.write('')
+  flushSync()
+  assert.equal(element.value, '', 'a parent update may reset the control to the placeholder')
+  assert.equal(product.selected, false)
+})
+
+test('Select with a stale bound value selects nothing but keeps the placeholder disabled', async () => {
+  const { window, target, instance, flushSync, select } = await mountControlFixture(
+    `<Select bind:value={team} placeholder="Choose a team">
+    <option value="product">Product design</option>
+  </Select>
+  <p data-echo>{team}</p>`,
+    `let team = $state('retired-team')
+  export const read = () => team`,
+  )
+
+  const element = select()
+  assert.equal(
+    element.selectedIndex,
+    -1,
+    'a value that matches no option must leave the control with nothing selected, not jump to the placeholder',
+  )
+
+  chooseOption(window, element, 'product')
+  flushSync()
+  assert.equal(instance.read(), 'product', 'the user can recover by picking a real option')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'product')
+  assert.equal(element.options[0].disabled, true)
+})
+
+test('the invalid state Field derives from its error reaches the Select control', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Billing plan" error="Choose a plan before you start the trial.">
+    {#snippet children(control)}
+      <Select {...control} placeholder="Choose a plan">
+        <option value="starter">Starter</option>
+      </Select>
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('select')
+  assert.equal(
+    element.getAttribute('aria-invalid'),
+    'true',
+    'the error must mark the control invalid',
+  )
+  assert.equal(
+    element.getAttribute('aria-describedby'),
+    target.querySelector('.rs-field__error').id,
+    'the control must point at the error text',
+  )
+  assert.ok(
+    target.querySelector('.rs-select').classList.contains('rs-select--invalid'),
+    'the Field error must reach the control styling',
+  )
+  assert.equal(
+    target.querySelector('label').getAttribute('for'),
+    element.id,
+    'the label must point at the select',
+  )
+})
+
+test('a Field without an error leaves its Select control valid and pointed at the hint', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Team" hint="Controls which runbooks appear in your sidebar.">
+    {#snippet children(control)}
+      <Select {...control} placeholder="Choose a team">
+        <option value="platform">Platform</option>
+      </Select>
+    {/snippet}
+  </Field>`,
+  )
+
+  const element = target.querySelector('select')
+  assert.equal(element.getAttribute('aria-invalid'), null, 'no error must mean no aria-invalid')
+  assert.ok(!target.querySelector('.rs-select').classList.contains('rs-select--invalid'))
+  assert.equal(element.getAttribute('aria-describedby'), target.querySelector('.rs-field__hint').id)
+})
+
+test('a disabled Field disables its Select control while an enabled one stays focusable', async () => {
+  const { window, target } = await mountControlFixture(
+    `<Field label="Region" disabled>
+    {#snippet children(control)}
+      <Select {...control}><option value="eu">Europe</option></Select>
+    {/snippet}
+  </Field>
+  <Field label="Workspace">
+    {#snippet children(control)}
+      <Select {...control}><option value="acme">Acme</option></Select>
+    {/snippet}
+  </Field>`,
+  )
+
+  const [disabled, enabled] = target.querySelectorAll('select')
+  assert.equal(disabled.disabled, true, 'the disabled Field must disable its control')
+
+  if (window.document.activeElement instanceof window.HTMLElement) {
+    window.document.activeElement.blur()
+  }
+  disabled.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a disabled Select must not take focus, so it cannot be opened',
+  )
+
+  enabled.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'SELECT',
+    'precondition: an enabled Select takes focus, so the disabled assertion is meaningful',
+  )
+})
+
+test('Select styles compile through the shared barrel with container queries and no viewport media queries', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Select'))
+
+  for (const selector of [
+    '.rs-select',
+    '.rs-select--sm',
+    '.rs-select--md',
+    '.rs-select--lg',
+    '.rs-select--invalid',
+    '.rs-select__control',
+    '.rs-select__icon',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Select CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    'Select must restate its touch-target scale at the sm container query',
+  )
+  assert.ok(
+    !/@media\s*\(min-width/.test(css),
+    'Select sizes with container queries, so it must not use viewport min-width media queries',
+  )
+  assert.match(
+    css,
+    /appearance:\s*none/,
+    'the native arrow is replaced by the chevron, so the control must reset its appearance',
+  )
+  assert.match(
+    css,
+    /--rs-select-bg:\s*var\(--rs-color-surface,\s*#ffffff\)/,
+    'the variant-owned background keeps the token over the literal',
+  )
+  assert.match(
+    css,
+    /\.rs-select--invalid\s+:global\s+\.rs-select__control\s*\{[^}]*--rs-select-bg:\s*var\(--rs-select-invalid-bg\)/m,
+    'the invalid modifier reassigns the local the control already reads',
+  )
+  assert.match(
+    css,
+    /--rs-select-invalid-bg:\s*var\(--rs-color-danger-bg,/,
+    'the invalid local keeps the semantic danger token over the literal',
+  )
+
+  // Every literal in the block must restate a value that already exists in variables.scss; a new
+  // hex would mean a colour the design system does not define.
+  const source = styleBlockOf('Select')
+  const knownLiterals = new Set([
+    '#ffffff',
+    '#c8d2eb',
+    '#131a2f',
+    '#296dff',
+    '#2f5bdb',
+    '#4f5b7d',
+    '#ffeef0',
+    '#f0a8b0',
+    '#c5221f',
+  ])
+  const authored = [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex.toLowerCase())
+  const invented = authored.filter((hex) => !knownLiterals.has(hex))
+  assert.deepEqual(invented, [], 'Select must not introduce hex values of its own')
 })

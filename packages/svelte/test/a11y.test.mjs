@@ -39,6 +39,9 @@ for (const key of Object.getOwnPropertyNames(window)) {
 globalThis.requestAnimationFrame = window.requestAnimationFrame
 globalThis.cancelAnimationFrame = window.cancelAnimationFrame
 globalThis.getComputedStyle = window.getComputedStyle
+// `bind:value` on a `<select>` observes its options with a MutationObserver, which is not part of
+// the HTML/SVG/Event group copied above.
+globalThis.MutationObserver = window.MutationObserver
 
 const { mount, flushSync } = await import(clientEntry)
 
@@ -83,6 +86,9 @@ const storyFixtures = [
   { label: 'TextareaDefault', file: 'TextareaDefault.svelte' },
   { label: 'TextareaSizes', file: 'TextareaSizes.svelte' },
   { label: 'TextareaStates', file: 'TextareaStates.svelte' },
+  { label: 'SelectDefault', file: 'SelectDefault.svelte' },
+  { label: 'SelectSizes', file: 'SelectSizes.svelte' },
+  { label: 'SelectStates', file: 'SelectStates.svelte' },
 ]
 
 const runAxe = (target) =>
@@ -117,6 +123,7 @@ test('the story examples render without axe violations', async () => {
     'Figure',
     'Input',
     'Label',
+    'Select',
     'Textarea',
   ]) {
     await compileToCache(name, readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'))

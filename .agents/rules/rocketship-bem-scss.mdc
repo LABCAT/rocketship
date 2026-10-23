@@ -24,6 +24,7 @@ alwaysApply: false
   - `variables.scss` is generated from the map with `rs-token-properties`. Edit values in the map, never in `variables.scss`.
   - Colour pairs compile to `light-dark()`; shadow pairs compile to layered shadows whose inactive mode is transparent, so each mode's shadow keeps its exact shape. Dark mode follows `color-scheme`.
   - Components reference tokens only through `#{rs-token(name)}`, which falls back to the default value. Never hand-write hex, px or rem token fallbacks. Unknown names fail the build.
+  - A token's name is its contract. Use it only for the role it states: `*-fg` is text on the matching `*-bg`, `*-accent` is a stroke or fill (3:1), `*-text` is text on page surfaces (4.5:1). A role with no token gets a new one (an alias is fine), with the founder's approval.
 
 - **Variables files (e.g. `variables.scss`)**
   - Must **never** contain class selectors (or any selectors other than `:root` and `@media`).
@@ -69,5 +70,6 @@ alwaysApply: false
 - **Component boundaries**
   - A component never sets its own outer margin; whoever places it owns the spacing (Stack, Grid, the page).
   - Components never set `font-family`; they inherit the page's typeface.
+  - Inline components (Label) set no `display`; the parent's layout decides whether they are block or inline.
   - Element classes the consumer applies set `margin: 0`, and set their own `color` when they sit on a component-owned background.
 

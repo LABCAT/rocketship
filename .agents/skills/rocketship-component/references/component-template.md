@@ -47,7 +47,16 @@ const Tag = as
 </div>
 ```
 
-- The consumer writes every content element and applies the element class. The component renders no titles, descriptions or wrappers.
+- The consumer writes every content element and applies the element class. The component renders no titles, descriptions, wrappers or words.
+- No id props: when one element references another (`aria-describedby`, `for`), both ends are in the consumer's markup.
+
+A component may render decoration next to the slot (Label):
+
+```astro
+<label {...attrs} class:list={['rs-label', className]}>
+  <slot />{required && <span class="rs-label__required" aria-hidden="true">*</span>}
+</label>
+```
 
 ## Styles
 

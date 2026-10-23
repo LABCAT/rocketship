@@ -18,6 +18,7 @@ $rs-tokens: (
   color-surface: (light: #ffffff, dark: #101833),
   color-surface-elevated: (light: #eef2ff, dark: #18244b),
   color-border: (light: #c8d2eb, dark: #31416f),
+  color-border-control: (light: #7e89a8, dark: #5d6f9f),
   color-accent: (light: #2f5bdb, dark: #4f89ff),
   color-accent-contrast: (light: #ffffff, dark: #f8fbff),
   color-link: (light: #1f49c6, dark: #87b5ff),
@@ -40,6 +41,7 @@ $rs-tokens: (
   color-danger-border: (light: #f0a8b0, dark: #8a2a30),
   color-danger-fg: (light: #3d0a08, dark: #ffe2e4),
   color-danger-accent: (light: #c5221f, dark: #ff6b6b),
+  color-danger-text: (alias: color-danger-accent),
 
   font-family-sans: ('Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif),
   font-family-mono: (ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace),

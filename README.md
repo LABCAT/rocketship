@@ -54,17 +54,20 @@ merge-ready.
    commit, so a new push must be re-reviewed before the label returns.
 2. **`preview-deploy.yml`** is the only thing that reacts to the label. It runs
    after `opencode-review` finishes (and on a manual label add), checks the
-   label, then builds the Storybook and publishes one Cloudflare Pages preview.
+   label, then mirrors the production path filters to decide what to build:
+   Astro changes go to `rocketship3000`, Svelte changes go to `rocketship3030`,
+   and a shared change (`packages/base`, `pnpm-lock.yaml`, root `package.json`)
+   publishes both. A PR that touches neither Storybook gets no preview.
    It does nothing when the label is absent, and removing the label publishes
    nothing new. Production deploys are untouched — the workflow runs only for
    pull requests and only ever publishes previews.
 3. The founder remains the only merge authority; merging to `main` deploys
    production exactly as before.
 
-One Cloudflare Pages setting is required for this gate (founder action):
-in the `rocketship3000` project go to **Settings → Builds & deployments →
-Configure Preview deployments** and turn off automatic preview branch
-deployments (**None**), leaving production branch deployments enabled. Without
-that change Cloudflare still builds a preview on every push, before the label is
-added. The repository needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
-Actions secrets for `preview-deploy.yml`.
+One Cloudflare Pages setting is required for this gate (founder action): in both
+the `rocketship3000` and `rocketship3030` projects go to **Settings → Builds &
+deployments → Configure Preview deployments** and turn off automatic preview
+branch deployments (**None**), leaving production branch deployments enabled.
+Without that change Cloudflare still builds a preview on every push, before the
+label is added. The repository needs `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` Actions secrets for `preview-deploy.yml`.

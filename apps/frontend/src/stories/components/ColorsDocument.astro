@@ -1,8 +1,8 @@
 ---
-import Card from '@labcat/rocketship/components/Card'
-import Container from '@labcat/rocketship/components/Container'
-import Grid from '@labcat/rocketship/components/Grid'
-import Typography from '@labcat/rocketship/components/Typography'
+import Card from '@labcat2020/rocketship/components/Card'
+import Container from '@labcat2020/rocketship/components/Container'
+import Grid from '@labcat2020/rocketship/components/Grid'
+import Typography from '@labcat2020/rocketship/components/Typography'
 
 const lightDarkExample = `:root {
   --rs-color-surface: #ffffff;
@@ -38,7 +38,10 @@ const consumeExample = `.rs-card {
 <Container>
   <Typography as="article">
     <h2>Surfaces</h2>
-    <p>The page, the panels that sit on it, and the lines that separate them.</p>
+    <p>
+      The page, the panels that sit on it, and the lines that separate them. Borders are decorative;
+      control borders mark where to type and keep 3:1 against every surface.
+    </p>
   </Typography>
 </Container>
 <Container padded>
@@ -66,6 +69,12 @@ const consumeExample = `.rs-card {
       <p class="rs-card__title">Border</p>
       <p class="rs-card__description">Hairlines and dividers</p>
       <span slot="meta" class="rs-card__token">--rs-color-border</span>
+    </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-border-control);">
+      <div slot="media"></div>
+      <p class="rs-card__title">Control border</p>
+      <p class="rs-card__description">Edges of inputs (3:1)</p>
+      <span slot="meta" class="rs-card__token">--rs-color-border-control</span>
     </Card>
   </Grid>
 </Container>
@@ -243,7 +252,10 @@ const consumeExample = `.rs-card {
 <Container>
   <Typography as="article">
     <h3>Danger</h3>
-    <p>The full danger palette, following the same background, border, foreground structure.</p>
+    <p>
+      The full danger palette, following the same background, border, foreground structure, plus
+      danger text for red text that sits on page surfaces, such as form errors.
+    </p>
   </Typography>
 </Container>
 <Container padded>
@@ -265,6 +277,12 @@ const consumeExample = `.rs-card {
       <p class="rs-card__title">Danger foreground</p>
       <p class="rs-card__description">Text on danger surfaces</p>
       <span slot="meta" class="rs-card__token">--rs-color-danger-fg</span>
+    </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-text);">
+      <div slot="media"></div>
+      <p class="rs-card__title">Danger text</p>
+      <p class="rs-card__description">Error text on page surfaces</p>
+      <span slot="meta" class="rs-card__token">--rs-color-danger-text</span>
     </Card>
   </Grid>
 </Container>

@@ -1,0 +1,24 @@
+---
+import Card from '@labcat2020/rocketship/components/Card'
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack>
+    <Card>
+      <h2 class="rs-card__title">One column</h2>
+      <p class="rs-card__description">Children stack top to bottom in the order you write them.</p>
+    </Card>
+    <Card>
+      <h2 class="rs-card__title">One gap</h2>
+      <p class="rs-card__description">
+        Stack owns the space between its children. They set no outer margins of their own.
+      </p>
+    </Card>
+    <Card>
+      <h2 class="rs-card__title">Any component</h2>
+      <p class="rs-card__description">Cards, alerts, buttons and forms all stack the same way.</p>
+    </Card>
+  </Stack>
+</Container>

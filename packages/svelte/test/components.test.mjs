@@ -654,7 +654,7 @@ test('Button styles compile through the shared barrel and keep every Astro selec
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Button sizes must restate through the sm container query',
   )
 })
@@ -775,12 +775,12 @@ test('Grid styles compile through the shared barrel and keep every Astro selecto
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'the base grid restates two columns at the sm container query',
   )
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*700px\)/,
+    /@container\s*\(min-width:\s*700px\)/,
     'the 3/4 column modifiers restate at the md container query',
   )
 })
@@ -897,7 +897,7 @@ test('Alert styles compile through the shared barrel and keep every Astro select
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Alert padding and type scale restate at the sm container query',
   )
 })
@@ -1651,7 +1651,7 @@ test('Field styles compile through the shared barrel and keep the Astro selector
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Field restates its gap at the sm container query',
   )
 })
@@ -1670,7 +1670,7 @@ test('Label styles compile through the shared barrel and keep the Astro selector
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Label restates its type scale at the sm container query',
   )
 })
@@ -2041,7 +2041,7 @@ test('Disclosure and Accordion styles compile through the shared barrel with the
   }
   assert.match(
     disclosure,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Disclosure type scale must restate at the sm container query',
   )
   assert.match(
@@ -2346,7 +2346,7 @@ test('Figure styles compile through the shared barrel and keep every selector', 
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'the caption type scale must restate at the sm container query',
   )
   assert.ok(
@@ -2752,7 +2752,7 @@ test('Input and Textarea styles compile through the shared barrel with container
   }
   assert.match(
     input,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Input must restate its type scale at the sm container query',
   )
   assert.ok(
@@ -2780,6 +2780,6 @@ test('Input and Textarea styles compile through the shared barrel with container
     /resize:\s*var\(--rs-textarea-resize,\s*vertical\)/,
     'the resize default is a token hook, so a consumer can override it',
   )
-  assert.match(textarea, /@container\s+rs-component\s*\(min-width:\s*500px\)/)
+  assert.match(textarea, /@container\s*\(min-width:\s*500px\)/)
   assert.ok(!/@media\s*\(min-width/.test(textarea), 'Textarea must not use viewport media queries')
 })

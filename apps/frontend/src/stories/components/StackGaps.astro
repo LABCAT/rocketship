@@ -1,0 +1,40 @@
+---
+import Card from '@labcat2020/rocketship/components/Card'
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+
+const gaps = [
+  {
+    gap: 'small' as const,
+    title: 'Small gap',
+    lines: ['8px between items.', 'For tightly related content.', 'A label and its value, or a list of links.'],
+  },
+  {
+    gap: 'medium' as const,
+    title: 'Medium gap (default)',
+    lines: ['16px between items.', 'For most groups of components.', 'Cards in a column, or the fields of a form.'],
+  },
+  {
+    gap: 'large' as const,
+    title: 'Large gap',
+    lines: ['24px between items.', 'For separate sections.', 'Distinct groups that need room to breathe.'],
+  },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    {
+      gaps.map((item) => (
+        <Card>
+          <Stack gap={item.gap}>
+            <h2 class="rs-card__title">{item.title}</h2>
+            {item.lines.map((line) => (
+              <p class="rs-card__description">{line}</p>
+            ))}
+          </Stack>
+        </Card>
+      ))
+    }
+  </Stack>
+</Container>

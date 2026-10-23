@@ -21,6 +21,8 @@ export default {
             ['Default', 'Content', 'Wide', 'FullWidth'],
             'Grid',
             ['TwoColumns', 'ThreeColumns', 'FourColumns'],
+            'Stack',
+            ['Default', 'Gaps'],
             'Typography',
             ['TermsStyleDocument'],
             'Button',

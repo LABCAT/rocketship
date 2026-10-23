@@ -33,6 +33,7 @@
     "./components/Card": "./src/components/Card.astro",
     "./components/Container": "./src/components/Container.astro",
     "./components/Grid": "./src/components/Grid.astro",
+    "./components/Stack": "./src/components/Stack.astro",
     "./components/Typography": "./src/components/Typography.astro",
     "./components/Alert": "./src/components/Alert.astro"
   },

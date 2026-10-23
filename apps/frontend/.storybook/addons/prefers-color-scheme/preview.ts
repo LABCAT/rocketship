@@ -20,6 +20,9 @@ function walkRules(rules: CSSRuleList, fn: (r: CSSMediaRule) => void) {
 }
 
 function apply(scheme: 'light' | 'dark') {
+  if (typeof document === 'undefined') return
+  // Tokens use light-dark(), which follows color-scheme rather than the media query.
+  document.documentElement.style.colorScheme = scheme
   try {
     for (const sheet of Array.from(document.styleSheets)) {
       try {

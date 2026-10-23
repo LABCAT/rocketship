@@ -344,7 +344,7 @@ test('Button styles compile through the shared barrel and keep every Astro selec
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Button sizes must restate through the sm container query',
   )
 })
@@ -465,12 +465,12 @@ test('Grid styles compile through the shared barrel and keep every Astro selecto
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'the base grid restates two columns at the sm container query',
   )
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*700px\)/,
+    /@container\s*\(min-width:\s*700px\)/,
     'the 3/4 column modifiers restate at the md container query',
   )
 })
@@ -587,7 +587,7 @@ test('Alert styles compile through the shared barrel and keep every Astro select
 
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'Alert padding and type scale restate at the sm container query',
   )
 })

@@ -58,7 +58,7 @@ test('@use "@labcat2020/rocketship/styles/mixins" resolves in a Svelte <style la
   assert.match(css, /width:\s*1rem/, 'to-rem() from the barrel should compile')
   assert.match(
     css,
-    /@container\s+rs-component\s*\(min-width:\s*500px\)/,
+    /@container\s*\(min-width:\s*500px\)/,
     'the barrel should forward the container-query mixins',
   )
 })

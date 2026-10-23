@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html'
 import AlertVariants from './components/AlertVariants.astro'
 import '@labcat2020/rocketship/components/Alert'
 import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof AlertVariants> = {
   title: 'Components/Alert',

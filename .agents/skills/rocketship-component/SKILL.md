@@ -5,7 +5,9 @@ description: 'Create a new Rocketship component exactly matching repo convention
 
 # Rocketship Component Authoring
 
-Build a new component for `@labcat2020/rocketship` following the exact patterns extracted from the five existing components (Button, Card, Container, Grid, Typography). **Card** (`packages/base/src/components/Card.astro`) is the gold-standard reference — copy its shape whenever unsure.
+Build a new component for `@labcat2020/rocketship` the way Shane builds them by hand. **Alert** (`packages/base/src/components/Alert.astro`) and **Stack** (`packages/base/src/components/Stack.astro`) are the reviewed reference components: Alert for a content block with variants, Stack for a layout primitive with `as`. Copy their shape whenever unsure. Button, Card, Container, Grid and Typography predate the review and do not yet follow every rule below; do not copy their deviations.
+
+The reasoning behind every rule is recorded in `_planning/component-review-decisions.md`.
 
 ## When to Use
 
@@ -15,48 +17,63 @@ Build a new component for `@labcat2020/rocketship` following the exact patterns 
 
 ## Before You Start
 
-1. Read the rules — they are binding, not advisory:
-   - `.agents/rules/rocketship-bem-scss.mdc` (naming, variables, declaration order)
+1. Read the rules. They are binding, not advisory:
+   - `.agents/rules/rocketship-bem-scss.mdc` (selectors, naming, tokens, declaration order)
    - `.agents/rules/rocketship-layout-responsive.mdc` (container queries vs media queries)
-   - `.agents/rules/rocketship-a11y.mdc` (WCAG targets, semantics)
+   - `.agents/rules/rocketship-a11y.mdc` (WCAG targets, roles, headings)
    - `.agents/rules/rocketship-typescript.mdc` (arrow functions, doc blocks)
-2. Read the closest existing component as your template:
-   - Interactive/control → `Button.astro`
-   - Layout wrapper with elements/slots → `Card.astro`
-   - Simple layout with size variants → `Grid.astro`
+2. Read the closest reference component:
+   - Content block with variants and element classes → `Alert.astro`
+   - Layout primitive with a polymorphic tag → `Stack.astro`
+   - Interactive control → `Button.astro` (pre-review: see the Button notes in the decisions file)
 3. Check whether the pattern is genuinely new (no `:has()`, `[open]`, `::backdrop`, popover attributes exist anywhere yet). If so, flag it: novel patterns need a hand-written reference example before delegation.
 
 ## Procedure
 
 ### 1. Component file: `packages/base/src/components/<Name>.astro`
 
-Follow this exact structure (see [component-template.md](./references/component-template.md) for the annotated skeleton):
+Follow this structure (see [component-template.md](./references/component-template.md) for the annotated skeleton):
 
 ```
 ---
 (frontmatter)          → types, Props, destructuring, class computation
 ---
-(markup)               → single root tag via dynamic Tag, class:list
+(markup)               → single root element, class:list, <slot />
 <style is:global lang="scss">  → @use barrel, then .rs-block { ... }
 ```
 
-Non-negotiables:
+#### Props and markup
 
-- **Props**: explicit exported union types (`export type XVariant = ...`), a `Props` type extending `HTMLAttributes<'...'>`, always include `as?:` (polymorphic tag) and `class?: string`; destructure with defaults; spread `...attrs` onto the root.
-- **Markup**: dynamic tag pattern — `const Tag = as` then `<Tag {...attrs} class:list={classes}>`. Compose classes into an array (`['rs-x', variant && \`rs-x--${variant}\`, className]`) or inline them; filter `undefined`.
-- **Styles**: one `<style is:global lang="scss">` block inside the component. Never create separate component `.scss` files.
-- **Import**: `@use '../styles/mixins' as *;` — the barrel only. Never `@use` individual mixin partials.
-- **BEM**: block `rs-<name>`, elements nested as `&__element`, modifiers as `&--modifier`, nested under the block selector.
-- **Declaration order per rule block**: `--rs-*` custom properties first (only when defined on the block — see below) → reset (`all: unset`) if needed → `box-sizing` if reset → everything else (layout, then appearance).
-- **Tokens**: reference global tokens from `variables.scss` (`--rs-color-*`, `--rs-space-*`, `--rs-font-size-*`, `--rs-radius-*`, `--rs-border-width-*`). Font sizes use `#{to-rem(16)}` fallbacks; all other dimensions are `px`. Two component-variable patterns — pick by need:
-  - **Opt-in hooks** (default; Card): never assign `--rs-<name>-*` on the block. Use them as the first fallback in properties so adopters can set them on `:root` or an ancestor: `border-radius: var(--rs-card-border-radius, var(--rs-radius-md, 10px))`. Prefer this for spacing, radius, borders, shadows, typography.
-  - **Variant-owned locals** (Alert / Button colors): assign `--rs-<name>-*` on the block and reassign in modifiers when variants must swap a coordinated set. Properties then read `var(--rs-alert-bg)`. These are overridden on `.rs-alert` / the instance, not via bare `:root` (the block redefines them). Do **not** use this pattern for static layout/type hooks.
-- **Component variables are the override API**: every `--rs-<name>-*` custom property is a documented customization point. Prefer exposing a variable over inlining a token when a dev might plausibly want to override that aspect. Inline global tokens directly only for structural internals that make no sense to override.
-- **Missing tokens**: if the component needs a semantic token that does not exist in `variables.scss` (e.g. status colors like `--rs-color-success-*`), **stop and tell the user** — never invent hard-coded hex values inside the component. Adding new global tokens is a design-system decision made in `variables.scss` (light and dark sections), with the user's approval.
-- **Dark mode**: never add component-level `prefers-color-scheme` blocks with hard-coded values. Semantic color tokens already flip in `variables.scss`; components only reference them.
-- **Sizing**: size variants via `@include container-query-up($rs-cq-sm)` (sm/md/lg from `mixins/container-query.scss`). Viewport `media-breakpoint-up` is reserved for Container/layout only — never leaf components.
-- **States**: hover/active/focus-visible/disabled nested under the block or modifier. Focus must be visible (`outline: 2px solid var(--rs-color-focus-ring, ...)` + offset).
-- **DRY in styles**: hoist shared declarations (e.g. `font-family`) to the block selector; never repeat them per element.
+- **Exported union types** for each axis (`export type AlertVariant = ...`), a `Props` type extending `HTMLAttributes<'...'>` of the root tag, `class?: string`, defaults in the destructure, and `...attrs` spread onto the root.
+- **`as?` only when more than one root tag is semantically valid.** Restrict it to a union of those tags (Stack: `'div' | 'ul' | 'ol'`). Omit it when only one tag is correct (Alert is always a `div`).
+- **Never shadow a native attribute with a prop.** A prop named `title` hijacks the tooltip attribute; choose another name or, better, let the consumer write the element.
+- **The base class is the default.** The default variant emits no modifier class: `['rs-alert', variant !== 'info' && \`rs-alert--${variant}\`, className]`. No class may appear in markup unless a rule exists for it.
+- **Consumers own content elements.** Do not render titles, descriptions or content wrappers, and do not take title/heading props or slots. The consumer writes the element and applies the BEM element class, choosing the heading level for the page outline: `<h3 class="rs-alert__title">`. The root renders `<slot />` directly.
+- **Content is block elements.** A flex block splits bare inline text into separate items, so stories and docs always show content inside elements.
+
+#### Styles
+
+- **One `<style is:global lang="scss">` block** inside the component. Never a separate component `.scss` file.
+- **Import the barrel only**: `@use '../styles/mixins' as *;`.
+- **Every compiled selector is a single BEM class** (plus pseudo-classes/elements on that same class). No descendant, child, sibling, compound-class, tag or ID selectors. `&__element` / `&--modifier` nesting is fine because it compiles flat.
+- **Modifiers change elements only by reassigning `--rs-*` variables on the block.** Elements read the variables. For parent state that a child must react to (e.g. parent hover), use a style query: the parent sets a custom property and the child uses `@container style(--rs-x-state: value)`.
+- **Tokens only through `rs-token()`.** Write `#{rs-token(space-4)}`, which compiles to `var(--rs-space-4, 16px)`. Always interpolate it, because Sass does not evaluate functions inside custom property values. Never write a hex, px or rem literal as a token fallback.
+- **Missing tokens fail the build.** `rs-token()` raises an error for unknown names. If a component needs a token that does not exist, **stop and tell the user**. Adding a token is a design-system decision made in `$rs-tokens` (`styles/mixins/tokens.scss`), with the user's approval.
+- **Two component-variable patterns:**
+  - **Opt-in hooks** (spacing, radius, borders, type): never assigned on the block; used as the first fallback: `border-radius: var(--rs-alert-border-radius, #{rs-token(radius-md)})`. Adopters set them on `:root` or any ancestor.
+  - **Variant-owned locals** (colours that variants swap as a set): assigned on the block, reassigned in modifiers, read by properties: `--rs-alert-bg: #{rs-token(color-surface-elevated)}` then `background: var(--rs-alert-bg)`.
+- **Variant names describe the message; token names describe the palette role.** Alert's `error` variant reads the `danger` tokens. The modifier translates between them; never rename one to match the other.
+- **Declaration order per rule block**: `--rs-*` custom properties first → reset (`all: unset`) if needed → `box-sizing` if reset → everything else (layout, then appearance).
+- **No outer margin.** A component styles its inside only. Spacing between components belongs to whoever places them (Stack, Grid, the page).
+- **Never set `font-family`.** Components inherit the typeface of the page so they blend into any theme.
+- **Body copy inherits size and line height.** Elements such as `__description` set only `color` and `margin: 0`.
+- **Heading level is semantics; the class is the look.** A title class sets `font-size: inherit` (cancelling tag defaults and host heading styles), its weight, line height, colour and `margin: 0`, so `h2` and `h4` render identically.
+- **Every element class sets `margin: 0`**, because consumer-written elements arrive with browser margins and the block's `gap` owns spacing.
+- **Any element on a component-owned background sets its own `color`**, so host rules like `p { color: grey }` cannot break contrast.
+- **Units**: authored font sizes use `to-rem()` px; everything else is `px`. No `em` font sizes.
+- **Dark mode is in the tokens.** Never add `prefers-color-scheme` blocks to components; `rs-token()` colours compile to `light-dark()`.
+- **Container queries are for layout changes** (columns appearing, media moving beside text), not cosmetic density steps. A component with one layout has one size. Viewport `media-breakpoint-up` is reserved for Container/layout.
+- **States**: hover/active/focus-visible/disabled nested under the block or modifier. Focus must be visible.
 
 ### 2. Register the export: `packages/base/package.json`
 
@@ -64,27 +81,30 @@ Add `"./components/<Name>": "./src/components/<Name>.astro"` to `exports`.
 
 ### 3. Stories: `apps/frontend/src/stories/`
 
-Two files, matching `Card.stories.tsx` / `components/CardDefault.astro`:
+Two files, matching `Alert.stories.tsx` / `components/AlertVariants.astro`:
 
-- `<Name>.stories.tsx` — `Meta`/`StoryObj` from `@storybook/html`, import the wrapper Astro file plus each used library component's style side effects (`import '@labcat2020/rocketship/components/X'`), title `'Components/<Name>'`, `parameters: { a11y: { disable: false } }`, one default-exported story object. The `Base/` group is reserved for the existing primitive components (Button, Typography, Grid, Container) — no new components go there. Token documentation stories live in the `Foundations/` group (e.g. `'Foundations/Colors'`).
-- `components/<Name>Default.astro` (or `<Name><Aspect>.astro`) — frontmatter imports only `@labcat2020/rocketship` components; body composes them inside `<Container size="content" padded>`. **No `<style>` blocks, no story-only CSS, ever.**
-- **Layout**: stack examples vertically inside the single `Container`. Do not reach for `Grid` or other layout components unless the story is specifically demonstrating composition with them.
-- **Scope**: show one aspect per story (e.g. four variants, or a default usage). If you need to demonstrate a secondary feature (slots, sizes), that is a separate story file — don't cram it into the same wrapper.
-- **Naming**: a single-story file exports `Default` (Storybook convention — the sidebar shows `Component > Default`); a multi-example comparison exports `Variants` (or `<Aspect>`). Only add extra stories when there is genuinely more than one aspect worth showing.
+- `<Name>.stories.tsx`: `Meta`/`StoryObj` from `@storybook/html`; import the wrapper Astro file plus each used library component's style side effect (`import '@labcat2020/rocketship/components/X'`); title `'Components/<Name>'`; `parameters: { a11y: { disable: false } }`. Layout primitives (Container, Grid, Stack) and Button/Typography live in `Base/`; token documentation lives in `Foundations/`.
+- `components/<Name><Aspect>.astro`: imports only `@labcat2020/rocketship` components. Examples go in a `<Stack>` inside a single `<Container size="content" padded>`. **No `<style>` blocks, no story-only CSS, and never Containers used as spacers.**
+- **Content**: show real headings on `__title` (use `h2`, since the story canvas has no other headings) and block elements for body text.
+- **Roles**: only show a live-region role where the example would genuinely be dynamic.
+- **Scope**: one aspect per story file. A second aspect (sizes, list usage) is a separate story file.
+- **Naming**: a single-story file exports `Default`; a multi-example comparison exports `Variants` (or `<Aspect>`). Add the story to `apps/frontend/.storybook/preview.ts` sort order when it sits in `Base/`.
 
 Story copy follows `.agents/rules/rocketship-story-copy.mdc`: present tense, adopter voice, no roadmap mentions.
 
 ### 4. Verify
 
-- `pnpm build` (or the package's check script) passes with no type or Sass errors.
-- Run Storybook (`pnpm storybook`) and confirm the new stories render and axe reports no violations.
-- Diff your output against `Card.astro`: same section order, same naming style, same token fallback depth. Any deviation should be deliberate and explainable.
+- `pnpm --filter @labcat2020/rocketship build` passes, and Storybook compiles the component's Sass with no errors.
+- Check every story in Storybook in **light and dark** (toolbar colour-scheme switch) and confirm axe reports no violations.
+- Diff your component against `Alert.astro` / `Stack.astro`: same section order, same naming style, `rs-token()` everywhere. Any deviation must be deliberate and explained.
 
 ## Tier Awareness (novel patterns)
 
-Existing components cover: polymorphic tags, BEM elements/modifiers, named slots, conditional markup, container-query sizes, token-driven tones. They do **not** cover interactive-state primitives: `:has()`, `[open]`, `::backdrop`, the `popover` attribute, focus-trapping. If the requested component needs these, stop and tell the user — the first such component should be hand-written by them to serve as the reference example (per the project's Tier A/Tier B methodology), not generated.
+Existing components cover: polymorphic tags, BEM elements/modifiers, consumer-owned element classes, token-driven tones, layout primitives. They do **not** cover interactive-state primitives: `:has()`, `[open]`, `::backdrop`, the `popover` attribute, focus-trapping. If the requested component needs these, stop and tell the user. The first such component is hand-written by them as the reference example (per the project's Tier A/Tier B methodology), not generated.
 
 ## A11y semantics
 
-- **Roles**: only apply live-region roles (`alert`, `status`) when the component is genuinely dynamic. For statically rendered content, prefer no role or `role="note"`; if a variant mapping to `role="alert"` is requested, flag it for review.
-- **Headings**: if a component renders a title, use a heading element (`h2`–`h4`) rather than `<p>`, so document outline remains meaningful.
+- **Roles are opt-in, never implied.** Statically rendered content has no role by default. Expose a narrow `role?` union (Alert: `'alert' | 'status' | 'note'`) so the consumer can opt in when content is injected dynamically. A component's name never implies a role: "Alert" does not mean `role="alert"`. Never map a visual variant to a live-region role.
+- **Lists keep their semantics.** A component rendered as `ul`/`ol` with `list-style: none` adds `role="list"`, because Safari/VoiceOver drops list semantics otherwise.
+- **Headings** come from the consumer at the level the outline needs; never hard-code a heading level in a component.
+- **Meaning is not colour alone.** Status variants rely on the consumer's title text to say what happened; make sure examples do.

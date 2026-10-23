@@ -1,0 +1,84 @@
+<script lang="ts">
+  import type { Snippet } from 'svelte'
+  import type { HTMLAttributes } from 'svelte/elements'
+
+  export type AlertVariant = 'info' | 'success' | 'warning' | 'error'
+
+  type Props = {
+    variant?: AlertVariant
+    role?: 'alert' | 'status' | 'note'
+    class?: string
+    children?: Snippet
+  } & HTMLAttributes<HTMLElement>
+
+  let { variant = 'info', class: className = '', children, ...attrs }: Props = $props()
+
+  const classes = $derived(
+    ['rs-alert', variant !== 'info' ? `rs-alert--${variant}` : undefined, className]
+      .filter(Boolean)
+      .join(' '),
+  )
+</script>
+
+<div {...attrs} class={classes}>
+  {@render children?.()}
+</div>
+
+<style lang="scss">
+  @use '@labcat2020/rocketship/styles/mixins' as *;
+
+  :global {
+    .rs-alert {
+      --rs-alert-bg: #{rs-token(color-surface-elevated)};
+      --rs-alert-color: #{rs-token(color-fg)};
+      --rs-alert-border-color: #{rs-token(color-border)};
+      --rs-alert-accent-color: #{rs-token(color-accent)};
+      display: flex;
+      flex-direction: column;
+      gap: var(--rs-alert-gap, #{rs-token(space-2)});
+      background: var(--rs-alert-bg);
+      border: var(--rs-alert-border-width, #{rs-token(border-width-sm)}) solid
+        var(--rs-alert-border-color);
+      border-inline-start: var(--rs-alert-accent-width, #{rs-token(border-width-lg)}) solid
+        var(--rs-alert-accent-color);
+      border-radius: var(--rs-alert-border-radius, #{rs-token(radius-md)});
+      color: var(--rs-alert-color);
+      padding-block: var(--rs-alert-padding-block, #{rs-token(space-4)});
+      padding-inline: var(--rs-alert-padding-inline, #{rs-token(space-5)});
+
+      &--success {
+        --rs-alert-bg: #{rs-token(color-success-bg)};
+        --rs-alert-border-color: #{rs-token(color-success-border)};
+        --rs-alert-accent-color: #{rs-token(color-success-accent)};
+        --rs-alert-color: #{rs-token(color-success-fg)};
+      }
+
+      &--warning {
+        --rs-alert-bg: #{rs-token(color-warning-bg)};
+        --rs-alert-border-color: #{rs-token(color-warning-border)};
+        --rs-alert-accent-color: #{rs-token(color-warning-accent)};
+        --rs-alert-color: #{rs-token(color-warning-fg)};
+      }
+
+      &--error {
+        --rs-alert-bg: #{rs-token(color-danger-bg)};
+        --rs-alert-border-color: #{rs-token(color-danger-border)};
+        --rs-alert-accent-color: #{rs-token(color-danger-accent)};
+        --rs-alert-color: #{rs-token(color-danger-fg)};
+      }
+
+      &__title {
+        color: var(--rs-alert-color);
+        font-size: inherit;
+        font-weight: var(--rs-alert-title-font-weight, #{rs-token(font-weight-semibold)});
+        line-height: #{rs-token(line-height-tight)};
+        margin: 0;
+      }
+
+      &__description {
+        color: var(--rs-alert-color);
+        margin: 0;
+      }
+    }
+  }
+</style>

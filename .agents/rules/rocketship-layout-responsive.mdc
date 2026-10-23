@@ -32,8 +32,11 @@ alwaysApply: false
   - Define layout breakpoints in `px` (Bootstrap-style), not `rem`.
   - Keep breakpoint logic centralized (e.g. in a SCSS partial) rather than re-declaring values per component.
 
-- **Container queries for component size**
-  - Size-aware components (buttons, cards, media blocks, typography scales, etc.) must use **container queries** to switch between small / medium / large, based on their container’s width.
+- **Container queries for component layout**
+  - Use **container queries** when a component's layout changes with the space it has (a Grid gaining columns, Card media moving beside text). Do not use them for cosmetic density steps; a component with one layout has one size.
+  - `container-query-up` queries the nearest container of any kind, so consumers can make any element a container (`container-type: inline-size`, e.g. a slide-over panel) and components inside respond to that box. Rocketship's Container is one such container.
+  - Put `container-type` on layout boxes (pages, panels, sidebars), not on leaf components: it stops the element sizing its width to its content.
+  - Body copy never shrinks on small screens.
   - Avoid tying component size to the viewport; components should behave correctly when reused inside any container context.
 
 - **General guidance**

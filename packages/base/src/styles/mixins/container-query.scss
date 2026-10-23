@@ -2,8 +2,15 @@ $rs-cq-sm: 500px;
 $rs-cq-md: 700px;
 $rs-cq-lg: 900px;
 
-@mixin container-query-up($min-width, $container-name: rs-component) {
-  @container #{$container-name} (min-width: #{$min-width}) {
-    @content;
+// Queries the nearest container of any kind unless a name is given.
+@mixin container-query-up($min-width, $container-name: null) {
+  @if $container-name {
+    @container #{$container-name} (min-width: #{$min-width}) {
+      @content;
+    }
+  } @else {
+    @container (min-width: #{$min-width}) {
+      @content;
+    }
   }
 }

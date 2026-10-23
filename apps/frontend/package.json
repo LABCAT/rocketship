@@ -15,7 +15,7 @@
     "preview": "vite preview --outDir storybook-static --port 6006 --strictPort"
   },
   "dependencies": {
-    "@labcat/rocketship": "workspace:*",
+    "@labcat2020/rocketship": "workspace:*",
     "astro": "^7.2.2"
   },
   "devDependencies": {

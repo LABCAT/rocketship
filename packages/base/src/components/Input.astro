@@ -1,0 +1,52 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type InputType = 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'tel'
+
+type Props = {
+  type?: InputType
+  class?: string
+} & Omit<HTMLAttributes<'input'>, 'type'>
+
+const { type = 'text', class: className, ...attrs } = Astro.props as Props
+const invalid = attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true'
+const classes = ['rs-input', invalid && 'rs-input--invalid', className]
+---
+
+<input {...attrs} type={type} class:list={classes} />
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-input {
+    --rs-input-border-color: #{rs-token(color-border-control)};
+    background: var(--rs-input-bg, #{rs-token(color-surface)});
+    border: var(--rs-input-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-input-border-color);
+    border-radius: var(--rs-input-border-radius, #{rs-token(radius-sm)});
+    color: var(--rs-input-color, #{rs-token(color-fg)});
+    font: inherit;
+    line-height: #{rs-token(line-height-base)};
+    margin: 0;
+    padding-block: var(--rs-input-padding-block, #{rs-token(space-2)});
+    padding-inline: var(--rs-input-padding-inline, #{rs-token(space-3)});
+
+    &::placeholder {
+      color: #{rs-token(color-muted)};
+    }
+
+    &:focus-visible {
+      outline: 2px solid #{rs-token(color-focus-ring)};
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    &--invalid {
+      --rs-input-border-color: #{rs-token(color-danger-accent)};
+    }
+  }
+</style>

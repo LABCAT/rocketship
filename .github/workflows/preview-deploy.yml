@@ -1,13 +1,20 @@
-# Gated preview deployment for the Rocketship Storybook.
+# Gated preview deployment for the Rocketship Storybooks.
 #
 # A visible preview is published only after the PR agent marks the PR
 # merge-ready by adding the `preview-ready` label (see opencode-review.yml).
 # The label is the single gate:
-#   - label present  -> build Storybook and publish exactly one preview
+#   - label present  -> build the affected Storybook(s) and publish preview(s)
 #   - label absent   -> no preview at all
 #   - label removed  -> no new preview is published; Cloudflare keeps serving
 #     the last gated preview, which is acceptable because it was published for
 #     an earlier reviewed head
+#
+# The workflow mirrors the production Cloudflare Pages path filters:
+#   - Astro Storybook  -> rocketship3000 (apps/frontend, packages/base)
+#   - Svelte Storybook -> rocketship3030 (apps/svelte, packages/svelte)
+# packages/base, pnpm-lock.yaml and the root package.json affect both hosts, so
+# a PR that touches them publishes both previews. A PR that touches neither
+# Storybook gets no preview.
 #
 # Why `workflow_run` and not only `pull_request: [labeled]`: when the review
 # workflow adds the label with the Actions `GITHUB_TOKEN`, GitHub does not fire
@@ -47,6 +54,8 @@ jobs:
       ready: ${{ steps.resolve.outputs.ready }}
       number: ${{ steps.resolve.outputs.number }}
       sha: ${{ steps.resolve.outputs.sha }}
+      astro: ${{ steps.resolve.outputs.astro }}
+      svelte: ${{ steps.resolve.outputs.svelte }}
     steps:
       - name: Resolve the pull request and check the gate
         id: resolve
@@ -73,10 +82,34 @@ jobs:
             if (pr.head.repo?.full_name !== `${owner}/${repo}`) return;
             const ready = pr.labels.some((l) => l.name === 'preview-ready');
 
+            // Keep these prefixes in sync with each Cloudflare Pages project's
+            // production path_includes. A shared change (packages/base, the
+            // lockfile or the root package.json) rebuilds both Storybooks.
+            const astroPaths = ['packages/base/', 'apps/frontend/'];
+            const sveltePaths = ['packages/base/', 'packages/svelte/', 'apps/svelte/'];
+            const sharedPaths = ['pnpm-lock.yaml', 'package.json'];
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: number, per_page: 100
+            });
+
+            const touched = (prefixes) =>
+              prefixes.some((prefix) =>
+                prefix.endsWith('/')
+                  ? files.some((file) => file.filename.startsWith(prefix))
+                  : files.some((file) => file.filename === prefix)
+              );
+
+            const shared = touched(sharedPaths);
+            const astro = shared || touched(astroPaths);
+            const svelte = shared || touched(sveltePaths);
+
             core.setOutput('ready', String(ready));
             core.setOutput('number', String(number));
             core.setOutput('sha', sha);
-            core.info(`PR #${number} at ${sha}: preview-ready=${ready}`);
+            core.setOutput('astro', String(astro));
+            core.setOutput('svelte', String(svelte));
+            core.info(`PR #${number} at ${sha}: preview-ready=${ready}, astro=${astro}, svelte=${svelte}`);
 
   preview:
     needs: resolve
@@ -89,20 +122,35 @@ jobs:
           ref: ${{ needs.resolve.outputs.sha }}
 
       - name: Install pnpm
+        if: needs.resolve.outputs.astro == 'true' || needs.resolve.outputs.svelte == 'true'
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - name: Install Node
+        if: needs.resolve.outputs.astro == 'true' || needs.resolve.outputs.svelte == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 26
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        if: needs.resolve.outputs.astro == 'true' || needs.resolve.outputs.svelte == 'true'
+        run: pnpm install --frozen-lockfile
 
-      # Builds packages/* and the static Storybook at apps/frontend/storybook-static.
-      - run: pnpm build
+      # Both Storybook hosts consume the built packages/* output.
+      - name: Build packages
+        if: needs.resolve.outputs.astro == 'true' || needs.resolve.outputs.svelte == 'true'
+        run: pnpm run build:packages
 
-      - name: Deploy gated preview
-        id: deploy
+      - name: Build Astro Storybook
+        if: needs.resolve.outputs.astro == 'true'
+        run: pnpm run build:storybook
+
+      - name: Build Svelte Storybook
+        if: needs.resolve.outputs.svelte == 'true'
+        run: pnpm run build:storybook:svelte
+
+      - name: Deploy Astro preview
+        id: deploy_astro
+        if: needs.resolve.outputs.astro == 'true'
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -114,17 +162,41 @@ jobs:
             --project-name=rocketship3000
             --branch=preview-${{ needs.resolve.outputs.number }}
 
-      - name: Comment the preview URL
+      - name: Deploy Svelte preview
+        id: deploy_svelte
+        if: needs.resolve.outputs.svelte == 'true'
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: >-
+            pages deploy apps/svelte/storybook-static
+            --project-name=rocketship3030
+            --branch=preview-${{ needs.resolve.outputs.number }}
+
+      - name: Comment the preview URL(s)
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
-          PREVIEW_URL: ${{ steps.deploy.outputs.deployment-url }}
           PR_NUMBER: ${{ needs.resolve.outputs.number }}
+          ASTRO: ${{ needs.resolve.outputs.astro }}
+          SVELTE: ${{ needs.resolve.outputs.svelte }}
+          ASTRO_URL: ${{ steps.deploy_astro.outputs.deployment-url }}
+          SVELTE_URL: ${{ steps.deploy_svelte.outputs.deployment-url }}
         with:
           script: |
-            const url = process.env.PREVIEW_URL;
-            const body = url
-              ? `Preview-ready — gated preview published at ${url}`
-              : 'Preview-ready — gated preview published (no URL in the action output).';
+            const lines = [];
+            const add = (label, deployed, url) => {
+              if (deployed !== 'true') return;
+              lines.push(`- ${label}: ${url || 'published (no URL in the action output)'}`);
+            };
+            add('Astro Storybook (rocketship3000)', process.env.ASTRO, process.env.ASTRO_URL);
+            add('Svelte Storybook (rocketship3030)', process.env.SVELTE, process.env.SVELTE_URL);
+
+            const body = lines.length
+              ? `Preview-ready — gated preview published:\n${lines.join('\n')}`
+              : 'Preview-ready — no Astro or Svelte Storybook changes detected, so no preview was published.';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

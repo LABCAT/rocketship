@@ -23,6 +23,8 @@ export default {
             ['TwoColumns', 'ThreeColumns', 'FourColumns'],
             'Stack',
             ['Default', 'Gaps'],
+            'Scroll',
+            ['Horizontal', 'Vertical'],
             'Typography',
             ['TermsStyleDocument'],
             'Button',

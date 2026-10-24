@@ -1,0 +1,74 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & Omit<HTMLAttributes<'input'>, 'type'>
+
+const { class: className, ...attrs } = Astro.props as Props
+const invalid = attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true'
+const classes = ['rs-radio', invalid && 'rs-radio--invalid', className]
+---
+
+<input {...attrs} type="radio" class:list={classes} />
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-radio {
+    --rs-radio-bg: #{rs-token(color-surface)};
+    --rs-radio-border-color: #{rs-token(color-border-control)};
+    --rs-radio-mark-color: transparent;
+    appearance: none;
+    display: inline-grid;
+    flex: none;
+    place-content: center;
+    background: var(--rs-radio-bg);
+    block-size: var(--rs-radio-size, 24px);
+    border: var(--rs-radio-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-radio-border-color);
+    border-radius: var(--rs-radio-border-radius, #{rs-token(radius-pill)});
+    cursor: pointer;
+    inline-size: var(--rs-radio-size, 24px);
+    margin: 0;
+
+    /// The dot is the input's own pseudo-element, clipped to a circle and painted from a
+    /// variable, so it follows the theme. It is transparent until the radio is checked.
+    &::before {
+      background: var(--rs-radio-mark-color);
+      block-size: 10px;
+      clip-path: circle(50%);
+      content: '';
+      inline-size: 10px;
+    }
+
+    &:checked {
+      --rs-radio-bg: #{rs-token(color-accent)};
+      --rs-radio-border-color: #{rs-token(color-accent)};
+      --rs-radio-mark-color: #{rs-token(color-accent-contrast)};
+    }
+
+    &:focus-visible {
+      outline: 2px solid #{rs-token(color-focus-ring)};
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    &--invalid {
+      --rs-radio-border-color: #{rs-token(color-danger-accent)};
+    }
+
+    /// Forced colours can drop author backgrounds, so high-contrast users get the native radio.
+    @media (forced-colors: active) {
+      appearance: auto;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+</style>

@@ -1,0 +1,49 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  inline?: boolean
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { inline = false, class: className, ...attrs } = Astro.props as Props
+---
+
+<div {...attrs} class:list={['rs-field', inline && 'rs-field--inline', className]}>
+  <slot />
+</div>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-field-gap, #{rs-token(space-2)});
+    min-width: 0;
+
+    /// A choice row: the control in the first column, its Label, hint and error in the second.
+    /// The Label's first line centres on the 24px control through Label's offset variable.
+    &--inline {
+      --rs-field-text-column: 2;
+      --rs-label-offset: calc((24px - 1lh) / 2);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: start;
+      column-gap: var(--rs-field-inline-gap, #{rs-token(space-2)});
+    }
+
+    &__hint {
+      color: var(--rs-field-hint-color, #{rs-token(color-muted)});
+      grid-column: var(--rs-field-text-column, auto);
+      margin: 0;
+    }
+
+    &__error {
+      color: var(--rs-field-error-color, #{rs-token(color-danger-text)});
+      font-weight: var(--rs-field-error-font-weight, #{rs-token(font-weight-semibold)});
+      grid-column: var(--rs-field-text-column, auto);
+      margin: 0;
+    }
+  }
+</style>

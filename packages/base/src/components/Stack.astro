@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'astro/types'
 
 export type StackTag = 'div' | 'ul' | 'ol'
-export type StackGap = 'small' | 'medium' | 'large'
+export type StackGap = 'small' | 'medium' | 'large' | 'xlarge'
 
 type Props = {
   as?: StackTag
@@ -37,6 +37,10 @@ const classes = ['rs-stack', gap !== 'medium' && `rs-stack--${gap}`, className]
 
     &--large {
       --rs-stack-gap: #{rs-token(space-6)};
+    }
+
+    &--xlarge {
+      --rs-stack-gap: #{rs-token(space-8)};
     }
   }
 </style>

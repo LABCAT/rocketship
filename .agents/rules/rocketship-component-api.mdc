@@ -1,0 +1,37 @@
+---
+description: Props and markup rules for every Rocketship component, Astro and Svelte — props, `as`, native attributes, content, slots, ids and words.
+globs:
+  - "packages/*/src/components/**"
+alwaysApply: false
+---
+
+# Rocketship component API
+
+Reasons: `_planning/component-review-decisions.md`.
+
+## Props
+
+- Mutually exclusive options: an exported union. `export type AlertVariant = 'info' | 'success' | 'warning' | 'error'`.
+- Independent on/off options: a boolean. Table `striped`, Scroll `vertical`, Field `inline`.
+- Name an option for what the consumer decides, not the CSS: `vertical`, not `axis="both"`.
+- `Props` = your options + `class?: string` + the root tag's native attributes. Defaults go in the destructure. Spread `...attrs` onto the root.
+- `as?` only when more than one root tag is valid, as a union of those tags: Stack `'div' | 'ul' | 'ol'`. Alert is always a `div`, so it has no `as`.
+- Never a prop that shadows a native attribute: no `title` prop.
+- Never re-declare a native attribute as a prop: `disabled` and `checked` flow through `...attrs`. No React names like `defaultChecked`.
+- A prop may narrow a native attribute's values: Alert `role?: 'alert' | 'status' | 'note'`, Input `type?: InputType`.
+- Never a prop for a state markup cannot express: no `indeterminate` prop. Style `:indeterminate`.
+- No `size`, `compact` or density prop.
+
+## Markup
+
+- The component is the semantic element, never a wrapper: Table renders one `<table>`, and `class`, `id`, `aria-*` land on it.
+- A control is one element: `class`, `id`, `aria-*` land on the native control. No wrapper `<span>`.
+- Decoration is painted (`background-image`, `::before`), never an extra element.
+- The consumer writes content elements. No title, heading, description, label or legend props, and no content wrappers. The consumer writes `<h3 class="rs-alert__title">`; the root renders `<slot />`.
+- A named slot only for an element with a fixed position: Fieldset `legend`, Table `caption` (both must be the first child). Render it only when the slot is filled:
+  ```astro
+  {Astro.slots.has('legend') && <legend class="rs-fieldset__legend"><slot name="legend" /></legend>}
+  ```
+- If a slotted element needs an id, the consumer slots an element that has one: `<span slot="caption" id="usage-caption">…</span>`.
+- No id props for wiring (`hintId`, `errorId`). The consumer writes both ends: `aria-describedby="x"` and `<p id="x">`.
+- Components never render words: no `requiredText` or `optionalText`. Decoration is fine: `<span aria-hidden="true">*</span>`.

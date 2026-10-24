@@ -29,17 +29,29 @@
       "import": "./src/styles/mixins.scss",
       "default": "./src/styles/mixins.scss"
     },
+    "./tokens/*": "./src/tokens/*",
     "./components/Button": "./src/components/Button.astro",
     "./components/Card": "./src/components/Card.astro",
     "./components/Container": "./src/components/Container.astro",
+    "./components/Fieldset": "./src/components/Fieldset.astro",
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Stack": "./src/components/Stack.astro",
+    "./components/Scroll": "./src/components/Scroll.astro",
     "./components/Typography": "./src/components/Typography.astro",
-    "./components/Alert": "./src/components/Alert.astro"
+    "./components/Alert": "./src/components/Alert.astro",
+    "./components/Field": "./src/components/Field.astro",
+    "./components/Label": "./src/components/Label.astro",
+    "./components/Input": "./src/components/Input.astro",
+    "./components/Textarea": "./src/components/Textarea.astro",
+    "./components/Select": "./src/components/Select.astro",
+    "./components/Checkbox": "./src/components/Checkbox.astro",
+    "./components/Radio": "./src/components/Radio.astro",
+    "./components/Table": "./src/components/Table.astro"
   },
   "files": [
     "dist",
     "src/styles",
+    "src/tokens",
     "src/components",
     "README.md"
   ],
@@ -47,6 +59,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "node scripts/build-tokens.mjs && tsc -p tsconfig.json",
+    "test": "node --test",
+    "tokens": "node scripts/build-tokens.mjs"
   }
 }

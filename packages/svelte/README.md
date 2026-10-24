@@ -14,16 +14,17 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Typography` | `@labcat2020/rocketship-svelte/components/Typography` | `Typography.astro` |
 | `Button`     | `@labcat2020/rocketship-svelte/components/Button`     | `Button.astro`     |
 | `Alert`      | `@labcat2020/rocketship-svelte/components/Alert`      | `Alert.astro`      |
-| `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | — (Svelte-first)   |
-| `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | — (Svelte-first)   |
-| `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
-| `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | — (Svelte-first)   |
-| `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | — (Svelte-first)   |
-| `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | — (Svelte-first)   |
+| `Stack`      | `@labcat2020/rocketship-svelte/components/Stack`      | `Stack.astro`      |
+| `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | `Table.astro`      |
+| `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | `Field.astro`      |
+| `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | `Label.astro`      |
+| `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | `Input.astro`      |
+| `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | `Textarea.astro`   |
+| `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | `Select.astro`     |
 | `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
 | `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
-| `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | — (Svelte-first)   |
+| `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | `Fieldset.astro`   |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 
@@ -59,12 +60,13 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Card`       | `as` (`article`, `section`, `div`, `li`), `media` snippet, `meta` snippet, `class`                                                            |
 | `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
-| `Alert`      | `as` (`div`, `section`, `aside`, `article`), `variant` (`info`, `success`, `warning`, `error`), `title`, `titleSlot` snippet, `role`, `class` |
+| `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                |
+| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                               |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
-| `Fieldset`   | `as` (`fieldset`), `legend`, `legendSlot` snippet, `disabled`, `children` snippet, `class`                                                    |
+| `Fieldset`   | `legend` snippet, `children` snippet, `class`                                                                                                 |
 
 ### `Typography` `html` prop
 
@@ -101,6 +103,32 @@ Each component spreads unknown attributes onto its rendered element and composes
 
 Both controls also work standalone. `invalid` raises `aria-invalid` and applies the error styling, and a size modifier (`sm`, `md`, `lg`) sets the type scale and control height. A `Field` error flows into the control's `aria-invalid` and its modifier, so the styling follows the error text Field renders.
 
+### `Alert`
+
+`Alert` is a fixed `div` styling the message, never the markup inside it. It takes no title prop, title snippet or content wrapper: write the elements yourself and apply `rs-alert__title` and `rs-alert__description`, choosing the heading level the page outline needs.
+
+```svelte
+<Alert variant="warning">
+  <h2 class="rs-alert__title">Check your quota</h2>
+  <p class="rs-alert__description">
+    You have used 85% of your build minutes. Upgrade or wait for the next cycle.
+  </p>
+</Alert>
+```
+
+`role` is opt-in and is never derived from the variant: pass `alert` or `status` when the content is injected dynamically. The default `info` variant emits no modifier class, because the base class is the default.
+
+### `Stack`
+
+`Stack` is a flex column whose `gap` owns the space between its children, so components keep no outer margins and the page decides the rhythm. `gap` accepts `small` (8px), `medium` (16px, the default, which emits no modifier), `large` (24px) and `xlarge` (40px). Render it as `ul` or `ol` to get list semantics, and it adds `role="list"` so Safari/VoiceOver keep them despite `list-style: none`.
+
+```svelte
+<Stack as="ul" gap="small">
+  <li>Deploy the preview.</li>
+  <li>Run the smoke tests.</li>
+</Stack>
+```
+
 ### `Select`
 
 `Select` wraps a native `<select>` and takes its options through the `children` snippet, plain `<option>` and `<optgroup>` included. There is no custom listbox, so keyboard, screen-reader and mobile behaviour are the platform's.
@@ -124,7 +152,7 @@ Both controls also work standalone. `invalid` raises `aria-invalid` and applies 
 
 ### `Fieldset`
 
-`Fieldset` wraps a native `<fieldset>` so a group of controls shares one name and one disabled state. The legend comes from the `legend` prop or the `legendSlot` snippet and always renders as the fieldset's first child, which is the only position the browser accepts. When neither is set the group renders no legend, so it can be named by an external heading through `aria-labelledby`.
+`Fieldset` groups controls under one name without drawing a box: the block resets the native chrome and its `gap` owns the spacing, so a group reads like the Fields around it. Put it in a `Card` when a panel is wanted. The `legend` snippet renders as the fieldset's first child, which is the only position the browser accepts; with no snippet the group renders no legend and can be named by an external heading through `aria-labelledby`.
 
 ```svelte
 <script lang="ts">
@@ -135,16 +163,19 @@ Both controls also work standalone. `invalid` raises `aria-invalid` and applies 
   let name = $state('Ada Lovelace')
 </script>
 
-<Fieldset legend="Billing contact">
+<Fieldset>
+  {#snippet legend()}Billing contact{/snippet}
   <Field label="Full name" hint="Appears on every invoice.">
     {#snippet children(control)}
-      <Input {...control} bind:value={name} />
+      <Input {...control} name="billing-name" bind:value={name} />
     {/snippet}
   </Field>
 </Fieldset>
 ```
 
-`disabled` sets the native attribute rather than a per-control prop, so every control inside the group is disabled and left out of the submitted form data, with no wiring of its own. The browser exempts controls inside the legend from that state, so an action there stays operable.
+`disabled` is the native attribute, spread through `...attrs` rather than declared as a prop. It disables every control inside the group and leaves them out of the submitted form data, with no wiring of its own. The browser exempts controls inside the legend from that state, so an action there stays operable, and the legend itself stays readable.
+
+A group's hint or error belongs to the fieldset: write `<p class="rs-fieldset__hint">` or `<p class="rs-fieldset__error">` after the legend and point at it with `aria-describedby` on the fieldset. Consecutive fieldsets go in `<Stack gap="xlarge">`, because the space between groups has to exceed the space within them.
 
 ## Install
 

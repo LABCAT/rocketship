@@ -2,6 +2,7 @@
 description: Voice and content rules for Storybook docs and foundation stories.
 globs:
   - apps/frontend/src/stories/**
+  - apps/svelte/src/stories/**
 alwaysApply: false
 ---
 

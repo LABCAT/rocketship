@@ -343,13 +343,13 @@ const containerModifiers = [
   'rs-container--content',
 ]
 
-test('packages/svelte exports the Alert, Button, Card, Container, Grid and Typography subpaths like the Astro package', () => {
+test('packages/svelte exports the Alert, Button, Card, Container, Grid, Stack and Typography subpaths like the Astro package', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
   )
 
-  for (const name of ['Alert', 'Button', 'Card', 'Container', 'Grid', 'Typography']) {
+  for (const name of ['Alert', 'Button', 'Card', 'Container', 'Grid', 'Stack', 'Typography']) {
     assert.equal(
       pkg.exports[`./components/${name}`],
       `./src/components/${name}.svelte`,
@@ -367,7 +367,7 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid and Typog
   )
 })
 
-test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+test('packages/svelte exports Table from the barrel and as a subpath', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
@@ -379,9 +379,10 @@ test('packages/svelte exports Table from the barrel and as a subpath, without an
     './src/components/Table.svelte',
     'packages/svelte must export ./components/Table',
   )
-  assert.ok(
-    !basePkg.exports?.['./components/Table'],
-    'Table is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports['./components/Table'],
+    './src/components/Table.astro',
+    'the Astro package exposes the same subpath, which is the source of truth',
   )
   assert.match(
     barrel,
@@ -796,13 +797,18 @@ test('Grid styles compile through the shared barrel and keep every Astro selecto
   )
 })
 
-test('Alert renders .rs-alert with exactly one status modifier per variant', async () => {
+test('Alert renders .rs-alert and emits no modifier for the default info variant', async () => {
   const Alert = await loadComponent('Alert')
 
-  const variants = ['info', 'success', 'warning', 'error']
-  const modifiers = variants.map((v) => `rs-alert--${v}`)
+  assert.deepEqual(
+    classList(renderMarkup(Alert)),
+    ['rs-alert'],
+    'info is the base class, no modifier',
+  )
+  assert.deepEqual(classList(renderMarkup(Alert, { variant: 'info' })), ['rs-alert'])
 
-  for (const variant of variants) {
+  const modifiers = ['rs-alert--info', 'rs-alert--success', 'rs-alert--warning', 'rs-alert--error']
+  for (const variant of ['success', 'warning', 'error']) {
     const classes = classList(renderMarkup(Alert, { variant }))
     assert.deepEqual(classes, ['rs-alert', `rs-alert--${variant}`], `Alert ${variant} class list`)
     for (const modifier of modifiers) {
@@ -813,87 +819,97 @@ test('Alert renders .rs-alert with exactly one status modifier per variant', asy
       )
     }
   }
-
-  assert.deepEqual(classList(renderMarkup(Alert)), ['rs-alert', 'rs-alert--info'], 'info default')
 })
 
-test('Alert derives role from the variant and lets an explicit role win', async () => {
+test('Alert is always a div and takes no as prop, mirroring the Astro original', async () => {
   const Alert = await loadComponent('Alert')
+  const source = loadComponentSource('Alert')
 
-  for (const variant of ['info', 'success']) {
-    assert.match(
-      openingTag(renderMarkup(Alert, { variant }), 'div'),
-      /role="status"/,
-      `Alert ${variant} must announce as status`,
-    )
-  }
-  for (const variant of ['warning', 'error']) {
-    assert.match(
-      openingTag(renderMarkup(Alert, { variant }), 'div'),
-      /role="alert"/,
-      `Alert ${variant} must announce as alert`,
-    )
-  }
-
-  assert.match(
-    openingTag(renderMarkup(Alert, { variant: 'error', role: 'status' }), 'div'),
-    /role="status"/,
-    'an explicit role overrides the variant-derived role',
+  assert.ok(openingTag(renderMarkup(Alert), 'div').startsWith('<div'), 'the root is a div')
+  assert.doesNotMatch(
+    source,
+    /export type AlertTag/,
+    'Alert has no tag union, so it takes no as prop',
   )
-  assert.match(
-    openingTag(renderMarkup(Alert, { variant: 'info', role: 'alert' }), 'div'),
-    /role="alert"/,
-    'an explicit role overrides the variant-derived role in both directions',
+  assert.doesNotMatch(
+    source,
+    /svelte:element/,
+    'the root is a fixed div, not a polymorphic element',
   )
 })
 
-test('Alert renders the title from the prop or the title snippet and always the body', async () => {
+test('Alert takes an opt-in role with no default and never derives it from the variant', async () => {
   const Alert = await loadComponent('Alert')
 
-  const titled = renderMarkup(Alert, { title: 'Heads up', children: snippet('<p>Body</p>') })
-  assert.match(titled, /<h4 class="rs-alert__title">Heads up<\/h4>/)
-  assert.match(titled, /<div class="rs-alert__body">[\s\S]*?<p>Body<\/p>[\s\S]*?<\/div>/)
-
-  const slotted = renderMarkup(Alert, {
-    titleSlot: snippet('<em>Slotted title</em>'),
-    children: snippet('<p>Body</p>'),
-  })
-  assert.match(slotted, /<h4 class="rs-alert__title">[\s\S]*?<em>Slotted title<\/em>[\s\S]*?<\/h4>/)
-
-  const titleWins = renderMarkup(Alert, {
-    title: 'Prop title',
-    titleSlot: snippet('<em>Slotted title</em>'),
-  })
-  assert.match(titleWins, /<h4 class="rs-alert__title">Prop title<\/h4>/)
-  assert.doesNotMatch(titleWins, /Slotted title/)
-
-  const bare = renderMarkup(Alert, { children: snippet('<p>Body</p>') })
-  assert.doesNotMatch(bare, /rs-alert__title/, 'Alert omits the title element when none is given')
-  assert.match(bare, /rs-alert__body/)
-})
-
-test('Alert as and class mirror the Astro component and spread native attributes', async () => {
-  const Alert = await loadComponent('Alert')
-
-  for (const tag of ['section', 'aside', 'article']) {
-    const markup = renderMarkup(Alert, {
-      as: tag,
-      variant: 'success',
-      class: 'consumer-class',
-      id: 'alert-1',
-    })
-    assert.ok(openingTag(markup, tag).length > 0, `Alert as="${tag}" must render a <${tag}>`)
-    assert.ok(
-      markup.indexOf(`<${tag}`) < markup.indexOf('<div'),
-      `Alert as="${tag}" must use the requested tag as the root element`,
+  for (const variant of ['info', 'success', 'warning', 'error']) {
+    assert.doesNotMatch(
+      openingTag(renderMarkup(Alert, { variant }), 'div'),
+      /role=/,
+      `Alert ${variant} must render no role of its own`,
     )
-    assert.deepEqual(classList(markup, tag), ['rs-alert', 'rs-alert--success', 'consumer-class'])
-    assert.match(openingTag(markup, tag), /id="alert-1"/)
+  }
+
+  for (const role of ['alert', 'status', 'note']) {
+    assert.match(
+      openingTag(renderMarkup(Alert, { role }), 'div'),
+      new RegExp(`role="${role}"`),
+      `Alert must forward the ${role} role the consumer opts into`,
+    )
   }
 })
 
-test('Alert styles compile through the shared barrel and keep every Astro selector', async () => {
-  const css = await compileStyleBlock(styleBlockOf('Alert'))
+test('Alert renders consumer content directly, with no title prop, snippet or body wrapper', async () => {
+  const Alert = await loadComponent('Alert')
+
+  const markup = visible(
+    renderMarkup(Alert, {
+      children: snippet(
+        '<h3 class="rs-alert__title">Saved</h3><p class="rs-alert__description">Body</p>',
+      ),
+    }),
+  )
+
+  assert.match(markup, /<h3 class="rs-alert__title">Saved<\/h3>/)
+  assert.match(markup, /<p class="rs-alert__description">Body<\/p>/)
+  assert.ok(
+    markup.indexOf('<h3') < markup.indexOf('<p'),
+    'the consumer content renders in the order it was written',
+  )
+  assert.doesNotMatch(markup, /rs-alert__body/, 'Alert renders no content wrapper of its own')
+
+  const source = loadComponentSource('Alert')
+  assert.doesNotMatch(
+    source,
+    /title\??:/,
+    'Alert takes no title prop, which would shadow the native attribute',
+  )
+  assert.doesNotMatch(
+    source,
+    /titleSlot/,
+    'Alert takes no title snippet; the consumer writes the element',
+  )
+  assert.doesNotMatch(source, /<h[1-6]/, 'Alert never hard-codes a heading level')
+})
+
+test('Alert composes a consumer class and spreads native attributes onto the div', async () => {
+  const Alert = await loadComponent('Alert')
+
+  const markup = renderMarkup(Alert, {
+    variant: 'success',
+    class: 'consumer-class',
+    id: 'alert-1',
+    'data-region': 'banner',
+  })
+  const tag = openingTag(markup, 'div')
+
+  assert.deepEqual(classList(markup), ['rs-alert', 'rs-alert--success', 'consumer-class'])
+  assert.match(tag, /id="alert-1"/)
+  assert.match(tag, /data-region="banner"/)
+})
+
+test('Alert styles compile through the shared barrel with the Astro rule block and no container queries', async () => {
+  const source = styleBlockOf('Alert')
+  const css = await compileStyleBlock(source)
 
   for (const selector of [
     '.rs-alert',
@@ -901,15 +917,133 @@ test('Alert styles compile through the shared barrel and keep every Astro select
     '.rs-alert--warning',
     '.rs-alert--error',
     '.rs-alert__title',
-    '.rs-alert__body',
+    '.rs-alert__description',
   ]) {
     assert.ok(css.includes(selector), `compiled Alert CSS must contain ${selector}`)
   }
 
+  assert.ok(!css.includes('.rs-alert--info'), 'the default variant has no modifier rule')
+  assert.ok(!css.includes('rs-alert__body'), 'the body wrapper is gone from the styles too')
+  assert.ok(!/@container/.test(css), 'Alert has one comfortable size, so no container queries')
+  assert.ok(!/@media\s*\(min-width/.test(css), 'Alert uses no viewport media queries either')
+  assert.ok(!/font-family/.test(css), 'components never set font-family')
+  assert.match(css, /font-size:\s*inherit/, 'the title class cancels tag defaults with inherit')
   assert.match(
     css,
-    /@container\s*\(min-width:\s*500px\)/,
-    'Alert padding and type scale restate at the sm container query',
+    /--rs-alert-bg:\s*var\(--rs-color-surface-elevated,/,
+    'every token reaches the stylesheet through rs-token()',
+  )
+  assert.deepEqual(
+    [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Alert names tokens only, never a hex literal',
+  )
+})
+
+test('Stack is exported from the barrel, as a subpath, with its prop union types', async () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(pkg.exports['./components/Stack'], './src/components/Stack.svelte')
+  assert.equal(
+    basePkg.exports?.['./components/Stack'],
+    './src/components/Stack.astro',
+    'Stack is a port, so the import path matches the Astro entry',
+  )
+  assert.match(barrel, /export \{ default as Stack \} from '\.\/components\/Stack\.svelte'/)
+  assert.match(barrel, /export type \* from '\.\/components\/Stack\.svelte'/)
+
+  const source = loadComponentSource('Stack')
+  assert.match(source, /export type StackTag = 'div' \| 'ul' \| 'ol'/)
+  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large'/)
+})
+
+test('Stack renders .rs-stack on a div with no gap modifier for the default medium gap', async () => {
+  const Stack = await loadComponent('Stack')
+
+  assert.deepEqual(
+    classList(renderMarkup(Stack)),
+    ['rs-stack'],
+    'medium is the base class, no modifier',
+  )
+  assert.deepEqual(classList(renderMarkup(Stack, { gap: 'medium' })), ['rs-stack'])
+
+  for (const gap of ['small', 'large']) {
+    assert.deepEqual(classList(renderMarkup(Stack, { gap })), ['rs-stack', `rs-stack--${gap}`])
+  }
+})
+
+test('Stack as renders the requested tag and adds role="list" for ul and ol only', async () => {
+  const Stack = await loadComponent('Stack')
+
+  assert.doesNotMatch(openingTag(renderMarkup(Stack), 'div'), /role=/, 'a div needs no role')
+
+  for (const tag of ['ul', 'ol']) {
+    const markup = renderMarkup(Stack, {
+      as: tag,
+      gap: 'large',
+      class: 'consumer-class',
+      children: snippet('<li>Item</li>'),
+    })
+    assert.ok(openingTag(markup, tag).length > 0, `Stack as="${tag}" must render a <${tag}>`)
+    assert.match(
+      openingTag(markup, tag),
+      /role="list"/,
+      `Stack as="${tag}" must keep list semantics, because list-style: none drops them in Safari`,
+    )
+    assert.deepEqual(classList(markup, tag), ['rs-stack', 'rs-stack--large', 'consumer-class'])
+    assert.match(markup, /<li>Item<\/li>/)
+  }
+})
+
+test('Stack spreads native attributes onto the root', async () => {
+  const Stack = await loadComponent('Stack')
+
+  const markup = renderMarkup(Stack, { as: 'div', id: 'team', 'data-region': 'list' })
+  const tag = openingTag(markup, 'div')
+
+  assert.match(tag, /id="team"/)
+  assert.match(tag, /data-region="list"/)
+})
+
+test('Stack styles compile through the shared barrel and mirror the Astro rule block', async () => {
+  const source = styleBlockOf('Stack')
+  const css = await compileStyleBlock(source)
+
+  for (const selector of [
+    '.rs-stack',
+    '.rs-stack--small',
+    '.rs-stack--large',
+    '.rs-stack--xlarge',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Stack CSS must contain ${selector}`)
+  }
+
+  assert.match(css, /--rs-stack-gap:\s*var\(--rs-space-4,/, 'medium reads the space-4 token')
+  assert.match(css, /\.rs-stack--small\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-2,/, 'small is 8px')
+  assert.match(
+    css,
+    /\.rs-stack--large\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-6,/,
+    'large is 24px',
+  )
+  assert.match(
+    css,
+    /\.rs-stack--xlarge\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-8,/,
+    'xlarge is 40px, the space decision 30 puts between consecutive fieldsets',
+  )
+  assert.ok(!css.includes('.rs-stack--medium'), 'medium has no modifier rule')
+  assert.match(
+    css,
+    /list-style:\s*none/,
+    'the list marker is removed, which is why role=list is added',
+  )
+  assert.deepEqual(
+    [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Stack names tokens only, never a hex literal',
   )
 })
 
@@ -2803,9 +2937,10 @@ test('Select is exported from the barrel, as a subpath, with its prop union type
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
 
   assert.equal(pkg.exports['./components/Select'], './src/components/Select.svelte')
-  assert.ok(
-    !basePkg.exports?.['./components/Select'],
-    'Select is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports['./components/Select'],
+    './src/components/Select.astro',
+    'the Astro package exposes the same subpath, which is the source of truth',
   )
   assert.match(barrel, /export \{ default as Select \} from '\.\/components\/Select\.svelte'/)
   assert.match(barrel, /export type \* from '\.\/components\/Select\.svelte'/)
@@ -3185,14 +3320,22 @@ test('Select styles compile through the shared barrel with container queries and
   assert.deepEqual(invented, [], 'Select must not introduce hex values of its own')
 })
 
-test('Fieldset is exported from the barrel, as a subpath, with its prop union types', () => {
+test('Fieldset is exported from the barrel, as a subpath, with the props type', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
 
   assert.equal(
     pkg.exports['./components/Fieldset'],
     './src/components/Fieldset.svelte',
     'packages/svelte must export ./components/Fieldset',
+  )
+  assert.equal(
+    basePkg.exports['./components/Fieldset'],
+    './src/components/Fieldset.astro',
+    'the Astro package is the source of truth, so it must export the same subpath',
   )
   assert.match(
     barrel,
@@ -3202,14 +3345,31 @@ test('Fieldset is exported from the barrel, as a subpath, with its prop union ty
   assert.match(
     barrel,
     /export type \* from '\.\/components\/Fieldset\.svelte'/,
-    'the barrel must re-export the Fieldset prop union types',
+    'the barrel must re-export the Fieldset props type',
   )
-  const source = loadComponentSource('Fieldset')
-  assert.match(source, /export type FieldsetTag = 'fieldset'/, 'Fieldset must export its tag union')
   assert.match(
-    source,
+    loadComponentSource('Fieldset'),
     /export type FieldsetProps = \{/,
     'Fieldset must export its prop type so a consumer can wrap it',
+  )
+})
+
+test('Fieldset is a fixed fieldset root with no as prop, mirroring the Astro original', () => {
+  const source = loadComponentSource('Fieldset')
+
+  // Decision 1: `as` only where more than one root tag is valid. A fieldset group is only ever
+  // a <fieldset>, so the Svelte port must not carry a tag union the Astro original lacks.
+  assert.doesNotMatch(source, /FieldsetTag|as\?:/, 'a fieldset group has one valid root tag')
+  assert.match(
+    source,
+    /^<fieldset \{\.\.\.attrs\} class=\{classes\}>/m,
+    'the root is the semantic element itself, with consumer attrs spread onto it',
+  )
+  // Decision 24: a prop never re-declares a native attribute, so `disabled` flows through `...attrs`.
+  assert.doesNotMatch(
+    source,
+    /^\s*disabled\??:/m,
+    'disabled is a native fieldset attribute, so it is not re-declared as a prop',
   )
 })
 
@@ -3222,66 +3382,30 @@ test('Fieldset renders the native block with no legend of its own by default', a
   assert.match(markup, /<\/fieldset>$/)
 })
 
-test('Fieldset renders the legend as the fieldset first child and treats a blank legend as absent', async () => {
+test('Fieldset renders the legend snippet as the fieldset first child', async () => {
   const Fieldset = await loadComponent('Fieldset')
 
-  const markup = visible(renderMarkup(Fieldset, { legend: 'Billing address' }))
+  const markup = visible(
+    renderMarkup(Fieldset, { legend: snippet('Billing <strong>address</strong>') }),
+  )
   assert.match(
     markup,
-    /^<fieldset class="rs-fieldset"><legend class="rs-fieldset__legend">Billing address<\/legend>/,
+    /^<fieldset class="rs-fieldset"><legend class="rs-fieldset__legend">Billing <strong>address<\/strong><\/legend>/,
     'the legend must be the first child of the fieldset, which is the only position the browser accepts',
   )
-
-  for (const blank of ['', '   ', '\n\t']) {
-    assert.doesNotMatch(
-      visible(renderMarkup(Fieldset, { legend: blank })),
-      /<legend/,
-      'a legend of nothing but whitespace would leave the group unnamed, so it must not render',
-    )
-  }
 })
 
-test('Fieldset renders a legend snippet and lets the legend prop win over it', async () => {
+test('Fieldset takes the native disabled attribute through attrs and keeps consumer attrs on the root', async () => {
   const Fieldset = await loadComponent('Fieldset')
 
-  const fromSnippet = visible(
-    renderMarkup(Fieldset, {
-      legendSlot: snippet('Billing <strong>address</strong>'),
-    }),
-  )
-  assert.match(
-    fromSnippet,
-    /<legend class="rs-fieldset__legend">Billing <strong>address<\/strong><\/legend>/,
-    'the snippet renders inside the legend element',
-  )
-
-  const both = visible(
-    renderMarkup(Fieldset, { legend: 'Text wins', legendSlot: snippet('Ignored') }),
-  )
-  assert.match(both, /<legend class="rs-fieldset__legend">Text wins<\/legend>/)
-  assert.doesNotMatch(both, /Ignored/, 'a fieldset holds one legend, so the prop takes precedence')
-
-  const blankProp = visible(
-    renderMarkup(Fieldset, { legend: '  ', legendSlot: snippet('From the snippet') }),
-  )
-  assert.match(
-    blankProp,
-    /<legend class="rs-fieldset__legend">From the snippet<\/legend>/,
-    'a blank prop is not a legend, so the snippet still renders',
-  )
-})
-
-test('Fieldset only emits the disabled attribute while disabled, and keeps consumer attrs on the root', async () => {
-  const Fieldset = await loadComponent('Fieldset')
-
-  const enabled = renderMarkup(Fieldset, { legend: 'Contact' })
+  const enabled = renderMarkup(Fieldset, { legend: snippet('Contact') })
   assert.doesNotMatch(openingTag(enabled, 'fieldset'), /disabled/)
 
-  const disabled = renderMarkup(Fieldset, { legend: 'Contact', disabled: true })
+  const disabled = renderMarkup(Fieldset, { legend: snippet('Contact'), disabled: true })
   assert.match(openingTag(disabled, 'fieldset'), /disabled/, 'disabled is the native attribute')
 
   const composed = renderMarkup(Fieldset, {
-    legend: 'Contact',
+    legend: snippet('Contact'),
     name: 'billing',
     'aria-labelledby': 'billing-heading',
     class: 'consumer-class',
@@ -3297,7 +3421,7 @@ test('Fieldset only emits the disabled attribute while disabled, and keeps consu
 
 test('a disabled Fieldset disables every nested control from the control components', async () => {
   const { target } = await mountControlFixture(
-    `<Fieldset legend="Billing contact" disabled>
+    `<Fieldset legend={undefined} disabled>
     <Field label="Full name">
       {#snippet children(control)}
         <Input {...control} value="Ada Lovelace" />
@@ -3340,7 +3464,7 @@ test('a disabled Fieldset disables every nested control from the control compone
 
 test('an enabled Fieldset leaves its controls operable, and toggling disabled locks and unlocks them', async () => {
   const { target, instance, flushSync, window } = await mountControlFixture(
-    `<Fieldset legend="Billing contact" disabled={locked}>
+    `<Fieldset disabled={locked}>
     <Field label="Full name">
       {#snippet children(control)}
         <Input {...control} value="Ada Lovelace" />
@@ -3387,10 +3511,10 @@ test('a disabled Fieldset leaves interactions in its legend alone, and keeps the
   const { target, window } = await mountControlFixture(
     `<form>
     <Fieldset disabled>
-      <Input aria-label="Account label" name="label" value="Primary" />
-      {#snippet legendSlot()}
+      {#snippet legend()}
         Billing contact <button type="button" data-legend-action>Edit</button>
       {/snippet}
+      <Input aria-label="Account label" name="label" value="Primary" />
     </Fieldset>
     <Input aria-label="Separate field" name="separate" value="kept" />
   </form>`,
@@ -3418,39 +3542,35 @@ test('a disabled Fieldset leaves interactions in its legend alone, and keeps the
   )
 })
 
-test('Fieldset styles compile through the shared barrel with container queries and no viewport media queries', async () => {
+test('Fieldset styles compile through the shared barrel and match the Astro rule block', async () => {
   const css = await compileStyleBlock(styleBlockOf('Fieldset'))
 
-  for (const selector of ['.rs-fieldset', '.rs-fieldset__legend', '.rs-fieldset:disabled']) {
+  for (const selector of [
+    '.rs-fieldset',
+    '.rs-fieldset__legend',
+    '.rs-fieldset__hint',
+    '.rs-fieldset__error',
+  ]) {
     assert.ok(css.includes(selector), `compiled Fieldset CSS must contain ${selector}`)
   }
 
-  assert.match(
-    css,
-    /@container\s*\(min-width:\s*500px\)/,
-    'Fieldset must restate its roomier spacing at the sm container query',
-  )
+  // Decision 25: Fieldset groups, it does not box. The native chrome is reset and nothing paints.
+  assert.match(css, /border:\s*0/, 'the native border is reset rather than styled')
+  assert.match(css, /min-inline-size:\s*0/, 'a fieldset must shrink inside a grid or flex parent')
+  assert.ok(!/background|border-radius|box-shadow/.test(css), 'Fieldset adds no box of its own')
+  assert.ok(!/@container|@media/.test(css), 'the Astro block has no query, so the port has none')
+
+  // Decision 26: float opts the legend out of the border-notch layout so the gap reaches it.
+  assert.match(css, /float:\s*inline-start/, 'the legend floats to become an ordinary flex item')
+  // Decision 27: no disabled legend style; disabled controls dim through their own rules.
   assert.ok(
-    !/@media\s*\(min-width/.test(css),
-    'Fieldset sizes with container queries, so it must not use viewport min-width media queries',
-  )
-  assert.match(
-    css,
-    /min-inline-size:\s*0/,
-    'a fieldset must be allowed to shrink inside a grid or flex parent',
-  )
-  assert.match(
-    css,
-    /\.rs-fieldset:disabled\s+:global\s+\.rs-fieldset__legend\s*\{[^}]*color:\s*var\(--rs-fieldset-disabled-legend-color,\s*var\(--rs-color-muted,/m,
-    'the disabled legend keeps the semantic muted token over a literal, matching the Astro block',
+    !/:disabled/.test(css),
+    'a disabled fieldset has no legend rule, so the caption stays readable',
   )
 
-  const source = styleBlockOf('Fieldset')
-  const knownLiterals = new Set(['#131a2f', '#c8d2eb', '#4f5b7d'])
-  const authored = [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex.toLowerCase())
   assert.deepEqual(
-    authored.filter((hex) => !knownLiterals.has(hex)),
+    [...styleBlockOf('Fieldset').matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
     [],
-    'Fieldset must not introduce hex values of its own',
+    'Fieldset names tokens only, never a hex literal',
   )
 })

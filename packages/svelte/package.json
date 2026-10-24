@@ -1,6 +1,6 @@
 {
   "name": "@labcat2020/rocketship-svelte",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "private": false,
   "type": "module",
   "description": "Rocketship Svelte port \u2014 Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",
@@ -32,6 +32,7 @@
     "./components/Input": "./src/components/Input.svelte",
     "./components/Label": "./src/components/Label.svelte",
     "./components/Select": "./src/components/Select.svelte",
+    "./components/Stack": "./src/components/Stack.svelte",
     "./components/Table": "./src/components/Table.svelte",
     "./components/Textarea": "./src/components/Textarea.svelte",
     "./components/Typography": "./src/components/Typography.svelte"

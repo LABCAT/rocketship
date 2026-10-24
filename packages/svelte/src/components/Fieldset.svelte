@@ -2,86 +2,58 @@
   import type { Snippet } from 'svelte'
   import type { HTMLFieldsetAttributes } from 'svelte/elements'
 
-  export type FieldsetTag = 'fieldset'
-
   export type FieldsetProps = {
-    as?: FieldsetTag
-    legend?: string
-    disabled?: boolean
     class?: string
-    legendSlot?: Snippet
+    legend?: Snippet
     children?: Snippet
-  } & Omit<HTMLFieldsetAttributes, 'disabled'>
+  } & HTMLFieldsetAttributes
 
-  let {
-    as = 'fieldset',
-    legend,
-    disabled = false,
-    class: className = '',
-    legendSlot,
-    children,
-    ...attrs
-  }: FieldsetProps = $props()
-
-  // A blank legend would leave the group named by nothing, so only real text counts. The prop wins
-  // over the snippet because a fieldset takes exactly one legend, and it has to stay its first child.
-  const hasLegendText = $derived(Boolean(legend?.trim()))
-  const hasLegend = $derived(hasLegendText || Boolean(legendSlot))
+  let { class: className = '', legend, children, ...attrs }: FieldsetProps = $props()
 
   const classes = $derived(['rs-fieldset', className].filter(Boolean).join(' '))
 </script>
 
-<svelte:element this={as} {...attrs} class={classes} disabled={disabled}>
-  {#if hasLegend}
-    <legend class="rs-fieldset__legend">
-      {#if hasLegendText}{legend}{:else}{@render legendSlot?.()}{/if}
-    </legend>
+<fieldset {...attrs} class={classes}>
+  {#if legend}
+    <legend class="rs-fieldset__legend">{@render legend()}</legend>
   {/if}
   {@render children?.()}
-</svelte:element>
+</fieldset>
 
 <style lang="scss">
   @use '@labcat2020/rocketship/styles/mixins' as *;
 
   :global {
     .rs-fieldset {
-      background: var(--rs-fieldset-bg, transparent);
-      border: var(--rs-fieldset-border-width, var(--rs-border-width-sm, 1px)) solid
-        var(--rs-fieldset-border-color, var(--rs-color-border, #c8d2eb));
-      border-radius: var(--rs-fieldset-border-radius, var(--rs-radius-sm, 6px));
       display: flex;
       flex-direction: column;
-      gap: var(--rs-fieldset-gap, var(--rs-space-3, 12px));
+      gap: var(--rs-fieldset-gap, #{rs-token(space-4)});
+      border: 0;
       margin: 0;
-      // A fieldset sizes itself to its content, which overflows a grid or flex parent. Resetting
-      // the min-content width lets it shrink into the space it is given.
       min-inline-size: 0;
-      padding-block: var(--rs-fieldset-padding-block, var(--rs-space-3, 12px));
-      padding-inline: var(--rs-fieldset-padding-inline, var(--rs-space-4, 16px));
+      padding: 0;
 
-      @include container-query-up($rs-cq-sm) {
-        gap: var(--rs-fieldset-gap, var(--rs-space-4, 16px));
-        padding-block: var(--rs-fieldset-padding-block, var(--rs-space-4, 16px));
-        padding-inline: var(--rs-fieldset-padding-inline, var(--rs-space-5, 20px));
-      }
-
+      /// Floating opts out of the legend's border-notch layout, so it becomes a flex item and
+      /// the block's gap owns its spacing. Flex items ignore float, so nothing floats.
       &__legend {
-        color: var(--rs-fieldset-legend-color, var(--rs-color-fg, #131a2f));
-        font-size: var(--rs-fieldset-legend-font-size, var(--rs-font-size-md, #{to-rem(16)}));
-        font-weight: var(--rs-fieldset-legend-font-weight, var(--rs-font-weight-semibold, 600));
-        line-height: var(--rs-fieldset-legend-line-height, var(--rs-line-height-tight, 1.2));
+        float: inline-start;
+        color: var(--rs-fieldset-legend-color, #{rs-token(color-fg)});
+        font-size: var(--rs-fieldset-legend-font-size, #{rs-token(font-size-lg)});
+        font-weight: var(--rs-fieldset-legend-font-weight, #{rs-token(font-weight-semibold)});
+        line-height: #{rs-token(line-height-tight)};
         margin: 0;
         padding: 0;
-
-        @include container-query-up($rs-cq-sm) {
-          font-size: var(--rs-fieldset-legend-font-size, var(--rs-font-size-lg, #{to-rem(18)}));
-        }
       }
 
-      // Nested controls are disabled by the browser itself; the legend is not a control, so its
-      // dimming has to be styled. Controls inside the legend stay operable, as the spec requires.
-      &:disabled &__legend {
-        color: var(--rs-fieldset-disabled-legend-color, var(--rs-color-muted, #4f5b7d));
+      &__hint {
+        color: var(--rs-fieldset-hint-color, #{rs-token(color-muted)});
+        margin: 0;
+      }
+
+      &__error {
+        color: var(--rs-fieldset-error-color, #{rs-token(color-danger-text)});
+        font-weight: var(--rs-fieldset-error-font-weight, #{rs-token(font-weight-semibold)});
+        margin: 0;
       }
     }
   }

@@ -14,13 +14,17 @@
     "dev": "pnpm run storybook",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint:styles": "stylelint \"packages/*/src/components/**/*.{astro,svelte}\"",
     "preview": "pnpm --filter @rocketship/frontend preview",
     "storybook": "pnpm --filter @rocketship/frontend storybook",
     "storybook:svelte": "pnpm --filter @rocketship/svelte-storybook storybook"
   },
   "devDependencies": {
+    "postcss-html": "2.0.0",
+    "postcss-scss": "4.0.9",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
+    "stylelint": "17.16.0",
     "typescript": "5.9.3",
     "wrangler": "~4.149.0"
   },

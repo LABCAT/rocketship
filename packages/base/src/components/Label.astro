@@ -1,0 +1,37 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  required?: boolean
+  class?: string
+} & HTMLAttributes<'label'>
+
+const { required = false, class: className, ...attrs } = Astro.props as Props
+---
+
+<label {...attrs} class:list={['rs-label', className]}>
+  <slot />{required && <span class="rs-label__required" aria-hidden="true">*</span>}
+</label>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-label {
+    color: var(--rs-label-color, #{rs-token(color-fg)});
+    font-size: inherit;
+    font-weight: var(--rs-label-font-weight, #{rs-token(font-weight-medium)});
+    line-height: #{rs-token(line-height-tight)};
+    margin: 0;
+    padding-block-start: var(--rs-label-offset, 0);
+
+    &__required {
+      color: var(--rs-label-required-color, #{rs-token(color-danger-text)});
+      margin-inline-start: #{rs-token(space-1)};
+    }
+
+    &__optional {
+      color: var(--rs-label-optional-color, #{rs-token(color-muted)});
+      font-weight: #{rs-token(font-weight-regular)};
+    }
+  }
+</style>

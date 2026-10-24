@@ -285,58 +285,131 @@ test('the Select stories compose Field, exercise bind:value, and cover sizes, pl
   }
 })
 
-test('the Fieldset variants share one story file with a11y enabled', () => {
+test('the Fieldset story mirrors the Astro story: one Default example per decision 29', () => {
   const fieldsetStories = readdirSync(storiesDir).filter((name) =>
     /^Fieldset.*\.stories\.ts$/.test(name),
   )
   assert.deepEqual(
     fieldsetStories,
     ['Fieldset.stories.ts'],
-    'all Fieldset variants belong in Fieldset.stories.ts',
+    'all Fieldset examples belong in Fieldset.stories.ts',
   )
 
   const story = read(join(storiesDir, 'Fieldset.stories.ts'))
   assert.match(story, /title:\s*'Components\/Fieldset'/)
-  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Fieldset stories must enable a11y')
-  for (const variant of ['Default', 'Disabled', 'Legend']) {
-    assert.match(
+  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Fieldset story must enable a11y')
+  // Decision 29: disabled is a state, not an aspect, so it sits inside Default rather than in a
+  // Disabled file. Asserting the absence keeps a second file from coming back.
+  for (const name of ['Disabled', 'Legend']) {
+    assert.doesNotMatch(
       story,
-      new RegExp(`export const ${variant}: Story =`),
-      `Fieldset.stories.ts must export the ${variant} variant`,
+      new RegExp(`export const ${name}: Story`),
+      `Fieldset has no ${name} story: the state sits inside Default`,
     )
   }
 })
 
-test('the Fieldset stories group real controls and show the disabled group and the legend snippet', () => {
-  const defaultStory = read(join(storiesDir, 'components', 'FieldsetDefault.svelte'))
-  const disabledStory = read(join(storiesDir, 'components', 'FieldsetDisabled.svelte'))
-  const legendStory = read(join(storiesDir, 'components', 'FieldsetLegend.svelte'))
+test('the Alert and Stack stories mirror the Astro story structure', () => {
+  const alert = read(join(storiesDir, 'components', 'AlertVariants.svelte'))
+  const stackDefault = read(join(storiesDir, 'components', 'StackDefault.svelte'))
+  const stackGaps = read(join(storiesDir, 'components', 'StackGaps.svelte'))
 
-  assert.match(defaultStory, /<Fieldset legend="/, 'the default story shows the legend prop')
-  assert.match(defaultStory, /<Field\b/, 'the default story groups Field controls')
-  assert.match(defaultStory, /bind:value=/, 'the default story exercises bind:value')
-
-  assert.match(
-    disabledStory,
-    /<Fieldset[^>]*\sdisabled\b/s,
-    'the disabled story disables the group',
+  assert.match(alert, /<Container size="content" padded>/, 'alerts go in one content Container')
+  assert.match(alert, /<Stack>/, 'alerts are stacked rather than spaced with nested Containers')
+  assert.doesNotMatch(
+    alert,
+    /<Alert[^>]*title=/,
+    'Alert takes no title prop; the story writes the heading itself',
   )
-  for (const [name, pattern] of [
-    ['Input', /<Input\b/],
-    ['Select', /<Select\b/],
-    ['Textarea', /<Textarea\b/],
-  ]) {
-    assert.match(disabledStory, pattern, `the disabled story groups ${name} inside the fieldset`)
+  for (const variant of ['info', 'success', 'warning', 'error']) {
+    assert.ok(
+      variant === 'info' ? /<Alert>/.test(alert) : alert.includes(`variant="${variant}"`),
+      `the Alert story must show the ${variant} variant`,
+    )
   }
-  assert.match(
-    disabledStory,
-    /<Fieldset legend="Shipping contact">/,
-    'the disabled story pairs the locked group with an enabled one, so the difference is visible',
+  assert.ok(
+    alert.includes('<h2 class="rs-alert__title">'),
+    'the story writes a real heading on the consumer-owned title class',
+  )
+  assert.ok(
+    alert.includes('<p class="rs-alert__description">'),
+    'the story writes a block element on the consumer-owned description class',
   )
 
+  assert.match(stackDefault, /<Container size="content" padded>/, 'Stack sits in one Container')
+  assert.match(stackDefault, /<Stack>/, 'the default Stack story shows the default gap')
+
+  assert.match(stackGaps, /<Container size="content" padded>/)
+  assert.match(stackGaps, /<Stack gap="large">/, 'the gaps story separates the groups')
+  for (const gap of ['small', 'medium', 'large']) {
+    assert.ok(stackGaps.includes(`'${gap}'`), `the gaps story must document the ${gap} gap`)
+  }
+
+  for (const [name, source] of [
+    ['AlertVariants', alert],
+    ['StackDefault', stackDefault],
+    ['StackGaps', stackGaps],
+  ]) {
+    assert.ok(
+      !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
+      `${name} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+})
+
+test('the Fieldset story groups real controls, pairs a locked group with an enabled one, and uses the legend snippet', () => {
+  const story = read(join(storiesDir, 'components', 'FieldsetDefault.svelte'))
+
   assert.match(
-    legendStory,
-    /{#snippet legendSlot\(\)}/,
-    'the legend story exercises the legend snippet',
+    story,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(
+    story,
+    /<Stack gap="xlarge">/,
+    'consecutive fieldsets go in an xlarge Stack, so groups sit further apart than their parts',
+  )
+  assert.match(story, /<Fieldset>/, 'the enabled group renders a plain Fieldset')
+  assert.match(
+    story,
+    /\{#snippet legend\(\)\}/,
+    'the legend comes from the legend snippet, mirroring the Astro named slot',
+  )
+  assert.match(story, /<Field\b/, 'the story groups Field controls')
+  assert.match(story, /bind:value=/, 'the story exercises bind:value')
+
+  assert.match(
+    story,
+    /<Fieldset disabled>/,
+    'the disabled group carries the native attribute, with no per-control prop',
+  )
+  for (const country of ['billing', 'shipping']) {
+    assert.ok(
+      story.includes(`name="${country}-name"`),
+      `the story must submit a ${country} name, so the disabled group can be seen to drop out`,
+    )
+  }
+})
+
+test('the Stack stories share the Base/Stack title with one story per gap aspect', () => {
+  const files = readdirSync(storiesDir).filter((name) => /^Stack.*\.stories\.ts$/.test(name))
+  assert.deepEqual(files.sort(), ['Stack.gaps.stories.ts', 'Stack.stories.ts'])
+
+  for (const file of files) {
+    const source = read(join(storiesDir, file))
+    assert.match(source, /title:\s*'Base\/Stack'/, `${file} keeps the Base/Stack title`)
+    assert.match(source, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+  }
+
+  assert.match(
+    read(join(storiesDir, 'Stack.stories.ts')),
+    /export const Default: Story =/,
+    'the single-example Stack story exports Default',
+  )
+  assert.match(
+    read(join(storiesDir, 'Stack.gaps.stories.ts')),
+    /export const Gaps: Story =/,
+    'the comparison Stack story exports Gaps',
   )
 })

@@ -37,6 +37,10 @@ alwaysApply: false
   - Text controls never go below the page's font size; under 16px iOS Safari zooms the page on focus.
   - A control that sets `appearance: none` restores `appearance: auto` under `@media (forced-colors: active)`, so high-contrast users keep native affordances.
   - Error styling comes from `aria-invalid`, never `:invalid` (which matches required fields before the user has touched them).
+  - Every control's target is at least 24×24 CSS px on its own (WCAG 2.2 2.5.8). Restyled controls lose the user-agent exception, and a nearby label or spacing is not guaranteed in every context.
+  - A radio group's hint or error is written after the legend and linked with `aria-describedby` on the fieldset; each radio in an invalid group sets `aria-invalid="true"`.
+  - Never show a state the control does not have: a visual-only `indeterminate` class would announce "not checked". Style the native `:indeterminate`, set by script.
+  - A choice mark (tick, dash, dot) keeps 3:1 against its fill (WCAG 1.4.11).
 
 - **Contrast safety**
   - Any element that sits on a component-owned background sets its own `color`, so host-page rules cannot break contrast.

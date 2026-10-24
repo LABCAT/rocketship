@@ -1,12 +1,61 @@
 ---
-import Container from '@labcat/rocketship/components/Container'
-import Radio from '@labcat/rocketship/components/Radio'
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Fieldset from '@labcat2020/rocketship/components/Fieldset'
+import Label from '@labcat2020/rocketship/components/Label'
+import Radio from '@labcat2020/rocketship/components/Radio'
+import Stack from '@labcat2020/rocketship/components/Stack'
 ---
 
 <Container size="content" padded>
-  <Radio name="delivery" value="unchecked"> Unchecked </Radio>
-  <Radio name="delivery" value="checked" checked> Checked </Radio>
-  <Radio name="delivery" value="disabled" disabled> Disabled </Radio>
-  <Radio name="delivery" value="disabled-checked" checked disabled> Disabled checked </Radio>
-  <Radio name="delivery" value="invalid" invalid> Invalid </Radio>
+  <Stack gap="xlarge">
+    <Fieldset>
+      <Fragment slot="legend">Delivery</Fragment>
+      <Stack gap="small">
+        <Field inline>
+          <Radio id="delivery-standard" name="delivery" value="standard" checked />
+          <Label for="delivery-standard">Standard, 3 to 5 days</Label>
+        </Field>
+        <Field inline>
+          <Radio id="delivery-express" name="delivery" value="express" />
+          <Label for="delivery-express">Express, next day</Label>
+        </Field>
+        <Field inline>
+          <Radio id="delivery-collect" name="delivery" value="collect" />
+          <Label for="delivery-collect">Collect in store</Label>
+        </Field>
+      </Stack>
+    </Fieldset>
+    <Fieldset disabled>
+      <Fragment slot="legend">Gift wrapping</Fragment>
+      <Stack gap="small">
+        <Field inline>
+          <Radio id="wrap-none" name="wrap" value="none" checked />
+          <Label for="wrap-none">No wrapping</Label>
+        </Field>
+        <Field inline>
+          <Radio id="wrap-paper" name="wrap" value="paper" />
+          <Label for="wrap-paper">Recycled paper</Label>
+        </Field>
+      </Stack>
+    </Fieldset>
+    <Fieldset aria-describedby="contact-error">
+      <Fragment slot="legend">Contact method</Fragment>
+      <p class="rs-fieldset__error" id="contact-error">Choose how we should contact you.</p>
+      <Stack gap="small">
+        <Field inline>
+          <Radio id="contact-email" name="contact" value="email" aria-invalid="true" />
+          <Label for="contact-email">Email</Label>
+        </Field>
+        <Field inline>
+          <Radio id="contact-phone" name="contact" value="phone" aria-invalid="true" />
+          <Label for="contact-phone">Phone</Label>
+        </Field>
+        <Field inline>
+          <Radio id="contact-post" name="contact" value="post" aria-invalid="true" />
+          <Label for="contact-post">Post</Label>
+        </Field>
+      </Stack>
+    </Fieldset>
+  </Stack>
 </Container>

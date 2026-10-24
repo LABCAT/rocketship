@@ -22,6 +22,7 @@ const { required = false, class: className, ...attrs } = Astro.props as Props
     font-weight: var(--rs-label-font-weight, #{rs-token(font-weight-medium)});
     line-height: #{rs-token(line-height-tight)};
     margin: 0;
+    padding-block-start: var(--rs-label-offset, 0);
 
     &__required {
       color: var(--rs-label-required-color, #{rs-token(color-danger-text)});

@@ -1,17 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import CheckboxDefault from './components/CheckboxDefault.astro'
-import '@labcat/rocketship/components/Checkbox'
-import '@labcat/rocketship/components/Container'
+import CheckboxStates from './components/CheckboxStates.astro'
+import '@labcat2020/rocketship/components/Checkbox'
+import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Field'
+import '@labcat2020/rocketship/components/Label'
+import '@labcat2020/rocketship/components/Stack'
 
-const meta: Meta<typeof CheckboxDefault> = {
+const meta: Meta<typeof CheckboxStates> = {
   title: 'Components/Checkbox',
-  component: CheckboxDefault,
+  component: CheckboxStates,
   parameters: {
     a11y: { disable: false },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof CheckboxDefault>
+type Story = StoryObj<typeof CheckboxStates>
 
-export const Default: Story = {}
+export const States: Story = {}

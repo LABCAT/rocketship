@@ -29,7 +29,7 @@ const { class: className, ...attrs } = Astro.props as Props
       // the block's gap owns its spacing. Flex items ignore float, so nothing floats.
       float: inline-start;
       color: var(--rs-fieldset-legend-color, #{rs-token(color-fg)});
-      font-size: inherit;
+      font-size: var(--rs-fieldset-legend-font-size, #{rs-token(font-size-lg)});
       font-weight: var(--rs-fieldset-legend-font-weight, #{rs-token(font-weight-semibold)});
       line-height: #{rs-token(line-height-tight)};
       margin: 0;

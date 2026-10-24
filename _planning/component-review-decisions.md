@@ -187,9 +187,10 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `rs-fieldset__legend` sets `float: inline-start`, which opts it out of that layout. It becomes an ordinary flex item (flex items ignore `float`, so nothing floats), stretches like Label in Field, and the block's `gap` owns its spacing. No `margin-block-end` patch (decision 11).
 - Semantics are unchanged: the accessible name and the disabled exemption both come from the first `<legend>` child, not its layout.
 
-### 27. The legend is a group caption: weight over Label, readable when disabled
+### 27. The legend is a group caption: a size step over Label, readable when disabled
 
-- Extends decisions 12 and 17. `rs-fieldset__legend`: `font-size: inherit`, semibold through `--rs-fieldset-legend-font-weight` (over Label's medium, so the group caption outranks the control captions inside it), `line-height-tight` with no hook, its own `color` through `--rs-fieldset-legend-color` (`color-fg`), `margin: 0`, `padding: 0`.
+- Extends decisions 12 and 17. `rs-fieldset__legend`: `font-size-lg` (18px) through `--rs-fieldset-legend-font-size`, semibold through `--rs-fieldset-legend-font-weight`, `line-height-tight` with no hook, its own `color` through `--rs-fieldset-legend-color` (`color-fg`), `margin: 0`, `padding: 0`.
+- Weight alone is not enough: at the same size, semibold over Label's medium is barely visible, and two fieldsets read as one list of fields. The legend heads a section, so it takes decision 12's "rem step through a token". Label, hints and errors still inherit; nothing shrinks (decision 17).
 - No disabled legend style. A disabled fieldset dims its controls through their own `:disabled` rules and the caption stays readable, as a Label does beside a disabled control.
 - The PR's `&:disabled { &__legend }` was a parent-state descendant rule (forbidden by decision 3) that compiled to the invalid `.rs-fieldset:disabled__legend` and never matched. Nesting an element under a pseudo-class is never valid; parent state is a block variable or a style query.
 
@@ -207,9 +208,10 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 ### 30. Groups are further apart than their parts
 
-- Extends decisions 13 and 28. Space between groups must exceed space within them, or the groups run together: two fieldsets in a default Stack (16px) sit as far apart as the Fields inside each (16px), and a legend's weight alone does not separate them.
-- The placer owns that space, not Fieldset (no outer margin): consecutive fieldsets go in `<Stack gap="large">` (`space-6`, 24px).
-- The legend stays inherit-size and semibold. A design that wants a larger group caption puts a heading inside the legend (HTML allows it), styled by its own class.
+- Extends decisions 13 and 28. Space between groups must be at least twice the space within them, or the groups run together. Two fieldsets in a default Stack (16px) sit as far apart as the Fields inside each (16px); `large` (24px, 1.5×) still read as one list.
+- The placer owns that space, not Fieldset (no outer margin): consecutive fieldsets go in `<Stack gap="xlarge">` (`space-8`, 40px, 2.5× the 16px inside).
+- Stack gains `xlarge` (`rs-stack--xlarge` reassigns `--rs-stack-gap` to `space-8`), continuing its two-token steps (`space-2`, `-4`, `-6`, `-8`). Existing gaps are unchanged.
+- Space and the larger legend (decision 27) work together: the legend opens each group, the space closes the one before.
 
 ## Parked for later
 
@@ -233,7 +235,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Authoring rule: always interpolate, `#{rs-token(space-4)}`, because Sass does not evaluate functions inside custom property values.
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
 - PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
-- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–30 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `Default`, groups in a large Stack. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
+- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–30 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

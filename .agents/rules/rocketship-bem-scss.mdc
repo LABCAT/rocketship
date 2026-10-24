@@ -36,6 +36,7 @@ alwaysApply: false
   - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
   - Do not create separate component `.scss` files when the style belongs to a single component.
   - In component `<style lang="scss">` blocks, import mixins via the barrel only: `@use '../styles/mixins' as *;`. Do not `@use` individual files under `styles/mixins/` (`functions`, `container-query`, etc.) — `styles/mixins.scss` already `@forward`s them. Direct `@use` of a mixin partial is for other Sass files that must avoid the full barrel (e.g. `variables.scss`).
+  - An explanatory comment sits above the rule it explains as a Sass doc comment (`///`), the SCSS counterpart of a JSDoc block. Never `/* */` or `/** */`: Sass keeps those in the compiled CSS, so they ship to consumers.
   - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
   - Use `to-rem($px)` (from the mixins barrel) for every `font-size` authored in SCSS (design-token `--rs-font-size-*`, component fallbacks, body copy in `base.scss`, etc.), so sizes are defined from px and emitted as `rem`. Typography mixins already use `to-rem()`. Exception: print styles may use `pt` where appropriate.
   - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
@@ -71,5 +72,7 @@ alwaysApply: false
   - A component never sets its own outer margin; whoever places it owns the spacing (Stack, Grid, the page).
   - Components never set `font-family`; they inherit the page's typeface.
   - Inline components (Label) set no `display`; the parent's layout decides whether they are block or inline.
+  - Semantic groups (Fieldset) add no box: no background, border, radius or padding. Native chrome is reset, and a consumer who wants a panel composes a Card.
+  - Never nest an element under a pseudo-class (`&:disabled { &__legend {} }` compiles to an invalid selector). Parent state is a block variable or a style query.
   - Element classes the consumer applies set `margin: 0`, and set their own `color` when they sit on a component-owned background.
 

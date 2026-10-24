@@ -1,4 +1,4 @@
-import '@labcat/rocketship/styles'
+import '@labcat2020/rocketship/styles'
 import { globalTypes, initialGlobals, decorators } from './addons/prefers-color-scheme/preview.ts'
 
 export default {
@@ -21,6 +21,8 @@ export default {
             ['Default', 'Content', 'Wide', 'FullWidth'],
             'Grid',
             ['TwoColumns', 'ThreeColumns', 'FourColumns'],
+            'Stack',
+            ['Default', 'Gaps'],
             'Typography',
             ['TermsStyleDocument'],
             'Button',

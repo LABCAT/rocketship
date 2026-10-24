@@ -2,7 +2,11 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  '@storybook/svelte': 10.5.8
+
 allowBuilds:
   esbuild: true
   sharp: true
   '@parcel/watcher': true
+  workerd: true

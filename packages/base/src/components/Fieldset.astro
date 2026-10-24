@@ -1,0 +1,46 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & HTMLAttributes<'fieldset'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<fieldset {...attrs} class:list={['rs-fieldset', className]}>
+  {
+    Astro.slots.has('legend') && (
+      <legend class="rs-fieldset__legend">
+        <slot name="legend" />
+      </legend>
+    )
+  }
+  <slot />
+</fieldset>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-fieldset-gap, #{rs-token(space-4)});
+    border: 0;
+    margin: 0;
+    min-inline-size: 0;
+    padding: 0;
+
+    /// Floating opts out of the legend's border-notch layout, so it becomes a flex item and
+    /// the block's gap owns its spacing. Flex items ignore float, so nothing floats.
+    &__legend {
+      float: inline-start;
+      color: var(--rs-fieldset-legend-color, #{rs-token(color-fg)});
+      font-size: var(--rs-fieldset-legend-font-size, #{rs-token(font-size-lg)});
+      font-weight: var(--rs-fieldset-legend-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
+      margin: 0;
+      padding: 0;
+    }
+  }
+</style>

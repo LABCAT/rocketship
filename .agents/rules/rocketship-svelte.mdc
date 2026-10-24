@@ -1,0 +1,40 @@
+---
+description: Svelte 5 component rules for Rocketship — port vs Svelte-first, structure, typed props, polymorphic tags, :global styles, the shared mixin barrel, and what never to copy.
+globs:
+  - "**/*.svelte"
+alwaysApply: false
+---
+
+# Rocketship Svelte Components
+
+- **Source of truth**
+  - Astro (`packages/base`) is the source of truth. Every rule in `.agents/skills/rocketship-component/SKILL.md`, `rocketship-bem-scss.mdc` and `rocketship-a11y.mdc` applies to Svelte unchanged. Decisions are recorded in `_planning/component-review-decisions.md`.
+  - **Port path**: a reviewed Astro original exists. Copy its API and its style block exactly.
+  - **Svelte-first path**: no Astro original on `main`. Design from the decisions and the reviewed references (Alert, Stack, Field, Label, Fieldset, Input, Textarea, Select). The component is provisional; Astro wins on divergence.
+  - Open Astro PRs are unreviewed: never port from them. Components not listed as reviewed predate the review: never copy their patterns.
+  - Svelte components live in `packages/svelte`; their Storybook is `apps/svelte`.
+
+- **Component structure**
+  - One component per file: `<script lang="ts">` → markup → `<style lang="scss">`. Never a separate `.scss` file.
+
+- **Typed props**
+  - Declare `Props`, destructure `$props()` with defaults, capture `...attrs` and spread it onto the root.
+  - Export a union type per public axis. Include `as?` only when the Astro original has it, and never as a single-value union.
+  - Native attributes: a fixed root uses its element type (`HTMLAttributes<HTMLDivElement>`, `HTMLLabelAttributes`, `HTMLInputAttributes`); a polymorphic root uses `HTMLAttributes<HTMLElement>`.
+  - A prop that narrows a native attribute (`role?: 'alert' | 'status' | 'note'`) is declared in `Props` and flows through `...attrs`.
+  - `children?: Snippet` renders with `{@render children?.()}`. An Astro named slot becomes a named snippet guarded by `{#if name}`. Components take no content props (title, legend, label text) and pass no wiring into snippets.
+  - Derive the class string once: `$derived([...].filter(Boolean).join(' '))`. The default variant adds no modifier.
+
+- **Polymorphic tag**
+  - `<svelte:element this={as} {...attrs} class={classes}>`, `as` defaulting to the Astro default. `{...attrs}` first so composed classes win.
+
+- **Styles**
+  - Wrap the rule block in `:global { ... }` inside `<style lang="scss">` (the equivalent of Astro's `is:global`). A `global` attribute on `<style>` does nothing.
+  - `@use '@labcat2020/rocketship/styles/mixins' as *;` once. Never `@use` a mixin partial or copy token source into `packages/svelte`.
+  - Tokens only through `#{rs-token(name)}`; colours compile to `light-dark()`, so no `prefers-color-scheme` blocks. No hex, px or rem fallbacks.
+  - Container queries only for layout changes, and only where the Astro original uses them. No viewport `@media` in components.
+  - No inline `style="…"` or `style:` directives for design.
+
+- **Package hygiene**
+  - Register the export in `package.json` and `src/index.ts`, update `README.md`, and update the four test files listed in the Svelte skill.
+  - Never bump `version` in a component PR: merging to `main` publishes any bumped package.

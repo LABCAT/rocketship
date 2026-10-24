@@ -1,0 +1,46 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type StackTag = 'div' | 'ul' | 'ol'
+export type StackGap = 'small' | 'medium' | 'large' | 'xlarge'
+
+type Props = {
+  as?: StackTag
+  gap?: StackGap
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { as = 'div', gap = 'medium', class: className, ...attrs } = Astro.props as Props
+const Tag = as
+const classes = ['rs-stack', gap !== 'medium' && `rs-stack--${gap}`, className]
+---
+
+<Tag role={as === 'div' ? undefined : 'list'} {...attrs} class:list={classes}>
+  <slot />
+</Tag>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-stack {
+    --rs-stack-gap: #{rs-token(space-4)};
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-stack-gap);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    &--small {
+      --rs-stack-gap: #{rs-token(space-2)};
+    }
+
+    &--large {
+      --rs-stack-gap: #{rs-token(space-6)};
+    }
+
+    &--xlarge {
+      --rs-stack-gap: #{rs-token(space-8)};
+    }
+  }
+</style>

@@ -1,36 +1,29 @@
 ---
-description: Rocketship Astro component library overview, architecture, and goals.
+description: What Rocketship is, how the monorepo is laid out, and where to find the other rules.
 globs:
   - "**/*"
 alwaysApply: false
 ---
 
-# Rocketship Overview
+# Rocketship overview
 
-- **What Rocketship is**
-  - Astro-focused component library designed to be highly themeable and CSS-first.
-  - Lives in this pnpm monorepo as library packages (`packages/*`) plus internal apps (`apps/*`).
-  - Long-term: full component suite comparable to other major UI libraries, with optional Payload template / collection packages and Figma kit as separate future work.
+## What it is
 
-- **Core principles**
-  - Prefer **SCSS/CSS over JavaScript**; MVP must be complete with CSS-only components and themes before any JS-required components are added.
-  - Components are styled via **CSS custom properties** (`--rs-*`) with sensible fallback values.
-  - Use **BEM with `rs` prefix** for all blocks (e.g. `.rs-button`, `.rs-button__icon`, `.rs-button--primary`).
-  - **Design tokens** for colors, type, spacing, and component scales live in **`packages/base/src/styles/variables.scss`** on `:root` as `--rs-*` (no class selectors there). **Container-query widths** are Sass-only **`$rs-cq-sm` / `$rs-cq-md` / `$rs-cq-lg`** in `packages/base/src/styles/mixins/container-query.scss` so `@container` conditions get real lengths. Use `@include container-query-up($rs-cq-sm)` (etc.) in component or mixin SCSS; map size modifiers to the right `--rs-*` tokens inside those blocks.
+- A themeable, CSS-first component library: Astro in `packages/base` (`@labcat2020/rocketship`), Svelte ports in `packages/svelte` (`@labcat2020/rocketship-svelte`).
+- A pnpm monorepo: library packages in `packages/*`, Storybook hosts in `apps/*` (`apps/frontend` for Astro, `apps/svelte` for Svelte). The apps are not products.
+- Every package is published to npm; the apps use them through workspace references.
+- Later: add-on packages (forms, layout, ecommerce) that extend the base without breaking it, Payload templates and a Figma kit.
 
-- **Monorepo / packaging strategy**
-  - Base package (e.g. `@labcat2020/rocketship`) exports primitives, design tokens, default theme, and core components.
-  - Add-on packages (forms, layout, ecommerce, etc.) extend the system without breaking the base.
-  - All packages are intended to be consumable via npm; internal apps (Storybook host today) depend on them via workspace references.
+## Principles
 
-- **Theming model**
-  - Default theme = “rocketship / space-station” aesthetic, implemented as fallback values for `--rs-*`.
-  - Eight planet themes shipped as separate packages of **CSS variable overrides only** (no components).
-  - Light/dark variants per theme follow user preference; theming is purely CSS-based.
+- CSS and SCSS before JavaScript. The MVP is complete with CSS-only components and themes before any JS-required component is added.
+- Components are styled through `--rs-*` custom properties with token defaults.
+- BEM with the `rs` prefix for every block.
 
-- **Docs and tooling**
-  - `_planning/rocketship-plan.md` is the source of truth for project vision, decisions, and roadmap.
-  - `_planning/tasks.md` holds the task list and acceptance criteria used by background agents.
-  - **Storybook** runs inside `apps/frontend` (Astro host only — not a product app) via `@storybook-astro/framework` (Storybook 10). Stories render real Astro components from `@labcat2020/rocketship`. Run with `pnpm dev` / `pnpm storybook` from the repo root. Stories use library components from `@labcat2020/rocketship` only. When storybook-astro’s one-component-per-story limit requires showing multiple components in one story, **Storybook-only wrapper components** (e.g. ButtonVariants, ButtonSizes) may be added under `apps/frontend/src/stories/components/`; they must only compose `@labcat2020/rocketship` components. Do not add Storybook wrapper components to the base package — the base package is for the published library only.
-  - **No custom styles in stories:** Do not add `<style>` blocks, scoped component CSS, or story-only classes used purely for decoration in `apps/frontend/src/stories/**` or Storybook-only Astro wrappers. If something needs a visual treatment for real content, implement it in `@labcat2020/rocketship` (component or typography SCSS) so stories reflect what consumers get.
+## Where things are
 
+- Vision, decisions and roadmap: `_planning/rocketship-plan.md`. Tasks and acceptance criteria: `_planning/tasks.md`.
+- Why each component rule exists: `_planning/component-review-decisions.md`.
+- Tokens and themes: `rocketship-themes.mdc`.
+- Building a component: `.agents/skills/rocketship-component/SKILL.md` (Astro) or `.agents/skills/rocketship-component-svelte/SKILL.md` (Svelte).
+- Stories: `rocketship-stories.mdc`. Run Storybook with `pnpm storybook` (Astro) or `pnpm storybook:svelte` from the repo root.

@@ -1,105 +1,89 @@
 ---
 name: rocketship-component-svelte
-description: 'Port or create a Rocketship Svelte component matching repo conventions. Use when asked to add, build, or port a component in packages/svelte (Svelte 5 runes + TypeScript + SCSS + BEM rs- prefix + --rs-* tokens), either as a copy-style port of the Astro component in packages/base or as a Svelte-first component with no Astro original, adding its Storybook stories in apps/svelte.'
+description: 'Port or create a Rocketship Svelte component. Use when asked to add, build, or port a component in packages/svelte (Svelte 5 runes + TypeScript + SCSS + BEM rs- prefix + --rs-* tokens), usually by translating the reviewed Astro component in packages/base, including its Storybook stories in apps/svelte.'
 ---
 
-# Rocketship Svelte Component Authoring
+# Rocketship component (Svelte)
 
-Build a component for `@labcat2020/rocketship-svelte`. **Astro is the source of truth.** Every rule in `.agents/skills/rocketship-component/SKILL.md` applies here unchanged; this skill only adds what is Svelte-specific. The reasoning behind every rule is in `_planning/component-review-decisions.md`.
+Astro is the source of truth. Port a component by copying the reviewed Astro file and translating its syntax. Change nothing else.
 
-Two paths:
+## 1. Read the rules
 
-- **Port path**: a reviewed Astro original exists. Mirror it (copy-style port).
-- **Svelte-first path**: no Astro original exists on `main`. Design the component in Svelte from the decisions and the reviewed references, so an Astro version can be ported back. It is provisional: Astro wins when the two diverge.
+All of `.agents/rules/` applies: `rocketship-svelte.mdc`, `rocketship-component-api.mdc`, `rocketship-bem-scss.mdc`, `rocketship-a11y.mdc`, `rocketship-layout-responsive.mdc`, `rocketship-stories.mdc`, `rocketship-story-copy.mdc`, `rocketship-typescript.mdc`.
 
-## Reviewed references
+## 2. Pick the path
 
-Copy the shape of these, in Astro (`packages/base/src/components/`) and their Svelte ports:
+- **Port**: the component exists in `packages/base/src/components/` and is reviewed: Alert, Stack, Field, Label, Fieldset, Input, Textarea, Select, Checkbox, Radio, Table, Scroll. Copy it. Also read its section in `.agents/skills/rocketship-component/references/patterns.md`.
+- **Svelte-first**: no Astro original on `main`. Build from the rules and the closest reference in the Astro skill's table. Say in the PR that it is provisional: Astro wins.
+- Never copy from an open Astro PR. If one exists for your component, put its number in your PR.
 
-- **Alert**: content block with variants and consumer-owned element classes
-- **Stack**: layout primitive with a polymorphic `as`
-- **Field**, **Label**, **Fieldset**: form wrapper, caption and group
-- **Input**, **Textarea**, **Select**: form controls
-- **Checkbox**, **Radio**: choice controls (one `<input>`, painted `::before` mark), laid out in `<Field inline>` rows
-- **Table**: structured content; rows style cells through inherited variables, `caption` is a positional slot
-- **Scroll**: layout primitive; a focusable region the consumer names (Astro only so far)
+## 3. Check the Svelte status
 
-Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. The Svelte Table (`rs-table-holder` wrapper, `compact`/`hover` props, tag selectors) predates decisions 40–54: port it again from the reviewed `Table.astro`, and port `Scroll.astro` alongside it so wide tables can scroll. Never copy their deviations. The Svelte Fieldset in PR #62 copied the unreviewed Astro PR #13 (box, `legend` prop, `disabled` prop, container-query sizing); port it again from the reviewed `Fieldset.astro`. The Checkbox/Radio review also extended reviewed Astro components the Svelte ports lack: Field's `inline` prop, Label's `--rs-label-offset`, Fieldset's `__hint`/`__error` and Stack's `xlarge` gap. Port those before building Svelte Checkbox or Radio.
+| Svelte file                                                                              | Status                                                                                      |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `Alert.svelte`                                                                           | Current, except its `Props` type: a fixed `div` root uses `HTMLAttributes<HTMLDivElement>`. |
+| `Stack.svelte`                                                                           | Current except the `xlarge` gap. Add it.                                                    |
+| `Field`, `Label`, `Input`, `Textarea`, `Select`, `Table`                                 | Pre-review. Port again from Astro.                                                          |
+| `Fieldset` (PR #62)                                                                      | Copies an unreviewed design. Port again from Astro.                                         |
+| `Checkbox`, `Radio`, `Scroll`                                                            | Not ported yet.                                                                             |
+| `Accordion`, `Button`, `Card`, `Container`, `Disclosure`, `Figure`, `Grid`, `Typography` | Pre-review. Never copy.                                                                     |
 
-**Open Astro PRs are unreviewed.** Never port from one, and never treat one as a reference. If an open Astro PR exists for the component you are building, note its number in your PR and follow the decisions instead.
+- Before Checkbox or Radio: port Field's `inline`, Label's `--rs-label-offset`, Fieldset's `__hint` / `__error` and Stack's `xlarge`.
+- Port Table together with Scroll.
 
-## Before You Start
+## 4. Translate
 
-1. Read the Astro skill (`.agents/skills/rocketship-component/SKILL.md`) and the rules: `rocketship-svelte.mdc`, `rocketship-bem-scss.mdc`, `rocketship-a11y.mdc`, `rocketship-layout-responsive.mdc`, `rocketship-typescript.mdc`.
-2. Decide the path. Port path: open the Astro original; it is your template. Svelte-first: open the closest reviewed reference above.
-3. Check whether the pattern is genuinely new (`:has()`, `[open]`, `::backdrop`, popover, focus-trapping). If so, stop and tell the user: novel patterns need a hand-written reference first.
+Copy `packages/base/src/components/<Name>.astro` to `packages/svelte/src/components/<Name>.svelte` and change only this:
 
-## Procedure
+| Astro                                                                      | Svelte                                                                                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `---` frontmatter                                                          | `<script lang="ts">`                                                                                                                        |
+| `import type { HTMLAttributes } from 'astro/types'`                        | `import type { HTMLAttributes } from 'svelte/elements'` and `import type { Snippet } from 'svelte'`                                         |
+| `HTMLAttributes<'div'>`                                                    | `HTMLAttributes<HTMLDivElement>`; `HTMLLabelAttributes`, `HTMLInputAttributes` etc. for other tags; `HTMLAttributes<HTMLElement>` with `as` |
+| `const { … } = Astro.props as Props`                                       | `let { …, children, ...attrs }: Props = $props()`                                                                                           |
+| `class: className`                                                         | `class: className = ''`                                                                                                                     |
+| `const classes = [ … ]` + `class:list={classes}`                           | `const classes = $derived([ … ].filter(Boolean).join(' '))` + `class={classes}`                                                             |
+| `cond && 'rs-x--y'`                                                        | `cond ? 'rs-x--y' : undefined`                                                                                                              |
+| `<slot />`                                                                 | `{@render children?.()}`, with `children?: Snippet` in `Props`                                                                              |
+| `{Astro.slots.has('legend') && <legend …><slot name="legend" /></legend>}` | `{#if legend}<legend …>{@render legend()}</legend>{/if}`, with `legend?: Snippet` in `Props`                                                |
+| `const Tag = as` + `<Tag …>`                                               | `<svelte:element this={as} …>`; `as` keeps the Astro default                                                                                |
+| `<style is:global lang="scss">`                                            | `<style lang="scss">` with every rule inside `:global { … }`                                                                                |
+| `@use '../styles/mixins' as *;`                                            | `@use '@labcat2020/rocketship/styles/mixins' as *;`                                                                                         |
 
-### 1. Component file: `packages/svelte/src/components/<Name>.svelte`
+Selectors, declarations and their order stay exactly the same. Skeleton: [component-template.md](./references/component-template.md).
 
-```
-<script lang="ts">   → exported unions, Props, $props(), $derived classes
-(markup)             → fixed root, or <svelte:element this={as}> when the Astro original has `as`
-<style lang="scss">  → @use barrel, then :global { .rs-block { ... } }
-```
+## 5. Register
 
-See [component-template.md](./references/component-template.md) for the annotated skeleton.
+- `packages/svelte/package.json` → `exports`: `"./components/<Name>": "./src/components/<Name>.svelte"` (the same key as Astro).
+- `packages/svelte/src/index.ts`: the value export and its type exports.
+- `packages/svelte/README.md`: the components table row, the props table and a `### <Name>` section.
+- Never bump `version`.
 
-- **Props**: an exported union per axis; `class?: string`; `children?: Snippet`; defaults in the `$props()` destructure; `...attrs` spread onto the root.
-- **Native attribute type** matches the Astro root. A fixed root uses that element's type (`HTMLAttributes<HTMLDivElement>`, `HTMLLabelAttributes`, `HTMLInputAttributes`); a polymorphic root uses `HTMLAttributes<HTMLElement>`.
-- **`as?` only when the Astro original has it** (decision 1). Never a single-value union.
-- **A prop that narrows a native attribute** (Alert's `role?: 'alert' | 'status' | 'note'`) is declared in `Props` and flows through `...attrs`, as in Astro.
-- **The default variant emits no modifier class** (decision 4).
-- **Never re-declare a native attribute as a prop** (decision 24). `disabled` on Fieldset flows through `...attrs`.
-- **Consumers own content elements** (decision 5). No title, legend, label or description props, and no snippet props that render content into a component wrapper. The consumer writes the element and applies the element class. `children` is the only snippet unless the Astro original has a named slot (decision 31): Fieldset's `legend` slot becomes a `legend` snippet, rendered as `{#if legend}<legend class="rs-fieldset__legend">{@render legend()}</legend>{/if}` before `children`; Table's `caption` slot becomes a `caption` snippet the same way.
-- **No props that pass wiring into snippets.** A11y links (`for`, `aria-describedby`) are written by the consumer at both ends (decision 14).
-- **Components never render words** (decision 16); decoration such as an `aria-hidden` glyph is fine.
+## 6. Stories
 
-### 2. Styles
+`apps/svelte/src/stories/<Name>.stories.ts` and `apps/svelte/src/stories/components/<Name>Default.svelte`. Mirror the Astro stories: same title, same examples.
 
-- **Port path:** copy the Astro `<style>` block into `<style lang="scss">`, wrapped in `:global { ... }`. Same selectors, declarations and order. Do not redesign.
-- **Svelte-first path:** author the block by every style rule in the Astro skill.
-- **Import** the barrel only: `@use '@labcat2020/rocketship/styles/mixins' as *;`. It provides `rs-token()`, `to-rem()` and the container-query mixin.
-- **Tokens only through `#{rs-token(name)}`**, always interpolated. Never a hex, px or rem fallback, and never a "three-level fallback".
-- **Unknown token names fail the build:** stop and ask. Tokens live in `$rs-tokens` (`packages/base/src/styles/mixins/tokens.scss`).
-- **Hardcore BEM** (decision 3): every compiled selector is one class plus pseudo-classes on it. `&:disabled &__legend` compiles to a descendant selector and is not allowed.
-- **No container queries for size or typography steps** (decision 9). Use them only for a real layout change, and only where the Astro original does.
-- **Component boundaries:** no `font-family`, no outer margin, and no `display` on inline components.
-- **Form text** inherits the page size (decisions 11, 12, 17).
-
-### 3. Register
-
-- `packages/svelte/package.json` `exports`: `"./components/<Name>": "./src/components/<Name>.svelte"`, the same key as the Astro package.
-- `packages/svelte/src/index.ts`: value and type exports alongside the other components.
-- `packages/svelte/README.md`: the components table row, the props table, and a `### <Name>` section.
-- **Never bump `version`** in a component PR. Publishing runs on merge to `main` for any bumped package.
-
-### 4. Stories: `apps/svelte/src/stories/`
-
-Mirror the Astro stories (port path) or follow the Astro skill's story rules (Svelte-first):
-
-- `<Name>.stories.ts`: Svelte CSF, `parameters: { a11y: { disable: false } }`, one story per file.
-- **Title:** layout primitives (Container, Grid, Stack, Scroll), Button and Typography live in `Base/`; everything else in `Components/`; tokens in `Foundations/`. Match the Astro title.
-- **Naming:** a second aspect is a second file, `<Name>.<aspect>.stories.ts` exporting `<Aspect>`, with wrapper `components/<Name><Aspect>.svelte`. A single example exports `Default`; a comparison exports `Variants` or `<Aspect>`. A state (disabled, required, error) sits beside the default in the same story, never a second file, and the story is named for what it shows: `States` for a states comparison (Select), `Default` when the only extra state is native behaviour (Fieldset) (decision 29). Consecutive fieldsets go in `<Stack gap="xlarge">` (decision 30); port Stack's `xlarge` gap first.
-- **Wrapper** `components/<Name><Aspect>.svelte` imports only `@labcat2020/rocketship-svelte` components. Examples go in a `<Stack>` inside one `<Container size="content" padded>`. Nested Stacks inside a component are fine; Containers as spacers are not. No `as="main"`, no `<style>`, no story-only classes.
-- **Content:** titles are real `h2` elements on `__title`; body text is in block elements; forms follow the Astro skill's Forms rule (`aria-invalid` on errors, the asterisk explained).
-
-### 5. Tests
-
-Every component change updates these by hand:
+## 7. Update the tests
 
 - `packages/svelte/test/components.test.mjs`: API and compiled-CSS tests for the component.
-- `packages/svelte/test/consumer-install.test.mjs`: the published-subpath list and the block-class map.
+- `packages/svelte/test/consumer-install.test.mjs`: the published subpath list and the block-class map.
 - `packages/svelte/test/a11y.test.mjs`: the story fixture list. A story missing here never reaches axe.
 - `apps/svelte/test/storybook-host.test.mjs`: story structure tests.
 
-### 6. Verify
+## 8. Verify
 
-- `pnpm --filter @labcat2020/rocketship-svelte test` and `check` pass; `pnpm --filter @rocketship/svelte-storybook test` passes; `pnpm build` passes at the root.
-- Storybook renders every story in light and dark with no axe violations.
-- Port path: diff the style block against the Astro original. It should be identical inside `:global`.
+Run from the repo root:
 
-## Recording differences
+```bash
+pnpm --filter @labcat2020/rocketship-svelte test
+pnpm --filter @labcat2020/rocketship-svelte check
+pnpm --filter @rocketship/svelte-storybook test
+pnpm build
+```
 
-The PR description lists every intentional difference from the Astro original (Astro slots → Svelte snippets at minimum), notes breaking changes to the published API, and, for Svelte-first, states the provisional status and any open Astro PR. Copy the checklist from `_planning/svelte-port-checklist.md`.
+- Run `pnpm storybook:svelte` and check every story in light and dark with no axe violations.
+- Port path: diff your style block against the Astro original. Inside `:global` it must be identical.
+
+## 9. Open the PR
+
+Paste the checklist from `_planning/svelte-port-checklist.md`. List every difference from the Astro original (at least slots → snippets) and any breaking change to the published Svelte API.

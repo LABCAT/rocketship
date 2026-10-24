@@ -395,7 +395,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - **Card review:** stories use `<p class="rs-card__title">`; titles should be headings.
 - **Typography mixins:** `lists.scss` uses tag and child selectors (`ol > li > ul`). Decide deliberately whether prose is an exception to rule 3.
 - **Alert:** once the role goes, "error" is conveyed by colour plus title text only. Decide on a non-colour signal.
-- **Style queries:** check current browser support (Firefox) before making rule 3's style-query clause binding.
+- **Style queries:** check current browser support (Firefox) before making rule 3's style-query clause binding. Resolved 2026-10-24: Firefox 151 (19 May 2026) shipped `@container style()` for custom properties, completing cross-browser support (Chrome/Edge 111, Safari 18). The clause is binding for exact-value matches only; range syntax (`>`, `<`) is still behind a Firefox flag and is not allowed.
 - **Svelte:** `Alert.svelte` has the same issues, and `packages/svelte/test/components.test.mjs` asserts the prop-beats-slot title behaviour. The `@labcat2020/rocketship/styles/mixins` subpath export is needed for `rs-token()` to reach Svelte.
 
 ## Alert topics still to review

@@ -1,0 +1,52 @@
+---
+description: Structure rules for Rocketship Storybook stories, Astro (apps/frontend) and Svelte (apps/svelte) — files, titles, wrappers, naming, scope and content.
+globs:
+  - "apps/*/src/stories/**"
+  - "apps/*/.storybook/**"
+alwaysApply: false
+---
+
+# Rocketship stories
+
+Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-review-decisions.md`.
+
+## Files
+
+- Astro: `apps/frontend/src/stories/<Name>.stories.tsx` and `apps/frontend/src/stories/components/<Name>Default.astro`.
+- Svelte: `apps/svelte/src/stories/<Name>.stories.ts` and `apps/svelte/src/stories/components/<Name>Default.svelte`.
+- Every story file sets `parameters: { a11y: { disable: false } }`.
+- Astro story files import the wrapper plus each library component it uses: `import '@labcat2020/rocketship/components/Stack'`.
+- Wrapper components live only in `apps/*/src/stories/components/`, never in a package.
+
+## Titles
+
+- `Base/`: Container, Grid, Stack, Scroll, Button, Typography. Add new `Base/` stories to the sort order in `.storybook/preview.ts`.
+- `Components/`: every other component.
+- `Foundations/`: tokens.
+- A Svelte story uses the same title as its Astro story.
+
+## Wrappers
+
+- Import only library components: `@labcat2020/rocketship` (Astro) or `@labcat2020/rocketship-svelte` (Svelte).
+- Put examples in a `<Stack>` inside one `<Container size="content" padded>`. Stacks may nest; Containers never act as spacers. No `as="main"`.
+- No `<style>` blocks, no story-only CSS, no story-only classes. If content needs a look, add it to the library.
+
+## Scope and names
+
+- Each story file exports one story and shows one aspect.
+- A second aspect (sizes, gaps) is a second file: `<Name>.<aspect>.stories.tsx` exporting `<Aspect>`, wrapper `<Name><Aspect>`.
+- States are not aspects. Disabled, required and error examples sit beside the default in the same story.
+- Name the export for what it shows: one example `Default`; a comparison `Variants`, `States` or `<Aspect>`.
+- A control with several states exports `States` (Select). A component whose only extra state is native behaviour exports `Default` (Fieldset).
+
+## Content
+
+- Titles are real `<h2>` elements with the `__title` class.
+- Body text is in block elements (`<p>`), never bare text.
+- Use realistic data in the library's voice (builds, deployments, releases) that uses every class: Table's story has numbers for `--numeric` and a totals row.
+- Show a live-region `role` only where the example is genuinely dynamic.
+- Forms: every control has a `<Label for>`. Error examples set `aria-invalid="true"` and `aria-describedby` on the control. A story with a required asterisk also shows "Fields marked * are required."
+- Compose forms as in `.agents/skills/rocketship-component/references/patterns.md` → Forms.
+- Use library controls only. If a control is still under review, the example waits; no native stand-ins.
+- A state only script can set (`indeterminate`) gets a one-line `<script is:inline>` in the wrapper. Never fake it with a class. If the story host does not run the script, leave the example out.
+- No `autofocus`.

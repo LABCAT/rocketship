@@ -35,6 +35,7 @@
     "./components/Fieldset": "./src/components/Fieldset.astro",
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Stack": "./src/components/Stack.astro",
+    "./components/Scroll": "./src/components/Scroll.astro",
     "./components/Typography": "./src/components/Typography.astro",
     "./components/Alert": "./src/components/Alert.astro",
     "./components/Field": "./src/components/Field.astro",
@@ -43,7 +44,8 @@
     "./components/Textarea": "./src/components/Textarea.astro",
     "./components/Select": "./src/components/Select.astro",
     "./components/Checkbox": "./src/components/Checkbox.astro",
-    "./components/Radio": "./src/components/Radio.astro"
+    "./components/Radio": "./src/components/Radio.astro",
+    "./components/Table": "./src/components/Table.astro"
   },
   "files": [
     "dist",

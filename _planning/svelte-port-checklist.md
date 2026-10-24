@@ -12,7 +12,7 @@ These are settled. A component PR does not reopen them.
 - **Target:** Svelte 5 with runes and TypeScript. One component per `.svelte` file.
 - **Source of truth:** Astro. Every rule in `.agents/skills/rocketship-component/SKILL.md` and the decisions in `_planning/component-review-decisions.md` apply to Svelte.
 - **Styles:** a copy of the Astro style block inside `:global { }` (port), or authored by the same rules (Svelte-first). Tokens only through `#{rs-token()}`; no hex, px or rem fallbacks; container queries only for layout changes.
-- **References:** reviewed components only (Alert, Stack, Field, Label, Fieldset, Input, Textarea, Select). Open Astro PRs and pre-review components are never copied.
+- **References:** reviewed components only (Alert, Stack, Field, Label, Fieldset, Input, Textarea, Select, Table, Scroll). Open Astro PRs and pre-review components are never copied.
 - **Shared design system:** tokens and mixins come from `@labcat2020/rocketship/styles` and the `./styles/mixins` barrel; nothing is duplicated.
 - **Location:** `packages/svelte`; Storybook in `apps/svelte`.
 - **Versions:** component PRs never bump `version`; merging to `main` publishes bumped packages.
@@ -31,7 +31,7 @@ These are settled. A component PR does not reopen them.
 ### Svelte-first variant
 
 1. **No Astro original on `main`.** Design from the decisions and the reviewed references. If an open Astro PR exists, note its number but do not port from it.
-2. **Follow the rules.** Consumer-owned content elements, `rs-token()` only, hardcore BEM, no font-family, no outer margin, no props that re-declare native attributes, form decisions 14–29.
+2. **Follow the rules.** Consumer-owned content elements, `rs-token()` only, hardcore BEM, no font-family, no outer margin, no props that re-declare native attributes, form decisions 14–29, table and scroll decisions 40–54.
 3. **Record provisional status.** Astro is the source of truth on divergence.
 4. **Update package hygiene.** As for the port variant.
 5. **Verify.** As for the port variant.

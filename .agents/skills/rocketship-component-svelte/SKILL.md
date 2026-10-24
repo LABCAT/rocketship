@@ -20,8 +20,10 @@ Copy the shape of these, in Astro (`packages/base/src/components/`) and their Sv
 - **Stack**: layout primitive with a polymorphic `as`
 - **Field**, **Label**, **Fieldset**: form wrapper, caption and group
 - **Input**, **Textarea**, **Select**: form controls
+- **Table**: structured content; rows style cells through inherited variables, `caption` is a positional slot
+- **Scroll**: layout primitive; a focusable region the consumer names (Astro only so far)
 
-Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. Never copy their deviations. The Svelte Fieldset in PR #62 copied the unreviewed Astro PR #13 (box, `legend` prop, `disabled` prop, container-query sizing); port it again from the reviewed `Fieldset.astro`.
+Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. The Svelte Table (`rs-table-holder` wrapper, `compact`/`hover` props, tag selectors) predates decisions 40–54: port it again from the reviewed `Table.astro`, and port `Scroll.astro` alongside it so wide tables can scroll. Never copy their deviations. The Svelte Fieldset in PR #62 copied the unreviewed Astro PR #13 (box, `legend` prop, `disabled` prop, container-query sizing); port it again from the reviewed `Fieldset.astro`.
 
 **Open Astro PRs are unreviewed.** Never port from one, and never treat one as a reference. If an open Astro PR exists for the component you are building, note its number in your PR and follow the decisions instead.
 
@@ -49,7 +51,7 @@ See [component-template.md](./references/component-template.md) for the annotate
 - **A prop that narrows a native attribute** (Alert's `role?: 'alert' | 'status' | 'note'`) is declared in `Props` and flows through `...attrs`, as in Astro.
 - **The default variant emits no modifier class** (decision 4).
 - **Never re-declare a native attribute as a prop** (decision 24). `disabled` on Fieldset flows through `...attrs`.
-- **Consumers own content elements** (decision 5). No title, legend, label or description props, and no snippet props that render content into a component wrapper. The consumer writes the element and applies the element class. `children` is the only snippet unless the Astro original has a named slot (decision 31): Fieldset's `legend` slot becomes a `legend` snippet, rendered as `{#if legend}<legend class="rs-fieldset__legend">{@render legend()}</legend>{/if}` before `children`.
+- **Consumers own content elements** (decision 5). No title, legend, label or description props, and no snippet props that render content into a component wrapper. The consumer writes the element and applies the element class. `children` is the only snippet unless the Astro original has a named slot (decision 31): Fieldset's `legend` slot becomes a `legend` snippet, rendered as `{#if legend}<legend class="rs-fieldset__legend">{@render legend()}</legend>{/if}` before `children`; Table's `caption` slot becomes a `caption` snippet the same way.
 - **No props that pass wiring into snippets.** A11y links (`for`, `aria-describedby`) are written by the consumer at both ends (decision 14).
 - **Components never render words** (decision 16); decoration such as an `aria-hidden` glyph is fine.
 
@@ -77,7 +79,7 @@ See [component-template.md](./references/component-template.md) for the annotate
 Mirror the Astro stories (port path) or follow the Astro skill's story rules (Svelte-first):
 
 - `<Name>.stories.ts`: Svelte CSF, `parameters: { a11y: { disable: false } }`, one story per file.
-- **Title:** layout primitives (Container, Grid, Stack), Button and Typography live in `Base/`; everything else in `Components/`; tokens in `Foundations/`. Match the Astro title.
+- **Title:** layout primitives (Container, Grid, Stack, Scroll), Button and Typography live in `Base/`; everything else in `Components/`; tokens in `Foundations/`. Match the Astro title.
 - **Naming:** a second aspect is a second file, `<Name>.<aspect>.stories.ts` exporting `<Aspect>`, with wrapper `components/<Name><Aspect>.svelte`. A single example exports `Default`; a comparison exports `Variants` or `<Aspect>`. A state (disabled, required, error) sits beside the default in the same story, never a second file, and the story is named for what it shows: `States` for a states comparison (Select), `Default` when the only extra state is native behaviour (Fieldset) (decision 29). Consecutive fieldsets go in `<Stack gap="xlarge">` (decision 30); port Stack's `xlarge` gap first.
 - **Wrapper** `components/<Name><Aspect>.svelte` imports only `@labcat2020/rocketship-svelte` components. Examples go in a `<Stack>` inside one `<Container size="content" padded>`. Nested Stacks inside a component are fine; Containers as spacers are not. No `as="main"`, no `<style>`, no story-only classes.
 - **Content:** titles are real `h2` elements on `__title`; body text is in block elements; forms follow the Astro skill's Forms rule (`aria-invalid` on errors, the asterisk explained).

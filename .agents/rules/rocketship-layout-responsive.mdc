@@ -32,6 +32,9 @@ alwaysApply: false
   - Define layout breakpoints in `px` (Bootstrap-style), not `rem`.
   - Keep breakpoint logic centralized (e.g. in a SCSS partial) rather than re-declaring values per component.
 
+- **Scrolling regions**
+  - Overflow scrolling belongs to whoever places the content, like spacing: wrap it in `<Scroll>` (sideways when content is too wide; `vertical` adds up-and-down scrolling, capped by `--rs-scroll-max-block-size`, default `70dvh`). Components never scroll themselves.
+
 - **Container queries for component layout**
   - Use **container queries** when a component's layout changes with the space it has (a Grid gaining columns, Card media moving beside text). Do not use them for cosmetic density steps; a component with one layout has one size.
   - `container-query-up` queries the nearest container of any kind, so consumers can make any element a container (`container-type: inline-size`, e.g. a slide-over panel) and components inside respond to that box. Rocketship's Container is one such container.

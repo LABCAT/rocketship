@@ -1,0 +1,37 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  vertical?: boolean
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { vertical = false, class: className, ...attrs } = Astro.props as Props
+const classes = ['rs-scroll', vertical && 'rs-scroll--vertical', className]
+---
+
+<div {...attrs} class:list={classes}>
+  <slot />
+</div>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-scroll {
+    overflow-x: auto;
+
+    /// The consumer makes the region focusable (`tabindex="0"`) so keyboard users can scroll it.
+    &:focus-visible {
+      outline: 2px solid #{rs-token(color-focus-ring)};
+      outline-offset: 2px;
+    }
+
+    /// Without a height limit it never scrolls, so the hook falls back to most of the screen.
+    /// Sideways scrolling stays `auto`: it only appears when content is too wide, and the
+    /// alternative (`hidden`) would cut that content off.
+    &--vertical {
+      max-block-size: var(--rs-scroll-max-block-size, 70dvh);
+      overflow-y: auto;
+    }
+  }
+</style>

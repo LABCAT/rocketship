@@ -58,6 +58,23 @@ A component may render decoration next to the slot (Label):
 </label>
 ```
 
+An element whose position is structure (a `<caption>` must be the table's first child, a `<legend>` the fieldset's) is rendered through an optional named slot (Table):
+
+```astro
+<table {...attrs} class:list={classes}>
+  {
+    Astro.slots.has('caption') && (
+      <caption class="rs-table__caption">
+        <slot name="caption" />
+      </caption>
+    )
+  }
+  <slot />
+</table>
+```
+
+Boolean options emit their modifier only when on: `const classes = ['rs-table', striped && 'rs-table--striped', className]`.
+
 ## Styles
 
 ```scss

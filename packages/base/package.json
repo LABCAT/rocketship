@@ -32,6 +32,7 @@
     "./components/Button": "./src/components/Button.astro",
     "./components/Card": "./src/components/Card.astro",
     "./components/Container": "./src/components/Container.astro",
+    "./components/Fieldset": "./src/components/Fieldset.astro",
     "./components/Grid": "./src/components/Grid.astro",
     "./components/Stack": "./src/components/Stack.astro",
     "./components/Typography": "./src/components/Typography.astro",

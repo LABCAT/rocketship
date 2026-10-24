@@ -43,7 +43,7 @@ Button, Card, Container, Grid and Typography predate the review. Never copy them
 ## 4. Create the files
 
 1. `packages/base/src/components/<Name>.astro`: copy the reference. Rename `Alert` → `<Name>` and `rs-alert` → `rs-<name>` everywhere. Keep the order: frontmatter, markup, `<style is:global lang="scss">`. Skeleton: [component-template.md](./references/component-template.md).
-2. `packages/base/package.json` → `exports`: add `"./components/<Name>": "./src/components/<Name>.astro"`.
+2. `packages/base/package.json` → `exports`: add `"./components/<Name>": "./src/components/<Name>.astro"`. When rebuilding a pre-review component, also remove it from `ignoreFiles` in `stylelint.config.mjs`.
 3. `apps/frontend/src/stories/<Name>.stories.tsx` and `apps/frontend/src/stories/components/<Name>Default.astro`: see the template and `rocketship-stories.mdc`.
 
 ## 5. Verify
@@ -51,6 +51,7 @@ Button, Card, Container, Grid and Typography predate the review. Never copy them
 Run from the repo root:
 
 ```bash
+pnpm lint:styles
 pnpm --filter @labcat2020/rocketship build
 pnpm --filter @labcat2020/rocketship test
 pnpm build

@@ -57,6 +57,7 @@ Selectors, declarations and their order stay exactly the same. Skeleton: [compon
 - `packages/svelte/package.json` → `exports`: `"./components/<Name>": "./src/components/<Name>.svelte"` (the same key as Astro).
 - `packages/svelte/src/index.ts`: the value export and its type exports.
 - `packages/svelte/README.md`: the components table row, the props table and a `### <Name>` section.
+- `stylelint.config.mjs` → `ignoreFiles`: remove the file if it is listed (pre-review files are skipped by the lint).
 - Never bump `version`.
 
 ## 6. Stories
@@ -75,6 +76,7 @@ Selectors, declarations and their order stay exactly the same. Skeleton: [compon
 Run from the repo root:
 
 ```bash
+pnpm lint:styles
 pnpm --filter @labcat2020/rocketship-svelte test
 pnpm --filter @labcat2020/rocketship-svelte check
 pnpm --filter @rocketship/svelte-storybook test

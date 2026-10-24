@@ -9,6 +9,13 @@ const { class: className, ...attrs } = Astro.props as Props
 ---
 
 <fieldset {...attrs} class:list={['rs-fieldset', className]}>
+  {
+    Astro.slots.has('legend') && (
+      <legend class="rs-fieldset__legend">
+        <slot name="legend" />
+      </legend>
+    )
+  }
   <slot />
 </fieldset>
 
@@ -24,9 +31,9 @@ const { class: className, ...attrs } = Astro.props as Props
     min-inline-size: 0;
     padding: 0;
 
+    /// Floating opts out of the legend's border-notch layout, so it becomes a flex item and
+    /// the block's gap owns its spacing. Flex items ignore float, so nothing floats.
     &__legend {
-      // Floating opts out of the legend's border-notch layout, so it becomes a flex item and
-      // the block's gap owns its spacing. Flex items ignore float, so nothing floats.
       float: inline-start;
       color: var(--rs-fieldset-legend-color, #{rs-token(color-fg)});
       font-size: var(--rs-fieldset-legend-font-size, #{rs-token(font-size-lg)});

@@ -49,7 +49,7 @@ See [component-template.md](./references/component-template.md) for the annotate
 - **A prop that narrows a native attribute** (Alert's `role?: 'alert' | 'status' | 'note'`) is declared in `Props` and flows through `...attrs`, as in Astro.
 - **The default variant emits no modifier class** (decision 4).
 - **Never re-declare a native attribute as a prop** (decision 24). `disabled` on Fieldset flows through `...attrs`.
-- **Consumers own content elements** (decision 5). No title, legend, label or description props, and no snippet props that render content into a component wrapper. The consumer writes the element and applies the element class. `children` is the only snippet unless the Astro original has a named slot.
+- **Consumers own content elements** (decision 5). No title, legend, label or description props, and no snippet props that render content into a component wrapper. The consumer writes the element and applies the element class. `children` is the only snippet unless the Astro original has a named slot (decision 31): Fieldset's `legend` slot becomes a `legend` snippet, rendered as `{#if legend}<legend class="rs-fieldset__legend">{@render legend()}</legend>{/if}` before `children`.
 - **No props that pass wiring into snippets.** A11y links (`for`, `aria-describedby`) are written by the consumer at both ends (decision 14).
 - **Components never render words** (decision 16); decoration such as an `aria-hidden` glyph is fine.
 

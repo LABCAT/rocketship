@@ -213,6 +213,18 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Stack gains `xlarge` (`rs-stack--xlarge` reassigns `--rs-stack-gap` to `space-8`), continuing its two-token steps (`space-2`, `-4`, `-6`, `-8`). Existing gaps are unchanged.
 - Space and the larger legend (decision 27) work together: the legend opens each group, the space closes the one before.
 
+### 31. A named slot only where position is structure
+
+- Extends decision 5. Consumers still write the words, but a component renders the content element through a named slot when the element has a structural position the component must guarantee. A legend names its fieldset only as the first child, so Fieldset takes `<Fragment slot="legend">Billing address</Fragment>` and renders `<legend class="rs-fieldset__legend"><slot name="legend" /></legend>` before the default slot.
+- The slot is optional (a group can be named by `aria-labelledby`); the legend element renders only when the slot is filled, so no empty `<legend>`. A slot, unlike a string prop, takes markup (a heading inside the legend).
+- Alert's title has no structural position, so it stays consumer-written. Svelte: a `legend` snippet guarded by `{#if legend}`.
+
+### 32. SCSS explanations are `///` doc comments above the rule
+
+- An explanatory comment in a style block sits above the rule it explains, as a Sass doc comment (`///`), the SCSS counterpart of a JSDoc block (`rocketship-typescript.mdc`).
+- Never `/* */` or `/** */`: Sass keeps those "loud" comments in the compiled CSS, so they ship to every consumer. `///` and `//` are stripped.
+- Existing `//` comments inside rules (Select's forced-colours note) are aligned when those components are next touched.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -235,7 +247,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Authoring rule: always interpolate, `#{rs-token(space-4)}`, because Sass does not evaluate functions inside custom property values.
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
 - PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
-- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–30 as an unboxed `<fieldset>` group with a consumer-written, floated `rs-fieldset__legend`; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
+- PR #13 (RCL-28): Fieldset rebuilt with decisions 24–32 as an unboxed `<fieldset>` group whose `legend` slot renders a floated `rs-fieldset__legend` as its first child; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

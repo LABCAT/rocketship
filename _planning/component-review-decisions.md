@@ -225,6 +225,50 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Never `/* */` or `/** */`: Sass keeps those "loud" comments in the compiled CSS, so they ship to every consumer. `///` and `//` are stripped.
 - Existing `//` comments inside rules (Select's forced-colours note) are aligned when those components are next touched.
 
+### 33. A prop never fakes a state the platform cannot express in markup
+
+- Extends decision 24. `indeterminate` is a DOM property only script can set (`el.indeterminate = true`); there is no HTML attribute, and `aria-checked` is not allowed on a native checkbox. A prop could only add a class that paints a dash while assistive tech announces "not checked".
+- Checkbox has no `indeterminate` prop and no `--indeterminate` class. `.rs-checkbox:indeterminate` paints the dash, so the look and the announcement always match. Docs show the one-line script; stories cannot show the state without one.
+
+### 34. Choice marks are a `::before` clipped shape painted from a token
+
+- Extends decision 22 (decoration is painted, not added). Checkbox and Radio are one `<input>` with `appearance: none`; the tick, dash and dot are the input's own `::before`, shaped with `clip-path` (tick polygon, dash inset, Radio's circle) and filled with `background: var(--rs-checkbox-mark-color)`, so the mark follows the theme and dark mode.
+- Not an SVG data URI (its colour is a literal and cannot follow the theme, decision 6) and not gradients (they cannot draw a tick).
+- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 3.2:1 dark (graphics need 3:1, WCAG 1.4.11).
+- Forced colours restore `appearance: auto` (decision 22); the native control returns and the pseudo-element is not drawn.
+
+### 35. Choice controls meet target size on their own: 24px
+
+- WCAG 2.2 2.5.8 (AA) needs a 24×24 target unless an exception applies (spacing, an equivalent target such as a `<Label for>`). Restyled controls lose the user-agent exception. A component must pass on its own, not only when composed well: a select-row checkbox in a table may have no visible label and no spacing.
+- Checkbox and Radio are 24px through `--rs-checkbox-size` / `--rs-radio-size`, a literal: it is the component's own geometry and no token states the role (like Select's chevron size and Input's 2px focus outline).
+- Edge `border-width-sm` (1px) in `color-border-control`, matching the text controls; `color-border-control` already meets 3:1 at 1px. Corners `radius-sm` (Checkbox) and `radius-pill` (Radio), each with a hook.
+- AAA (2.5.5, 44×44) is a matter of the row a control sits in, not the box.
+
+### 36. A choice row is `<Field inline>`
+
+- Extends decisions 14 and 19. Checkbox and Radio render no label; the consumer writes `<Label for>` beside the control. `Field` takes `inline?: boolean`, which adds `rs-field--inline`: a two-column grid (`auto 1fr`, `align-items: start`, `column-gap` through `--rs-field-inline-gap`, default `space-2`). The default flex column is unchanged.
+- Hints and errors sit under the Label, not the box: `rs-field__hint` and `rs-field__error` read `grid-column: var(--rs-field-text-column, auto)`, which the modifier sets to `2`. In the default column the property has no effect. No descendant selector (decision 3).
+- The Label's first line centres on the 24px box with `padding-block-start: calc((24px - 1lh) / 2)` set by the inline modifier through a variable Label reads, never a magic number.
+- Option groups compose: `<Fieldset>` with its legend, then `<Stack gap="small">` of `<Field inline>` rows (decision 28). No 44px row minimum by default; AA is met by the box (decision 35).
+
+### 37. A group's hint and error belong to the fieldset
+
+- Extends decisions 5, 14 and 20. A message about a radio group ("Choose a delivery option") is written after the legend as `<p class="rs-fieldset__error" id="…">` (or `rs-fieldset__hint`), and the fieldset points at it with `aria-describedby`, so screen readers announce it on entering the group. The consumer writes both ends.
+- Fieldset gains `__hint` and `__error` with Field's tokens and hooks pattern (`color-muted`; `color-danger-text`, semibold; `margin: 0`). Borrowing `rs-field__error` inside a fieldset would use another block's element.
+- Each radio in an invalid group carries `aria-invalid="true"`, which drives its danger border (decision 20). Words plus colour, never colour alone.
+
+### 38. Form controls change state instantly
+
+- Extends decisions 20–23. Checkbox and Radio have no transitions, like Input, Textarea, Select and the native controls: ticking is a direct action, and a fade only delays the confirmation. No motion also means no `prefers-reduced-motion` opt-out to maintain.
+- State colours are reassigned custom properties (decision 34), which do not interpolate without `@property`; a fade is not worth that machinery.
+- `transition-fast` stays for Button and links. Disabled follows Input: `opacity: 0.55`, `cursor: not-allowed`, and the Label beside it stays readable. At rest the choice controls have `cursor: pointer` (decision 23's affordance).
+
+### 39. Choice stories show rows and groups as consumers build them
+
+- Extends decision 29. `Components/Checkbox` → `States`: `<Field inline>` rows in `<Stack gap="small">` (unchecked with a hint, checked, indeterminate, disabled, disabled checked, a required terms box in error with the "Fields marked * are required." line). `Components/Radio` → `States`: three fieldsets in `<Stack gap="xlarge">` (a group with one option checked, the same group disabled, a group in error through `rs-fieldset__error` and `aria-invalid` on each radio).
+- No `Focused` stories: `autofocus` steals focus on load, an a11y problem in itself; focus is checked by keyboard.
+- A state only script can set (decision 33) is shown with a one-line inline script in the story wrapper, which is also its usage example. Scripts are behaviour, so the no-story-CSS rule is unaffected. If the story host does not run it, the example is left out rather than faked.
+
 ### 40. Table is one `<table>`; scrolling belongs to whoever places it
 
 - Extends decision 22. Table renders `<table {...attrs} class="rs-table">`: `class`, `id`, `aria-*`, modifiers and hooks all land on the semantic element. No component-rendered wrapper (the PR's `rs-table-holder` was a second block that the table's class, modifiers and hooks could not reach, because custom properties do not flow up).
@@ -358,6 +402,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #11 (RCL-32): Field and Label rebuilt with decisions 14–19, `color-danger-text` alias added, stories split into `Components/Field` → `Default` and `Components/Label` → `Markers`. Skill and a11y/bem-scss rules updated. Verified light and dark, axe clean. Astro Input and Textarea added (decisions 20–21). The Svelte skill, `rocketship-svelte.mdc`, the Svelte template and `svelte-port-checklist.md` were rewritten to defer to the Astro skill and decisions 1–21; the old versions sent agents to pre-review templates and open Astro PRs (PR #62 copied unreviewed PR #13).
 - PR #10 (RCL-31): Select rebuilt with decisions 20–23 as a single `<select>` with a painted chevron; `Components/Select` → `States`; the Field story uses it. The Svelte Select (RCL-54) still has a wrapper, SVG icon, sizes, a `placeholder` prop and `:invalid` styling.
 - PR #13 (RCL-28): Fieldset rebuilt with decisions 24–32 as an unboxed `<fieldset>` group whose `legend` slot renders a floated `rs-fieldset__legend` as its first child; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
+- PR #15 (RCL-30): Checkbox and Radio rebuilt with decisions 33–39 as one `<input>` each with a clipped `::before` mark, 24px, in `<Field inline>` rows. Field gains `inline`, Label `--rs-label-offset`, Fieldset `__hint`/`__error`. `Components/Checkbox` → `States` and `Components/Radio` → `States`. Mark on fill measured 5.8:1 light, 3.2:1 dark. Svelte ports of Field inline, Label offset, Fieldset hint/error and Stack xlarge are still to do.
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).

@@ -20,10 +20,11 @@ Copy the shape of these, in Astro (`packages/base/src/components/`) and their Sv
 - **Stack**: layout primitive with a polymorphic `as`
 - **Field**, **Label**, **Fieldset**: form wrapper, caption and group
 - **Input**, **Textarea**, **Select**: form controls
+- **Checkbox**, **Radio**: choice controls (one `<input>`, painted `::before` mark), laid out in `<Field inline>` rows
 - **Table**: structured content; rows style cells through inherited variables, `caption` is a positional slot
 - **Scroll**: layout primitive; a focusable region the consumer names (Astro only so far)
 
-Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. The Svelte Table (`rs-table-holder` wrapper, `compact`/`hover` props, tag selectors) predates decisions 40–54: port it again from the reviewed `Table.astro`, and port `Scroll.astro` alongside it so wide tables can scroll. Never copy their deviations. The Svelte Fieldset in PR #62 copied the unreviewed Astro PR #13 (box, `legend` prop, `disabled` prop, container-query sizing); port it again from the reviewed `Fieldset.astro`.
+Everything else predates the review. Button, Card, Container, Grid and Typography (Astro), and Accordion, Disclosure, Figure, Table and the existing Svelte Field, Label, Input, Textarea and Select, do **not** follow every rule. The Svelte Table (`rs-table-holder` wrapper, `compact`/`hover` props, tag selectors) predates decisions 40–54: port it again from the reviewed `Table.astro`, and port `Scroll.astro` alongside it so wide tables can scroll. Never copy their deviations. The Svelte Fieldset in PR #62 copied the unreviewed Astro PR #13 (box, `legend` prop, `disabled` prop, container-query sizing); port it again from the reviewed `Fieldset.astro`. The Checkbox/Radio review also extended reviewed Astro components the Svelte ports lack: Field's `inline` prop, Label's `--rs-label-offset`, Fieldset's `__hint`/`__error` and Stack's `xlarge` gap. Port those before building Svelte Checkbox or Radio.
 
 **Open Astro PRs are unreviewed.** Never port from one, and never treat one as a reference. If an open Astro PR exists for the component you are building, note its number in your PR and follow the decisions instead.
 

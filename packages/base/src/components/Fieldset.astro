@@ -42,5 +42,16 @@ const { class: className, ...attrs } = Astro.props as Props
       margin: 0;
       padding: 0;
     }
+
+    &__hint {
+      color: var(--rs-fieldset-hint-color, #{rs-token(color-muted)});
+      margin: 0;
+    }
+
+    &__error {
+      color: var(--rs-fieldset-error-color, #{rs-token(color-danger-text)});
+      font-weight: var(--rs-fieldset-error-font-weight, #{rs-token(font-weight-semibold)});
+      margin: 0;
+    }
   }
 </style>

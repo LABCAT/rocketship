@@ -75,6 +75,9 @@ alwaysApply: false
   - Inline components (Label) set no `display`; the parent's layout decides whether they are block or inline.
   - Semantic groups (Fieldset) add no box: no background, border, radius or padding. Native chrome is reset, and a consumer who wants a panel composes a Card.
   - Never nest an element under a pseudo-class (`&:disabled { &__legend {} }` compiles to an invalid selector). Parent state is a block variable or a style query.
+  - A control's state never reaches a sibling (`__input:checked ~ __control`). The control is one element; its decoration is its own pseudo-element, and states reassign its variables.
+  - A layout modifier repositions elements through variables they read (`grid-column: var(--rs-field-text-column, auto)`), and a neighbouring component reads an inherited variable (`--rs-label-offset`), never a descendant selector.
+  - Form controls have no transitions.
   - Element classes the consumer applies set `margin: 0`, and set their own `color` when they sit on a component-owned background.
   - The component is the semantic element (Table renders one `<table>`), never a wrapper that `class`, modifiers and hooks cannot reach. Scrolling is a separate primitive (`Scroll`) the placer wraps around it.
   - Density is padding hooks, never a `compact`/`size` prop; static content has no hover state.

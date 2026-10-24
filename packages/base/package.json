@@ -43,6 +43,8 @@
     "./components/Input": "./src/components/Input.astro",
     "./components/Textarea": "./src/components/Textarea.astro",
     "./components/Select": "./src/components/Select.astro",
+    "./components/Checkbox": "./src/components/Checkbox.astro",
+    "./components/Radio": "./src/components/Radio.astro",
     "./components/Table": "./src/components/Table.astro"
   },
   "files": [

@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import ScrollDefault from './components/ScrollDefault.astro'
+import ScrollHorizontal from './components/ScrollHorizontal.astro'
 import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Scroll'
 import '@labcat2020/rocketship/components/Stack'
 import '@labcat2020/rocketship/components/Table'
 
-const meta: Meta<typeof ScrollDefault> = {
+const meta: Meta<typeof ScrollHorizontal> = {
   title: 'Base/Scroll',
-  component: ScrollDefault,
+  component: ScrollHorizontal,
   parameters: {
     a11y: { disable: false },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof ScrollDefault>
+type Story = StoryObj<typeof ScrollHorizontal>
 
-export const Default: Story = {}
+export const Horizontal: Story = {}

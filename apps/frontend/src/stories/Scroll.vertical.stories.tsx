@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import ScrollBoth from './components/ScrollBoth.astro'
+import ScrollVertical from './components/ScrollVertical.astro'
 import '@labcat2020/rocketship/components/Card'
 import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Scroll'
 import '@labcat2020/rocketship/components/Stack'
 
-const meta: Meta<typeof ScrollBoth> = {
+const meta: Meta<typeof ScrollVertical> = {
   title: 'Base/Scroll',
-  component: ScrollBoth,
+  component: ScrollVertical,
   parameters: {
     a11y: { disable: false },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof ScrollBoth>
+type Story = StoryObj<typeof ScrollVertical>
 
-export const Both: Story = {}
+export const Vertical: Story = {}

@@ -7,9 +7,9 @@ import Table from '@labcat2020/rocketship/components/Table'
 
 <Container size="content" padded>
   <Stack>
-    <Scroll tabindex="0" role="region" aria-labelledby="scroll-default-caption">
+    <Scroll tabindex="0" role="region" aria-labelledby="scroll-horizontal-caption">
       <Table>
-        <caption class="rs-table__caption" id="scroll-default-caption">Deployments by region</caption>
+        <span slot="caption" id="scroll-horizontal-caption">Deployments by region</span>
         <thead>
           <tr>
             <th class="rs-table__column-header" scope="col">Project</th>

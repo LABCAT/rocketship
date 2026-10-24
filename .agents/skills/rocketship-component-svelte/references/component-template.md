@@ -1,6 +1,6 @@
 # Svelte Component Template (annotated)
 
-Based on the reviewed references: Alert (fixed root, variants), Stack (polymorphic `as`) and Label (fixed root, decoration). Replace `<Name>` / `rs-name` throughout.
+Based on the reviewed references: Alert (fixed root, variants), Stack (polymorphic `as`), Label (fixed root, decoration) and Table (positional snippet). Replace `<Name>` / `rs-name` throughout.
 
 On the port path only Astro syntax changes: frontmatter → `<script>`, `Astro.props` → `$props()`, `<slot />` → `{@render children?.()}`, `<style is:global>` → `<style lang="scss">` + `:global { }`. Selectors, declarations and their order come across unchanged.
 
@@ -67,6 +67,17 @@ On the port path only Astro syntax changes: frontmatter → `<script>`, `Astro.p
 ```
 
 The consumer writes every content element and applies the element class. A component may render decoration (a glyph), never words, and never takes ids or wiring for the consumer's elements.
+
+## Positional snippet (Table caption)
+
+An Astro named slot for an element whose position is structure becomes a named snippet guarded by `{#if}`:
+
+```svelte
+<table {...attrs} class={classes}>
+  {#if caption}<caption class="rs-table__caption">{@render caption()}</caption>{/if}
+  {@render children?.()}
+</table>
+```
 
 ## Styles
 

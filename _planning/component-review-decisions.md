@@ -236,7 +236,9 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 ### 41. Scroll is a layout primitive; the consumer names the region
 
 - New `Scroll` (`rs-scroll`) in `Base/`, beside Stack and Container: `<div {...attrs} class="rs-scroll"><slot /></div>`. Built in this PR because Table's overflow example needs it, and reviewed line by line like Stack.
-- `axis?: 'inline' | 'both'`. `inline` is the default (wide tables) and emits no modifier (decision 4). There is no block-only axis: when one `overflow` axis is `auto`, CSS computes `visible` on the other to `auto` (and `clip` to `hidden`), so "block" would either duplicate `both` or silently clip wide content.
+- By default it scrolls sideways when its content is too wide (`overflow-x: auto`), with no modifier (decision 4).
+- `vertical?: boolean` (`rs-scroll--vertical`) also lets it scroll up and down. A boolean because the consumer's question is yes/no ("can this also scroll vertically?"); an `axis="both"` union named the CSS mechanics instead. "Vertical" is a deliberate physical name: it is the direction a person sees, and `block` meant nothing to a reader.
+- Sideways scrolling stays `auto` when vertical is on. Once one axis scrolls, CSS computes `visible` on the other to `auto` (and `clip` to `hidden`), so the only choices are a sideways scrollbar that appears only for too-wide content, or `hidden`, which cuts that content off unreachably. Normal-width content never shows a sideways scrollbar.
 - Vertical scrolling only happens when the box is constrained. That height belongs to whoever places it (decision 13): one opt-in hook, `--rs-scroll-max-block-size`, never assigned by the library, or the parent's own layout. No preset heights (decision 9).
 - No visual styling (border, padding, background). The box belongs to the content; a table's border stays on `rs-table` (decision 40). The only paint is the library focus ring on `:focus-visible`, because the region is focusable.
 - A11y is consumer-written, never implied (decisions 2 and 14): `<Scroll tabindex="0" role="region" aria-labelledby="…">`, labelled by the table's `<caption id>` or a heading. A scrollable region must be keyboard-reachable (Safari does not focus scroll containers on its own) and a focusable region needs a name. The skill and a11y rule make the three attributes mandatory, and stories always show them.
@@ -270,7 +272,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 ### 46. Table element classes exist only where Rocketship has a rule
 
-- Vocabulary: `rs-table__caption`, `rs-table__column-header` (`<th scope="col">`), `rs-table__row-header` (`<th scope="row">`), `rs-table__cell` (`<td>`), `rs-table__body-row`, `rs-table__foot-row`.
+- Vocabulary: `rs-table__caption` (rendered by Table through the `caption` slot, decision 54), `rs-table__column-header` (`<th scope="col">`), `rs-table__row-header` (`<th scope="row">`), `rs-table__cell` (`<td>`), `rs-table__body-row`, `rs-table__foot-row`.
 - Header classes are named for the ARIA role their `scope` produces (`columnheader`, `rowheader`), so the class and the attribute visibly agree. Row headers get a look of their own (weight on the body surface), which `thead th` never covered.
 - `<thead>`, `<tbody>`, `<tfoot>` and header rows get no class: they have no rules. Applies decision 4: an `rs-` class with no rule promises styling the library does not provide. Consumers who want to style a row add their own class; they own the markup. A class such as `__head-row` arrives together with its first real rule (e.g. a sticky header).
 - `__foot-row` (totals) sets `--rs-table-cell-font-weight: semibold`, and cells read `var(--rs-table-cell-font-weight, inherit)`. Rows style their cells only by setting variables the cells inherit (decision 3).
@@ -309,9 +311,15 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - `rs-table__caption` is styled like a `__title` (decision 12): `font-size: inherit`, `font-weight: var(--rs-table-caption-font-weight, semibold)`, `line-height-tight`, its own `color: var(--rs-table-caption-color, color-fg)` (decision 11), `text-align: start` (browsers centre captions).
 - It is the table's accessible name and the usual target of `<Scroll aria-labelledby>`, so it is not muted small print.
-- It sits outside the table's box on the page surface: aligned with the box edge, `padding-block-end: space-2`, no inline padding. Verified in Chromium that the block's `clip-path` does not clip it (top or bottom); Firefox and Safari to verify.
+- It sits outside the table's box on the page surface: aligned with the box edge, `padding-block-end: space-4` (16px, the same as a legend above its first control; 8px read as part of the table), no inline padding. Verified in Chromium that the block's `clip-path` does not clip it (top or bottom); Firefox and Safari to verify.
 - No `caption-side` rule (top is the browser default) and no `--bottom` modifier.
 - When a page heading already names the table, the consumer omits the caption and points `aria-labelledby` at the heading; no prop.
+
+### 54. The caption is a named slot (applies decision 31)
+
+- `<caption>` names its table only as the first child, a structural position like Fieldset's legend. Table renders `<caption class="rs-table__caption"><slot name="caption" /></caption>` before the default slot, only when the slot is filled.
+- Consumers still write the words: `<Fragment slot="caption">Build usage this month</Fragment>`. To label a `<Scroll>`, they slot an element with an id, `<span slot="caption" id="usage-caption">…</span>`, and point `aria-labelledby` at it. Both ends stay in their markup; no id prop (decision 14).
+- Amends decisions 46 and 51, which had the consumer write the `<caption>` element.
 
 ### 52. Table stories: the full anatomy, then stripes; overflow belongs to Scroll
 
@@ -322,9 +330,9 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 ### 53. Scroll's vertical axis works out of the box
 
-- Extends decision 41. `rs-scroll--both` sets `max-block-size: var(--rs-scroll-max-block-size, 70dvh)` and `overflow-y: auto`. Without a limit it never scrolls vertically, a silent no-op, and stories (no CSS) could not show it.
+- Extends decision 41. `rs-scroll--vertical` sets `max-block-size: var(--rs-scroll-max-block-size, 70dvh)` and `overflow-y: auto`. Without a limit it never scrolls vertically, a silent no-op, and stories (no CSS) could not show it.
 - The hook is still never assigned by the library; `70dvh` is only its fallback, so there is still one height and no presets. `dvh` follows the mobile browser bar. No token: a viewport fraction is a layout limit, not a themeable design value.
-- `Base/Scroll` → `Default` (a six-column table labelled by its caption, overflowing inline) and `Both` (an `h2` with an id labelling an `axis="both"` Scroll of Cards). Scroll joins the `Base/` sort order.
+- `Base/Scroll` → `Horizontal` (an eleven-column table labelled by its caption, overflowing sideways) and `Vertical` (an `h2` with an id labelling a `<Scroll vertical>` of Cards), named for what each shows (decision 29). Scroll joins the `Base/` sort order.
 - Sticky table headers inside a vertical Scroll are undecided; they would bring `__head-row` with them (decision 46).
 
 ## Parked for later

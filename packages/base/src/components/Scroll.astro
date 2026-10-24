@@ -1,15 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 
-export type ScrollAxis = 'inline' | 'both'
-
 type Props = {
-  axis?: ScrollAxis
+  vertical?: boolean
   class?: string
 } & HTMLAttributes<'div'>
 
-const { axis = 'inline', class: className, ...attrs } = Astro.props as Props
-const classes = ['rs-scroll', axis !== 'inline' && `rs-scroll--${axis}`, className]
+const { vertical = false, class: className, ...attrs } = Astro.props as Props
+const classes = ['rs-scroll', vertical && 'rs-scroll--vertical', className]
 ---
 
 <div {...attrs} class:list={classes}>
@@ -22,12 +20,16 @@ const classes = ['rs-scroll', axis !== 'inline' && `rs-scroll--${axis}`, classNa
   .rs-scroll {
     overflow-x: auto;
 
+    /// The consumer makes the region focusable (`tabindex="0"`) so keyboard users can scroll it.
     &:focus-visible {
       outline: 2px solid #{rs-token(color-focus-ring)};
       outline-offset: 2px;
     }
 
-    &--both {
+    /// Without a height limit it never scrolls, so the hook falls back to most of the screen.
+    /// Sideways scrolling stays `auto`: it only appears when content is too wide, and the
+    /// alternative (`hidden`) would cut that content off.
+    &--vertical {
       max-block-size: var(--rs-scroll-max-block-size, 70dvh);
       overflow-y: auto;
     }

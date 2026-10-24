@@ -23,6 +23,13 @@ alwaysApply: false
   - Do not overuse roles; prefer native elements over re-creating them with ARIA.
   - Live-region roles (`alert`, `status`) are opt-in for genuinely dynamic content. Statically rendered components have no role by default, a component's name never implies a role, and visual variants never map to live-region roles.
   - Lists styled with `list-style: none` add `role="list"` so Safari/VoiceOver keeps announcing them as lists.
+  - A scrollable region is focusable and named by the consumer: `tabindex="0"`, `role="region"` and `aria-labelledby` (a caption or heading) on `<Scroll>`. Safari does not focus scroll containers on its own. Focus on the region is visible.
+
+- **Tables**
+  - Header cells carry `scope` (`col` or `row`) and the class that matches it (`rs-table__column-header`, `rs-table__row-header`).
+  - The caption is the table's name (Table's `caption` slot, always the first child). When a heading already names the table, omit the caption and point `aria-labelledby` at the heading.
+  - Never make a `<table>` itself scroll; `display: block` strips table semantics. Wrap it in `<Scroll>`.
+  - Static tables have no row hover; striping is a scanning aid that carries no meaning.
 
 - **Headings**
   - Components never hard-code a heading level. The consumer writes the heading at the level the page outline needs and applies the component's `__title` class; the class, not the level, sets the look.

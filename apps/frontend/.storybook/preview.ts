@@ -24,7 +24,7 @@ export default {
             'Stack',
             ['Default', 'Gaps'],
             'Scroll',
-            ['Default', 'Both'],
+            ['Horizontal', 'Vertical'],
             'Typography',
             ['TermsStyleDocument'],
             'Button',

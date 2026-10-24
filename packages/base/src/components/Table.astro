@@ -11,12 +11,21 @@ const classes = ['rs-table', striped && 'rs-table--striped', className]
 ---
 
 <table {...attrs} class:list={classes}>
+  {
+    Astro.slots.has('caption') && (
+      <caption class="rs-table__caption">
+        <slot name="caption" />
+      </caption>
+    )
+  }
   <slot />
 </table>
 
 <style is:global lang="scss">
   @use '../styles/mixins' as *;
 
+  /// `separate` with no spacing looks like `collapse` but honours `border-radius`. Cell
+  /// backgrounds are square, so `clip-path` trims them to the same radius.
   .rs-table {
     border-collapse: separate;
     border-spacing: 0;
@@ -38,7 +47,7 @@ const classes = ['rs-table', striped && 'rs-table--striped', className]
       font-size: inherit;
       font-weight: var(--rs-table-caption-font-weight, #{rs-token(font-weight-semibold)});
       line-height: #{rs-token(line-height-tight)};
-      padding-block-end: #{rs-token(space-2)};
+      padding-block-end: #{rs-token(space-4)};
       text-align: start;
     }
 
@@ -46,6 +55,8 @@ const classes = ['rs-table', striped && 'rs-table--striped', className]
       background: var(--rs-table-stripe-bg, transparent);
     }
 
+    /// Rows style their cells only by setting variables the cells inherit: the last row drops
+    /// its divider against the table border, and a totals row draws one above itself.
     &__body-row:last-child,
     &__foot-row:last-child {
       --rs-table-row-divider-width: 0;

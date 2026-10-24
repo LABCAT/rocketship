@@ -379,6 +379,16 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `Base/Scroll` → `Horizontal` (an eleven-column table labelled by its caption, overflowing sideways) and `Vertical` (an `h2` with an id labelling a `<Scroll vertical>` of Cards), named for what each shows (decision 29). Scroll joins the `Base/` sort order.
 - Sticky table headers inside a vertical Scroll are undecided; they would bring `__head-row` with them (decision 46).
 
+### 55. Tokens are W3C DTCG JSON; the Sass map is generated
+
+- The source of truth is DTCG 2025.10 files in `packages/base/src/tokens/`: `foundation.tokens.json` (shared by both modes), `light.tokens.json`, `dark.tokens.json`, and `rocketship.resolver.json`, whose `mode` modifier selects light or dark (the DTCG Resolver module). Figma exports variables the same way, one file per mode.
+- Names are nested groups (`color` → `danger` → `bg`), joined with `-` for CSS (`--rs-color-danger-bg`). A name that is also a group uses the spec's `$root` key (`color.accent.$root`).
+- `scripts/build-tokens.mjs` generates `$rs-tokens` into `styles/mixins/token-map.scss`. It is committed and published because consumers' Sass cannot read JSON. `build` regenerates it, `pnpm --filter @labcat2020/rocketship tokens` regenerates it by hand, and a test fails when the map and the JSON disagree.
+- Only colours and shadows may differ between modes. An alias is the same in both.
+- Each theme is a complete theme with its own light and dark, never a layer on top of Rocketship. Planet themes are separate packages with the same layout: `packages/theme-<planet>/src/tokens/`.
+- The JSON ships in the package (`@labcat2020/rocketship/tokens/*`) for Figma and other tools.
+- Verified on the switch: every component stylesheet compiles byte-identical; `:root` has the same declarations in a new order, and single-word font family names are now quoted.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -404,7 +414,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #13 (RCL-28): Fieldset rebuilt with decisions 24–32 as an unboxed `<fieldset>` group whose `legend` slot renders a floated `rs-fieldset__legend` as its first child; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - PR #15 (RCL-30): Checkbox and Radio rebuilt with decisions 33–39 as one `<input>` each with a clipped `::before` mark, 24px, in `<Field inline>` rows. Field gains `inline`, Label `--rs-label-offset`, Fieldset `__hint`/`__error`. `Components/Checkbox` → `States` and `Components/Radio` → `States`. Mark on fill measured 5.8:1 light, 3.2:1 dark. Svelte ports of Field inline, Label offset, Fieldset hint/error and Stack xlarge are still to do.
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
-- Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it.
+- Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 
 ## Sequence

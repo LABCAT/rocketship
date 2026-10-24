@@ -289,7 +289,7 @@ const mountControlFixture = async (markup, script = '') => {
   ).href
   const { mount, flushSync } = await import(clientEntry)
 
-  for (const name of ['Field', 'Input', 'Label', 'Select', 'Textarea']) {
+  for (const name of ['Field', 'Fieldset', 'Input', 'Label', 'Select', 'Textarea']) {
     await writeClientComponent(name, loadComponentSource(name), { stable: true })
   }
 
@@ -297,6 +297,7 @@ const mountControlFixture = async (markup, script = '') => {
     `ControlFixture-${randomUUID()}`,
     `<script lang="ts">
   import Field from './Field.svelte'
+  import Fieldset from './Fieldset.svelte'
   import Input from './Input.svelte'
   import Label from './Label.svelte'
   import Select from './Select.svelte'
@@ -319,6 +320,8 @@ ${markup}`,
     input: () => target.querySelector('input'),
     textarea: () => target.querySelector('textarea'),
     select: () => target.querySelector('select'),
+    fieldsets: () => [...target.querySelectorAll('fieldset')],
+    controls: () => [...target.querySelectorAll('input, select, textarea, button')],
   }
 }
 
@@ -364,7 +367,7 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid, Stack an
   )
 })
 
-test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+test('packages/svelte exports Table from the barrel and as a subpath', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
@@ -376,9 +379,10 @@ test('packages/svelte exports Table from the barrel and as a subpath, without an
     './src/components/Table.svelte',
     'packages/svelte must export ./components/Table',
   )
-  assert.ok(
-    !basePkg.exports?.['./components/Table'],
-    'Table is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports['./components/Table'],
+    './src/components/Table.astro',
+    'the Astro package exposes the same subpath, which is the source of truth',
   )
   assert.match(
     barrel,
@@ -1009,7 +1013,12 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
   const source = styleBlockOf('Stack')
   const css = await compileStyleBlock(source)
 
-  for (const selector of ['.rs-stack', '.rs-stack--small', '.rs-stack--large']) {
+  for (const selector of [
+    '.rs-stack',
+    '.rs-stack--small',
+    '.rs-stack--large',
+    '.rs-stack--xlarge',
+  ]) {
     assert.ok(css.includes(selector), `compiled Stack CSS must contain ${selector}`)
   }
 
@@ -1019,6 +1028,11 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
     css,
     /\.rs-stack--large\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-6,/,
     'large is 24px',
+  )
+  assert.match(
+    css,
+    /\.rs-stack--xlarge\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-8,/,
+    'xlarge is 40px, the space decision 30 puts between consecutive fieldsets',
   )
   assert.ok(!css.includes('.rs-stack--medium'), 'medium has no modifier rule')
   assert.match(
@@ -2923,9 +2937,10 @@ test('Select is exported from the barrel, as a subpath, with its prop union type
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
 
   assert.equal(pkg.exports['./components/Select'], './src/components/Select.svelte')
-  assert.ok(
-    !basePkg.exports?.['./components/Select'],
-    'Select is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports['./components/Select'],
+    './src/components/Select.astro',
+    'the Astro package exposes the same subpath, which is the source of truth',
   )
   assert.match(barrel, /export \{ default as Select \} from '\.\/components\/Select\.svelte'/)
   assert.match(barrel, /export type \* from '\.\/components\/Select\.svelte'/)
@@ -3303,4 +3318,259 @@ test('Select styles compile through the shared barrel with container queries and
   const authored = [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex.toLowerCase())
   const invented = authored.filter((hex) => !knownLiterals.has(hex))
   assert.deepEqual(invented, [], 'Select must not introduce hex values of its own')
+})
+
+test('Fieldset is exported from the barrel, as a subpath, with the props type', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Fieldset'],
+    './src/components/Fieldset.svelte',
+    'packages/svelte must export ./components/Fieldset',
+  )
+  assert.equal(
+    basePkg.exports['./components/Fieldset'],
+    './src/components/Fieldset.astro',
+    'the Astro package is the source of truth, so it must export the same subpath',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Fieldset \} from '\.\/components\/Fieldset\.svelte'/,
+    'the barrel must export the Fieldset value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Fieldset\.svelte'/,
+    'the barrel must re-export the Fieldset props type',
+  )
+  assert.match(
+    loadComponentSource('Fieldset'),
+    /export type FieldsetProps = \{/,
+    'Fieldset must export its prop type so a consumer can wrap it',
+  )
+})
+
+test('Fieldset is a fixed fieldset root with no as prop, mirroring the Astro original', () => {
+  const source = loadComponentSource('Fieldset')
+
+  // Decision 1: `as` only where more than one root tag is valid. A fieldset group is only ever
+  // a <fieldset>, so the Svelte port must not carry a tag union the Astro original lacks.
+  assert.doesNotMatch(source, /FieldsetTag|as\?:/, 'a fieldset group has one valid root tag')
+  assert.match(
+    source,
+    /^<fieldset \{\.\.\.attrs\} class=\{classes\}>/m,
+    'the root is the semantic element itself, with consumer attrs spread onto it',
+  )
+  // Decision 24: a prop never re-declares a native attribute, so `disabled` flows through `...attrs`.
+  assert.doesNotMatch(
+    source,
+    /^\s*disabled\??:/m,
+    'disabled is a native fieldset attribute, so it is not re-declared as a prop',
+  )
+})
+
+test('Fieldset renders the native block with no legend of its own by default', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const markup = visible(renderMarkup(Fieldset))
+  assert.match(markup, /^<fieldset class="rs-fieldset">/, 'the root is a real fieldset')
+  assert.doesNotMatch(markup, /<legend/, 'a fieldset with no legend renders no legend element')
+  assert.match(markup, /<\/fieldset>$/)
+})
+
+test('Fieldset renders the legend snippet as the fieldset first child', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const markup = visible(
+    renderMarkup(Fieldset, { legend: snippet('Billing <strong>address</strong>') }),
+  )
+  assert.match(
+    markup,
+    /^<fieldset class="rs-fieldset"><legend class="rs-fieldset__legend">Billing <strong>address<\/strong><\/legend>/,
+    'the legend must be the first child of the fieldset, which is the only position the browser accepts',
+  )
+})
+
+test('Fieldset takes the native disabled attribute through attrs and keeps consumer attrs on the root', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const enabled = renderMarkup(Fieldset, { legend: snippet('Contact') })
+  assert.doesNotMatch(openingTag(enabled, 'fieldset'), /disabled/)
+
+  const disabled = renderMarkup(Fieldset, { legend: snippet('Contact'), disabled: true })
+  assert.match(openingTag(disabled, 'fieldset'), /disabled/, 'disabled is the native attribute')
+
+  const composed = renderMarkup(Fieldset, {
+    legend: snippet('Contact'),
+    name: 'billing',
+    'aria-labelledby': 'billing-heading',
+    class: 'consumer-class',
+  })
+  assert.deepEqual(classList(composed, 'fieldset'), ['rs-fieldset', 'consumer-class'])
+  assert.match(openingTag(composed, 'fieldset'), /name="billing"/)
+  assert.match(
+    openingTag(composed, 'fieldset'),
+    /aria-labelledby="billing-heading"/,
+    'native and ARIA attributes land on the fieldset, so it can be named by an external heading',
+  )
+})
+
+test('a disabled Fieldset disables every nested control from the control components', async () => {
+  const { target } = await mountControlFixture(
+    `<Fieldset legend={undefined} disabled>
+    <Field label="Full name">
+      {#snippet children(control)}
+        <Input {...control} value="Ada Lovelace" />
+      {/snippet}
+    </Field>
+    <Field label="Country">
+      {#snippet children(control)}
+        <Select {...control} value="gb"><option value="gb">United Kingdom</option></Select>
+      {/snippet}
+    </Field>
+    <Field label="Purchase order">
+      {#snippet children(control)}
+        <Textarea {...control} rows="2" value="PO-4471"></Textarea>
+      {/snippet}
+    </Field>
+    <button type="button">Remove contact</button>
+  </Fieldset>`,
+  )
+
+  const [fieldset] = target.querySelectorAll('fieldset')
+  assert.equal(fieldset.disabled, true, 'the fieldset itself must carry the disabled attribute')
+  assert.match(fieldset.className, /\brs-fieldset\b/)
+
+  const controls = [...target.querySelectorAll('input, select, textarea, button')]
+  assert.equal(controls.length, 4, 'the fixture must render one of each control')
+
+  for (const control of controls) {
+    assert.equal(
+      control.matches(':disabled'),
+      true,
+      `${control.tagName.toLowerCase()} must be disabled by the fieldset, with no per-control prop`,
+    )
+    assert.equal(
+      control.hasAttribute('disabled'),
+      false,
+      'the fieldset disables descendants itself, so no component may hard-code the attribute',
+    )
+  }
+})
+
+test('an enabled Fieldset leaves its controls operable, and toggling disabled locks and unlocks them', async () => {
+  const { target, instance, flushSync, window } = await mountControlFixture(
+    `<Fieldset disabled={locked}>
+    <Field label="Full name">
+      {#snippet children(control)}
+        <Input {...control} value="Ada Lovelace" />
+      {/snippet}
+    </Field>
+  </Fieldset>`,
+    `let locked = $state(false)
+  export const lock = () => { locked = true }
+  export const unlock = () => { locked = false }`,
+  )
+
+  const [fieldset] = target.querySelectorAll('fieldset')
+  const input = target.querySelector('input')
+
+  assert.equal(input.matches(':disabled'), false, 'precondition: an enabled group is editable')
+  input.focus()
+  assert.equal(window.document.activeElement, input, 'an enabled control takes focus')
+  // Focus has to be released while the control is still focusable: a disabled control cannot be
+  // blurred, so it would stay the active element and the check below would prove nothing.
+  input.blur()
+  assert.equal(window.document.activeElement.tagName, 'BODY')
+
+  instance.lock()
+  flushSync()
+  assert.equal(fieldset.disabled, true, 'a prop change must reach the native attribute')
+  assert.equal(input.matches(':disabled'), true, 'the nested control is disabled at runtime too')
+
+  input.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a control inside a disabled fieldset cannot take focus, so it cannot be edited',
+  )
+
+  instance.unlock()
+  flushSync()
+  assert.equal(fieldset.disabled, false, 'unlocking must clear the native attribute')
+  assert.equal(input.matches(':disabled'), false)
+  input.focus()
+  assert.equal(window.document.activeElement, input, 'the control becomes focusable again')
+})
+
+test('a disabled Fieldset leaves interactions in its legend alone, and keeps them out of the form data', async () => {
+  const { target, window } = await mountControlFixture(
+    `<form>
+    <Fieldset disabled>
+      {#snippet legend()}
+        Billing contact <button type="button" data-legend-action>Edit</button>
+      {/snippet}
+      <Input aria-label="Account label" name="label" value="Primary" />
+    </Fieldset>
+    <Input aria-label="Separate field" name="separate" value="kept" />
+  </form>`,
+  )
+
+  const legendButton = target.querySelector('[data-legend-action]')
+  assert.equal(
+    legendButton.matches(':disabled'),
+    false,
+    'the HTML spec exempts controls inside the legend from the fieldset disabled state',
+  )
+  legendButton.focus()
+  assert.equal(
+    window.document.activeElement,
+    legendButton,
+    'so an action in the legend stays operable',
+  )
+
+  const form = target.querySelector('form')
+  const submitted = [...new window.FormData(form).keys()]
+  assert.deepEqual(
+    submitted,
+    ['separate'],
+    'a disabled fieldset also drops its controls from the submitted form data',
+  )
+})
+
+test('Fieldset styles compile through the shared barrel and match the Astro rule block', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Fieldset'))
+
+  for (const selector of [
+    '.rs-fieldset',
+    '.rs-fieldset__legend',
+    '.rs-fieldset__hint',
+    '.rs-fieldset__error',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Fieldset CSS must contain ${selector}`)
+  }
+
+  // Decision 25: Fieldset groups, it does not box. The native chrome is reset and nothing paints.
+  assert.match(css, /border:\s*0/, 'the native border is reset rather than styled')
+  assert.match(css, /min-inline-size:\s*0/, 'a fieldset must shrink inside a grid or flex parent')
+  assert.ok(!/background|border-radius|box-shadow/.test(css), 'Fieldset adds no box of its own')
+  assert.ok(!/@container|@media/.test(css), 'the Astro block has no query, so the port has none')
+
+  // Decision 26: float opts the legend out of the border-notch layout so the gap reaches it.
+  assert.match(css, /float:\s*inline-start/, 'the legend floats to become an ordinary flex item')
+  // Decision 27: no disabled legend style; disabled controls dim through their own rules.
+  assert.ok(
+    !/:disabled/.test(css),
+    'a disabled fieldset has no legend rule, so the caption stays readable',
+  )
+
+  assert.deepEqual(
+    [...styleBlockOf('Fieldset').matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Fieldset names tokens only, never a hex literal',
+  )
 })

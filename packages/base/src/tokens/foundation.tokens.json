@@ -1,0 +1,252 @@
+{
+  "$description": "Rocketship tokens shared by light and dark mode.",
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": {
+        "$value": ["Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"]
+      },
+      "mono": {
+        "$value": ["ui-monospace", "SF Mono", "Menlo", "Monaco", "Consolas", "monospace"]
+      }
+    },
+    "size": {
+      "$type": "dimension",
+      "xs": {
+        "$value": {
+          "value": 0.75,
+          "unit": "rem"
+        }
+      },
+      "sm": {
+        "$value": {
+          "value": 0.875,
+          "unit": "rem"
+        }
+      },
+      "md": {
+        "$value": {
+          "value": 1,
+          "unit": "rem"
+        }
+      },
+      "lg": {
+        "$value": {
+          "value": 1.125,
+          "unit": "rem"
+        }
+      },
+      "xl": {
+        "$value": {
+          "value": 1.25,
+          "unit": "rem"
+        }
+      },
+      "2xl": {
+        "$value": {
+          "value": 1.5,
+          "unit": "rem"
+        }
+      },
+      "3xl": {
+        "$value": {
+          "value": 2,
+          "unit": "rem"
+        }
+      }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular": {
+        "$value": 400
+      },
+      "medium": {
+        "$value": 500
+      },
+      "semibold": {
+        "$value": 600
+      },
+      "bold": {
+        "$value": 700
+      }
+    }
+  },
+  "line-height": {
+    "$type": "number",
+    "tight": {
+      "$value": 1.2
+    },
+    "base": {
+      "$value": 1.45
+    },
+    "relaxed": {
+      "$value": 1.7
+    }
+  },
+  "space": {
+    "1": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      }
+    },
+    "2": {
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      }
+    },
+    "3": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      }
+    },
+    "4": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      }
+    },
+    "5": {
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      }
+    },
+    "6": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      }
+    },
+    "7": {
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      }
+    },
+    "8": {
+      "$value": {
+        "value": 40,
+        "unit": "px"
+      }
+    },
+    "$type": "dimension"
+  },
+  "radius": {
+    "$type": "dimension",
+    "sm": {
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      }
+    },
+    "md": {
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      }
+    },
+    "pill": {
+      "$value": {
+        "value": 999,
+        "unit": "px"
+      }
+    }
+  },
+  "border-width": {
+    "$type": "dimension",
+    "$root": {
+      "$value": "{border-width.sm}"
+    },
+    "sm": {
+      "$value": {
+        "value": 1,
+        "unit": "px"
+      }
+    },
+    "md": {
+      "$value": {
+        "value": 2,
+        "unit": "px"
+      }
+    },
+    "lg": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      }
+    }
+  },
+  "transition": {
+    "$type": "duration",
+    "fast": {
+      "$value": {
+        "value": 140,
+        "unit": "ms"
+      }
+    }
+  },
+  "container": {
+    "$type": "dimension",
+    "gutter": {
+      "$value": "{space.4}"
+    },
+    "padding-block": {
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      }
+    },
+    "width": {
+      "wide": {
+        "$value": {
+          "value": 1200,
+          "unit": "px"
+        }
+      },
+      "content": {
+        "sm": {
+          "$value": {
+            "value": 600,
+            "unit": "px"
+          }
+        },
+        "lg": {
+          "$value": {
+            "value": 800,
+            "unit": "px"
+          }
+        }
+      }
+    }
+  },
+  "heading": {
+    "$type": "dimension",
+    "spacing": {
+      "top": {
+        "$value": "{space.7}"
+      },
+      "bottom": {
+        "$value": "{space.3}"
+      }
+    }
+  },
+  "text": {
+    "$type": "dimension",
+    "spacing": {
+      "bottom": {
+        "$value": "{space.4}"
+      }
+    }
+  },
+  "list": {
+    "$type": "dimension",
+    "spacing": {
+      "bottom": {
+        "$value": "{space.4}"
+      }
+    }
+  }
+}

@@ -1,43 +1,50 @@
 ---
-description: Rocketship theming model with default rocketship theme and planet theme packages using CSS variables only.
+description: Rocketship tokens and themes — where token values live, how to change them, light and dark mode, and planet theme packages.
 globs:
-  - "**/*.astro"
-  - "**/*.scss"
+  - "**/src/tokens/**"
+  - "**/styles/variables.scss"
+  - "**/styles/mixins/tokens.scss"
 alwaysApply: false
 ---
 
-# Rocketship Themes
+# Rocketship tokens and themes
 
-- **Default theme**
-  - Implement a “rocketship / space-station” visual identity as the default theme.
-  - Default theme lives in the base package (e.g. `@labcat2020/rocketship`) and provides fallback values for all `--rs-*` variables.
-  - Components should look good and be accessible using only the default theme values.
+Reasons: `_planning/component-review-decisions.md` (decisions 6, 7, 55).
 
-- **Planet themes**
-  - Provide eight additional themes, one per planet (e.g. Mars, Venus, Jupiter).
-  - Each theme is a separate package (e.g. `@rocketship/theme-mars`) that exports **only CSS variable overrides**; no components.
-  - Planet themes override subsets of the `--rs-*` variables to evoke the character of each planet while respecting accessibility constraints.
+## Where tokens live
 
-- **Theming mechanics**
-  - Theming is driven purely by CSS variables (no JS required for the base experience).
-  - Variables follow the `--rs-*` naming convention and are grouped into:
-    - Color tokens (backgrounds, text, borders, accents)
-    - Typography tokens (font families, sizes, weights, line heights)
-    - Layout tokens (spacing, radius, shadows)
-  - Default theme = variable definitions; planet themes = overrides.
+- Token values live in `packages/base/src/tokens/` as W3C DTCG 2025.10 files:
+  - `foundation.tokens.json`: values shared by light and dark (type, spacing, radii, borders, durations).
+  - `light.tokens.json` and `dark.tokens.json`: colours and shadows, the same names in both.
+  - `rocketship.resolver.json`: the `mode` modifier that picks light or dark.
+- Names are nested groups joined with `-`: `color` → `danger` → `bg` is `--rs-color-danger-bg`. A name that is also a group uses `$root`: `color.accent.$root`.
+- An alias is a reference: `"$value": "{space.4}"`. It is the same in light and dark.
+- Only colours and shadows may differ between modes.
 
-- **Light / dark modes**
-  - Modes follow `color-scheme`. Tokens hold both values via `light-dark()`, and `:root` sets `color-scheme: light dark` so the OS preference applies by default.
-  - A theme picker forces a mode by setting `color-scheme` on `:root` (or any subtree); no media queries or root classes are needed.
-  - Shadows keep a distinct shape per mode through layered shadows (see `rocketship-bem-scss.mdc`).
-  - Use the same variable names across modes; only values change.
+## Changing tokens
 
-- **Standalone components**
-  - Components work without importing Rocketship's styles: every token reference carries its default (light and dark) as a fallback. A standalone consumer only needs `:root { color-scheme: light dark; }` for dark mode.
+- Adding, renaming or removing a token needs Shane's approval.
+- Edit the JSON, then run `pnpm --filter @labcat2020/rocketship tokens`. It regenerates `styles/mixins/token-map.scss`.
+- Never edit `token-map.scss` or the token part of `variables.scss` by hand.
+- In the same change, update the Foundations story for the token: `apps/frontend/src/stories/components/ColorsDocument.astro`, `SpacingDocument.astro`, `BordersDocument.astro` or `ShadowsDocument.astro`, aliases included.
+- `variables.scss` holds only custom properties on `:root` and inside `@media`. No class selectors. It is the only Sass file that may `@use` a file inside `styles/mixins/` directly.
 
-- **Consumer experience**
-  - Consumers should be able to:
-    - Use the default theme out of the box (no extra configuration).
-    - Swap in a planet theme by including its CSS and applying the recommended root selector / attribute.
-    - Further customize by overriding `--rs-*` variables at project level without editing Rocketship source.
+## Light and dark
 
+- Modes follow `color-scheme`. `:root` sets `color-scheme: light dark`, so the OS preference applies.
+- Colour pairs compile to `light-dark()`. Shadow pairs compile to layered shadows whose inactive layer is transparent, so each mode keeps its exact shape.
+- A theme picker forces a mode by setting `color-scheme` on `:root` or any subtree.
+- Variable names are the same in both modes; only values change.
+
+## Standalone components
+
+- Components work without Rocketship's styles: every `rs-token()` carries its light and dark default as a fallback.
+- A standalone consumer only needs `:root { color-scheme: light dark; }` for dark mode.
+
+## Themes
+
+- Rocketship ("space-station") is the default theme. It lives in `packages/base` and must look good and pass accessibility on its own.
+- Each of the eight planet themes (Earth, Mars, …) is a complete theme with its own light and dark, never a layer on top of Rocketship.
+- A planet theme is its own package with the same layout: `packages/theme-<planet>/src/tokens/`. It contains tokens only, no components, and uses the same token names.
+- Theming is CSS variables only; the base experience needs no JavaScript.
+- Consumers can use the default theme with no setup, swap in a planet theme by including its CSS, and override any `--rs-*` variable in their own project.

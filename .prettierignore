@@ -3,3 +3,4 @@ pnpm-lock.yaml
 **/storybook-static
 **/.astro
 **/node_modules
+packages/base/src/styles/mixins/token-map.scss

@@ -1,85 +1,95 @@
 ---
-description: BEM naming with rs prefix, SCSS usage, and --rs-* variable conventions for Rocketship components.
+description: Style rules for every Rocketship component, Astro and Svelte — selectors, tokens, variables, the style block, units, text and states.
 globs:
   - "**/*.astro"
+  - "**/*.svelte"
   - "**/*.scss"
 alwaysApply: false
 ---
 
-# Rocketship BEM and SCSS Conventions
+# Rocketship styles
 
-- **BEM block naming**
-  - Use `rs` as the global block prefix to avoid clashes, e.g.:
-    - `.rs-button`, `.rs-button__icon`, `.rs-button--primary`
-    - `.rs-link`, `.rs-link__icon`, `.rs-link--muted`
-  - Elements use `__`, modifiers use `--` exactly as in classic BEM.
+Reasons: `_planning/component-review-decisions.md`.
 
-- **Class responsibilities**
-  - Blocks are reusable components (e.g. `rs-button`, `rs-container`).
-  - Elements are structural parts of a block (e.g. `rs-button__label`, `rs-card__media`).
-  - Modifiers represent visual/behavioral variants (e.g. `rs-button--secondary`, `rs-button--outline`).
+## Naming
 
-- **Tokens**
-  - `$rs-tokens` in `styles/mixins/tokens.scss` is the single source of truth. Each token is a plain value, a `(light: …, dark: …)` pair, or an `(alias: other-token)`.
-  - `variables.scss` is generated from the map with `rs-token-properties`. Edit values in the map, never in `variables.scss`.
-  - Colour pairs compile to `light-dark()`; shadow pairs compile to layered shadows whose inactive mode is transparent, so each mode's shadow keeps its exact shape. Dark mode follows `color-scheme`.
-  - Components reference tokens only through `#{rs-token(name)}`, which falls back to the default value. Never hand-write hex, px or rem token fallbacks. Unknown names fail the build.
-  - A token's name is its contract. Use it only for the role it states: `*-fg` is text on the matching `*-bg`, `*-accent` is a stroke or fill (3:1), `*-text` is text on page surfaces (4.5:1). A role with no token gets a new one (an alias is fine), with the founder's approval.
+- Block `rs-alert`, element `rs-alert__title`, modifier `rs-alert--error`.
+- Every custom property starts with `--rs-`: token `--rs-space-4`, component variable `--rs-alert-bg`.
 
-- **Variables files (e.g. `variables.scss`)**
-  - Must **never** contain class selectors (or any selectors other than `:root` and `@media`).
-  - Only define CSS custom properties on `:root` and inside `@media`. Component-specific tokens and class-based overrides belong in the component that owns them.
+## Selectors
 
-- **SCSS usage**
-  - Prefer SCSS for authoring styles; compile to CSS for consumers.
-  - Use SCSS features for maintainability (nesting, variables, mixins), but **CSS custom properties** remain the public API for theming.
-  - Component styles must be written directly inside the Astro component in a `<style lang="scss">` block.
-  - Do not create separate component `.scss` files when the style belongs to a single component.
-  - In component `<style lang="scss">` blocks, import mixins via the barrel only: `@use '../styles/mixins' as *;`. Do not `@use` individual files under `styles/mixins/` (`functions`, `container-query`, etc.) — `styles/mixins.scss` already `@forward`s them. Direct `@use` of a mixin partial is for other Sass files that must avoid the full barrel (e.g. `variables.scss`).
-  - An explanatory comment sits above the rule it explains as a Sass doc comment (`///`), the SCSS counterpart of a JSDoc block. Never `/* */` or `/** */`: Sass keeps those in the compiled CSS, so they ship to consumers.
-  - Use `media-breakpoint-up` only in Container/layout styles; use container queries for component/typography size changes.
-  - Use `to-rem($px)` (from the mixins barrel) for every `font-size` authored in SCSS (design-token `--rs-font-size-*`, component fallbacks, body copy in `base.scss`, etc.), so sizes are defined from px and emitted as `rem`. Typography mixins already use `to-rem()`. Exception: print styles may use `pt` where appropriate.
-  - Use `px` for all other dimensional values (including spacing, radii, layout dimensions, container-query thresholds, viewport breakpoints, letter-spacing, underline offsets, and underline thickness).
-  - `rem` is for font sizes only. No `em` font sizes; use `font-size: inherit` when an element should follow its context.
-  - Always interpolate token calls, `#{rs-token(space-4)}`: Sass does not evaluate functions inside custom property values.
+- Every compiled selector is one BEM class, plus pseudo-classes or pseudo-elements on that class: `.rs-table__body-row:nth-child(even)`, `.rs-checkbox::before`.
+- Never: descendant `.rs-a .rs-b`, child `.rs-a > *`, sibling `.rs-a ~ .rs-b`, compound `.rs-a--x.rs-a__y`, tag `td`, ID `#x`.
+- Nest with `&__element`, `&--modifier`, `&:state`.
+- Never put an element inside a pseudo-class: `&:disabled { &__legend {} }` is wrong.
+- No class in markup without a rule. The default variant has no modifier class.
 
-- **Declaration order (per rule block)**
-  - **CSS custom properties (`--rs-*`) always first** in the block.
-  - Then reset if needed (e.g. `all: unset` for buttons/controls), then `box-sizing` if you reset.
-  - Then all other properties (layout, appearance, etc.).
+## Change other parts through variables
 
-- **CSS variable conventions**
-  - All design tokens and component-level variables exposed to users should be named with the `--rs-*` prefix, for example:
-    - `--rs-color-bg`, `--rs-color-fg`
-    - `--rs-color-accent`, `--rs-color-border`
-    - `--rs-font-family-sans`, `--rs-font-size-md`
-    - `--rs-space-sm`, `--rs-radius-md`
-  - Component-specific variables should still follow the `--rs-*` prefix and clearly indicate scope (e.g. `--rs-button-bg`, `--rs-button-border-radius`).
+- A modifier or state only reassigns `--rs-*` variables on the block. Elements read them:
+  ```scss
+  &--error { --rs-alert-bg: #{rs-token(color-danger-bg)}; }
+  ```
+- A row styles its cells the same way: `rs-table__foot-row` sets `--rs-table-cell-font-weight`; cells read it.
+- A layout modifier moves elements through a variable: `grid-column: var(--rs-field-text-column, auto)`.
+- A child reacting to parent state: the parent sets `--rs-<block>-<state>`; the child uses `@container style(--rs-<block>-<state>: value)`. Exact values only, never `>` or `<`.
 
-- **No inline styles for design**
-  - Do not use inline `style="..."` attributes for anything related to design or theming.
-  - Use classes + `--rs-*` variables instead so themes and consumers can override styles cleanly.
+## Tokens
 
-- **Selector style (hardcore BEM)**
-  - Every compiled selector is a **single BEM class**, plus pseudo-classes or pseudo-elements on that same class (`:hover`, `:focus-visible`, `::before`).
-  - Never descendant, child, sibling or compound-class selectors (`.rs-a .rs-b`, `.rs-a > *`, `.rs-a--x .rs-a__y`). Never tag or ID selectors in components.
-  - A modifier changes its elements only by reassigning `--rs-*` variables on the block; elements read those variables. An element styles nested elements the same way: a table row sets variables its cells inherit.
-  - Structural pseudo-classes on an element's own class are allowed (`.rs-table__body-row:nth-child(even)`, `:last-child`). Selecting children by tag is not (`tbody tr td`).
-  - Parent state a child must react to (e.g. parent hover) uses a style query: the parent sets a custom property and the child uses `@container style(--rs-x-state: value)`.
-  - Write elements and modifiers nested under their owning block with `&__element` / `&--modifier`. This is source organisation; it compiles flat.
-  - The base class is the default: a default variant has no modifier class or rule, and no class appears in markup without a rule.
+- Write tokens only as `#{rs-token(name)}`, always inside `#{}`: `#{rs-token(space-4)}`.
+- Never write a hex, px or rem value where a token exists. Never write your own `var()` fallback chain.
+- Unknown token name: the build fails. Stop and ask Shane. Never invent a token.
+- No token for the role you need: stop and ask Shane.
+- Use a token only for the role in its name:
+  - `color-*-fg`: text on the matching `color-*-bg`.
+  - `color-*-accent`: strokes and fills. Never text.
+  - `color-*-text`: text on page surfaces (`color-danger-text` for errors).
+  - `color-border`: decorative lines. Control edges use `color-border-control`.
+- Variant names describe the message, token names the palette role: Alert's `--error` reads `danger` tokens. Do not rename either.
+- Never write `prefers-color-scheme` in a component.
 
-- **Component boundaries**
-  - A component never sets its own outer margin; whoever places it owns the spacing (Stack, Grid, the page).
-  - Components never set `font-family`; they inherit the page's typeface.
-  - Inline components (Label) set no `display`; the parent's layout decides whether they are block or inline.
-  - Semantic groups (Fieldset) add no box: no background, border, radius or padding. Native chrome is reset, and a consumer who wants a panel composes a Card.
-  - Never nest an element under a pseudo-class (`&:disabled { &__legend {} }` compiles to an invalid selector). Parent state is a block variable or a style query.
-  - A control's state never reaches a sibling (`__input:checked ~ __control`). The control is one element; its decoration is its own pseudo-element, and states reassign its variables.
-  - A layout modifier repositions elements through variables they read (`grid-column: var(--rs-field-text-column, auto)`), and a neighbouring component reads an inherited variable (`--rs-label-offset`), never a descendant selector.
-  - Form controls have no transitions.
-  - Element classes the consumer applies set `margin: 0`, and set their own `color` when they sit on a component-owned background.
-  - The component is the semantic element (Table renders one `<table>`), never a wrapper that `class`, modifiers and hooks cannot reach. Scrolling is a separate primitive (`Scroll`) the placer wraps around it.
-  - Density is padding hooks, never a `compact`/`size` prop; static content has no hover state.
-  - Use logical properties (`inline-size`, `padding-block-end`, `text-align: start` / `end`).
+## Component variables
 
+Use only these two patterns:
+
+- **Opt-in hook** (spacing, radius, border, type). Never assign it; read it with the token as fallback:
+  `border-radius: var(--rs-alert-border-radius, #{rs-token(radius-md)});`
+- **Variant-owned local** (colours modifiers swap). Assign on the block, reassign in modifiers:
+  `--rs-alert-bg: #{rs-token(color-surface-elevated)};` then `background: var(--rs-alert-bg);`
+  Consumers override a local on the block or one instance, never on bare `:root`.
+
+## The style block
+
+- Styles live in the component file. Astro: `<style is:global lang="scss">`. Svelte: `rocketship-svelte.mdc`. Never a separate `.scss` file.
+- Import only the barrel: `@use '../styles/mixins' as *;`. Never a file inside `styles/mixins/`.
+- Comments: `///` above the rule. Never `/* */` or `/** */`.
+- Order in each rule: `--rs-*` variables, then `all: unset`, then `box-sizing`, then layout, then appearance.
+- No inline `style="…"` or Svelte `style:` for design.
+
+## Units
+
+- Font sizes: `to-rem(18)`. Print styles may use `pt`.
+- Everything else: `px`.
+- Never `em` font sizes. To follow the context, `font-size: inherit`.
+
+## Boundaries
+
+- No outer margin.
+- Never set `font-family`.
+- Inline components (Label) set no `display`. A text container is never a flex row.
+- Logical properties: `inline-size`, `padding-block-end`, `text-align: start`.
+- Density: padding hooks only (`--rs-table-cell-padding-block`). Text never shrinks.
+
+## Elements and text
+
+- Every element class sets `margin: 0`.
+- An element on a component background sets its own `color`.
+- Body text (`__description`, `__hint`, `__error`): only `color`, `font-weight` if needed, `margin: 0`.
+- Titles: `font-size: inherit`, a weight, `line-height: #{rs-token(line-height-tight)}`, `color`, `margin: 0`.
+- `th` and `caption` classes set `text-align: inherit` or `start`.
+
+## States
+
+- Nest states under the block or modifier: `&:hover`, `&:focus-visible`, `&:disabled`.
+- Focus: `&:focus-visible { outline: 2px solid #{rs-token(color-focus-ring)}; outline-offset: 2px; }`.
+- Static content has no hover state.

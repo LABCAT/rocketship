@@ -2,111 +2,17 @@
 @use 'sass:map';
 @use 'sass:meta';
 @use 'sass:string';
-@use 'functions' as *;
+@forward 'token-map';
+@use 'token-map' as *;
 
-// The single source of truth for Rocketship design tokens.
-// `variables.scss` and every component fallback are generated from this map.
+// `$rs-tokens` is generated into `token-map.scss` from the DTCG files in `src/tokens/`.
+// Edit the JSON, never the map. `variables.scss` and every component fallback are built from it.
 //
-// A token value is one of:
+// A token value in the map is one of:
 // - a plain value: `16px`
 // - a light/dark pair: `(light: …, dark: …)`. Colours compile to `light-dark()`;
 //   shadows compile to layered shadows where the inactive mode is transparent.
 // - an alias of another token: `(alias: space-4)`
-$rs-tokens: (
-  color-bg: (light: #f6f8ff, dark: #060b18),
-  color-fg: (light: #131a2f, dark: #f6f7ff),
-  color-surface: (light: #ffffff, dark: #101833),
-  color-surface-elevated: (light: #eef2ff, dark: #18244b),
-  color-border: (light: #c8d2eb, dark: #31416f),
-  color-border-control: (light: #7e89a8, dark: #5d6f9f),
-  color-accent: (light: #2f5bdb, dark: #4f89ff),
-  color-accent-contrast: (light: #ffffff, dark: #f8fbff),
-  color-link: (light: #1f49c6, dark: #87b5ff),
-  color-link-hover: (light: #173ea8, dark: #accdff),
-  color-link-visited: (light: #6a3fc2, dark: #c1a4ff),
-  color-focus-ring: (light: #296dff, dark: #7cc7ff),
-  color-muted: (light: #4f5b7d, dark: #c3cbea),
-
-  color-success-bg: (light: #e6f4ea, dark: #0f2a18),
-  color-success-border: (light: #a7d8b5, dark: #2a5d3a),
-  color-success-fg: (light: #0f2a18, dark: #d9f0df),
-  color-success-accent: (light: #1a7a32, dark: #4caf6a),
-
-  color-warning-bg: (light: #fff8e1, dark: #2e2300),
-  color-warning-border: (light: #f0c36a, dark: #8a6d1b),
-  color-warning-fg: (light: #3d2800, dark: #fff3cf),
-  color-warning-accent: (light: #9a5d00, dark: #ffbf3d),
-
-  color-danger-bg: (light: #ffeef0, dark: #2e0a0f),
-  color-danger-border: (light: #f0a8b0, dark: #8a2a30),
-  color-danger-fg: (light: #3d0a08, dark: #ffe2e4),
-  color-danger-accent: (light: #c5221f, dark: #ff6b6b),
-  color-danger-text: (alias: color-danger-accent),
-
-  font-family-sans: ('Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif),
-  font-family-mono: (ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace),
-
-  font-size-xs: to-rem(12),
-  font-size-sm: to-rem(14),
-  font-size-md: to-rem(16),
-  font-size-lg: to-rem(18),
-  font-size-xl: to-rem(20),
-  font-size-2xl: to-rem(24),
-  font-size-3xl: to-rem(32),
-
-  font-weight-regular: 400,
-  font-weight-medium: 500,
-  font-weight-semibold: 600,
-  font-weight-bold: 700,
-
-  line-height-tight: 1.2,
-  line-height-base: 1.45,
-  line-height-relaxed: 1.7,
-
-  space-1: 4px,
-  space-2: 8px,
-  space-3: 12px,
-  space-4: 16px,
-  space-5: 20px,
-  space-6: 24px,
-  space-7: 32px,
-  space-8: 40px,
-
-  radius-sm: 6px,
-  radius-md: 10px,
-  radius-pill: 999px,
-
-  border-width-sm: 1px,
-  border-width-md: 2px,
-  border-width-lg: 4px,
-  border-width: (alias: border-width-sm),
-
-  shadow-sm: (
-    light: 0 1px 2px rgb(19 26 47 / 0.2),
-    dark: 0 0 0 1px rgb(255 255 255 / 0.2),
-  ),
-  shadow-md: (
-    light: 0 2px 8px rgb(19 26 47 / 0.4),
-    dark: 0 0 8px rgb(255 255 255 / 0.4),
-  ),
-  shadow-lg: (
-    light: 0 8px 24px rgb(19 26 47 / 0.6),
-    dark: 0 0 16px rgb(255 255 255 / 0.6),
-  ),
-
-  transition-fast: 140ms,
-
-  container-gutter: (alias: space-4),
-  container-padding-block: 20px,
-  container-width-wide: 1200px,
-  container-width-content-sm: 600px,
-  container-width-content-lg: 800px,
-
-  heading-spacing-top: (alias: space-7),
-  heading-spacing-bottom: (alias: space-3),
-  text-spacing-bottom: (alias: space-4),
-  list-spacing-bottom: (alias: space-4),
-);
 
 @function -rs-shadow-layers($shadow, $mode) {
   $layers: $shadow;
@@ -129,7 +35,7 @@ $rs-tokens: (
 
 @function -rs-token-value($name) {
   @if not map.has-key($rs-tokens, $name) {
-    @error "Unknown token '#{$name}'. Add it to $rs-tokens in styles/mixins/tokens.scss.";
+    @error "Unknown token '#{$name}'. Add it to src/tokens/*.tokens.json and run `pnpm --filter @labcat2020/rocketship tokens`.";
   }
 
   $value: map.get($rs-tokens, $name);

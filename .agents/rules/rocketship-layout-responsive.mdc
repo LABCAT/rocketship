@@ -1,48 +1,37 @@
 ---
-description: Rocketship layout and responsive rules using media queries for layout only and container queries for component sizing.
+description: Rocketship layout rules — viewport media queries for layout only, container queries for layout changes only, the Container component and scrolling.
 globs:
   - "**/*.astro"
+  - "**/*.svelte"
   - "**/*.scss"
 alwaysApply: false
 ---
 
-# Rocketship Layout and Responsive Rules
+# Rocketship layout
 
-- **Media queries = layout only**
-  - Use viewport media queries **only** for top-level layout and container components.
-  - Follow a Bootstrap-style `media-breakpoint-up` pattern (min-width breakpoints, mobile-first).
-  - `media-breakpoint-up` is reserved for the Container/layout layer only; do not use it in typography or other leaf component sizing.
-  - Do not sprinkle viewport media queries into individual components for sizing; use container queries instead.
+Reasons: `_planning/component-review-decisions.md`.
 
-- **Container component**
-  - Provide a dedicated Container layout block (e.g. `.rs-container`) with width modifiers:
-    - `default` (base max-width from `--rs-container-width-default`, no extra BEM modifier)
-    - `wide` (~1200px)
-    - `content` (~600px / ~800px at `lg`)
-    - `full` (full width)
-  - Optional `.rs-container--padded` (prop `padded` on `<Container>`): uses `inherit` so `--rs-container-padding-block` comes from `:root` (20px / 30px / 40px at base / `md` / `lg`, defined in `variables.scss`). Default `.rs-container` sets `--rs-container-padding-block: 0` so unpadded containers stay flush vertically.
-  - Containers are responsible for:
-    - Applying max-widths at specific breakpoints.
-    - Handling page gutters and horizontal padding (`--rs-container-gutter`, `--rs-container-gutter-left` / `-right`).
-    - Optional vertical inset via `--rs-container-padding-block` (symmetric), or `--rs-container-padding-block-start` / `-end`; resolved with safe-area into `--rs-container-gutter-top` / `-bottom`. The responsive `:root` values for `--rs-container-padding-block` (padded scale) are defined in `variables.scss` with `media-breakpoint-up`.
-  - Media queries in SCSS should live with container/layout code or shared layout tokens (`variables.scss` for `:root` container spacing), not with leaf components.
+## Viewport media queries
 
-- **Breakpoints**
-  - Use a small, explicit set of min-width breakpoints (e.g. `sm`, `md`, `lg`, `xl`) for layout only.
-  - Define layout breakpoints in `px` (Bootstrap-style), not `rem`.
-  - Keep breakpoint logic centralized (e.g. in a SCSS partial) rather than re-declaring values per component.
+- Use `@include media-breakpoint-up(md)` only in Container and layout code, and in `variables.scss` for `:root` spacing. Never in a component.
+- Breakpoints are min-width, mobile-first and in px: `$rs-breakpoints` in `styles/mixins/breakpoints.scss`. Never redeclare them.
 
-- **Scrolling regions**
-  - Overflow scrolling belongs to whoever places the content, like spacing: wrap it in `<Scroll>` (sideways when content is too wide; `vertical` adds up-and-down scrolling, capped by `--rs-scroll-max-block-size`, default `70dvh`). Components never scroll themselves.
+## Container queries
 
-- **Container queries for component layout**
-  - Use **container queries** when a component's layout changes with the space it has (a Grid gaining columns, Card media moving beside text). Do not use them for cosmetic density steps; a component with one layout has one size.
-  - `container-query-up` queries the nearest container of any kind, so consumers can make any element a container (`container-type: inline-size`, e.g. a slide-over panel) and components inside respond to that box. Rocketship's Container is one such container.
-  - Put `container-type` on layout boxes (pages, panels, sidebars), not on leaf components: it stops the element sizing its width to its content.
-  - Body copy never shrinks on small screens.
-  - Avoid tying component size to the viewport; components should behave correctly when reused inside any container context.
+- Only for a layout change: a Grid gaining columns, Card media moving beside the text. Never for size, type or density steps.
+- A component with one layout has one size. Body copy never shrinks.
+- Write `@include container-query-up($rs-cq-md)`. Thresholds `$rs-cq-sm/md/lg` (500/700/900px) live in `styles/mixins/container-query.scss`.
+- It queries the nearest container of any kind. Put `container-type: inline-size` on layout boxes (pages, panels), never on a leaf component.
+- Never tie a component's size to the viewport.
 
-- **General guidance**
-  - When you find yourself adding a viewport media query inside a component, ask whether it should instead be a container-aware rule or belong in a layout/container SCSS file.
-  - Keep layout responsibilities (page structure, container widths, grids) clearly separated from component responsibilities (local styling, variants, tokens).
+## Container component
 
+- `.rs-container` sets max-width and page gutters (`--rs-container-gutter`, `-left`, `-right`).
+- Widths: default (`--rs-container-width-default`, no modifier), `wide` (1200px), `content` (600px, 800px at `lg`), `full`.
+- `padded` adds vertical inset from `--rs-container-padding-block` (20/30/40px at base/`md`/`lg`, set on `:root` in `variables.scss`). Unpadded containers set it to `0`.
+- `--rs-container-padding-block-start` / `-end` override one side. They resolve with the safe area into `--rs-container-gutter-top` / `-bottom`.
+
+## Scrolling
+
+- Scrolling belongs to whoever places the content. Wrap it in `<Scroll>`; components never scroll themselves.
+- `<Scroll>` scrolls sideways when content is too wide. `vertical` adds up-and-down scrolling, capped by `--rs-scroll-max-block-size` (default `70dvh`).

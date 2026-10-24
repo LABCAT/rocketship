@@ -1,209 +1,53 @@
 ---
 import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
 import Table from '@labcat2020/rocketship/components/Table'
-import Typography from '@labcat2020/rocketship/components/Typography'
 ---
 
 <Container size="content" padded>
-  <Typography as="article">
-    <h2>Standard table</h2>
-    <p>
-      A plain table with no modifiers. Borders, header background, and responsive overflow come from
-      the component.
-    </p>
-  </Typography>
-  <Table>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Katherine Johnson</td>
-        <td>Analyst</td>
-        <td>On leave</td>
-      </tr>
-    </tbody>
-  </Table>
-
-  <Typography as="article">
-    <h2>Striped</h2>
-    <p>Even rows use the elevated surface to improve scan-ability.</p>
-  </Typography>
-  <Table striped>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Katherine Johnson</td>
-        <td>Analyst</td>
-        <td>On leave</td>
-      </tr>
-      <tr>
-        <td>Margaret Hamilton</td>
-        <td>Director</td>
-        <td>Active</td>
-      </tr>
-    </tbody>
-  </Table>
-
-  <Typography as="article">
-    <h2>Hover</h2>
-    <p>Rows highlight on hover for pointer-driven contexts.</p>
-  </Typography>
-  <Table hover>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Katherine Johnson</td>
-        <td>Analyst</td>
-        <td>On leave</td>
-      </tr>
-    </tbody>
-  </Table>
-
-  <Typography as="article">
-    <h2>Compact</h2>
-    <p>Reduced cell padding for dense data where vertical space is limited.</p>
-  </Typography>
-  <Table compact>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Katherine Johnson</td>
-        <td>Analyst</td>
-        <td>On leave</td>
-      </tr>
-    </tbody>
-  </Table>
-
-  <Typography as="article">
-    <h2>Compact, striped and hover</h2>
-    <p>Modifiers compose — this table combines all three.</p>
-  </Typography>
-  <Table compact striped hover>
-    <caption>Team roster — compact striped hover variant</caption>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Active</td>
-      </tr>
-      <tr>
-        <td>Katherine Johnson</td>
-        <td>Analyst</td>
-        <td>On leave</td>
-      </tr>
-    </tbody>
-  </Table>
-
-  <Typography as="article">
-    <h2>Overflow safety</h2>
-    <p>
-      Wide tables scroll horizontally inside the holder so layouts remain intact on narrow
-      viewports.
-    </p>
-  </Typography>
-  <Table>
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Role</th>
-        <th scope="col">Team</th>
-        <th scope="col">Location</th>
-        <th scope="col">Status</th>
-        <th scope="col">Projects</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ada Lovelace</td>
-        <td>Engineer</td>
-        <td>Platform</td>
-        <td>London</td>
-        <td>Active</td>
-        <td>Compiler, Runtime</td>
-      </tr>
-      <tr>
-        <td>Grace Hopper</td>
-        <td>Lead</td>
-        <td>Systems</td>
-        <td>New York</td>
-        <td>Active</td>
-        <td>Networking, Storage</td>
-      </tr>
-    </tbody>
-  </Table>
+  <Stack>
+    <Table>
+      <caption class="rs-table__caption">Build usage this month</caption>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Project</th>
+          <th class="rs-table__column-header" scope="col">Owner</th>
+          <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+            Builds
+          </th>
+          <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+            Minutes
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Docs site</th>
+          <td class="rs-table__cell">Platform</td>
+          <td class="rs-table__cell rs-table__cell--numeric">142</td>
+          <td class="rs-table__cell rs-table__cell--numeric">1,284</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Marketing</th>
+          <td class="rs-table__cell">Growth</td>
+          <td class="rs-table__cell rs-table__cell--numeric">87</td>
+          <td class="rs-table__cell rs-table__cell--numeric">642</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Dashboard</th>
+          <td class="rs-table__cell">Product</td>
+          <td class="rs-table__cell rs-table__cell--numeric">213</td>
+          <td class="rs-table__cell rs-table__cell--numeric">2,907</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="rs-table__foot-row">
+          <th class="rs-table__row-header" scope="row">Total</th>
+          <td class="rs-table__cell"></td>
+          <td class="rs-table__cell rs-table__cell--numeric">442</td>
+          <td class="rs-table__cell rs-table__cell--numeric">4,833</td>
+        </tr>
+      </tfoot>
+    </Table>
+  </Stack>
 </Container>

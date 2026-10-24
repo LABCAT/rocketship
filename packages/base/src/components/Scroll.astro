@@ -1,0 +1,35 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export type ScrollAxis = 'inline' | 'both'
+
+type Props = {
+  axis?: ScrollAxis
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { axis = 'inline', class: className, ...attrs } = Astro.props as Props
+const classes = ['rs-scroll', axis !== 'inline' && `rs-scroll--${axis}`, className]
+---
+
+<div {...attrs} class:list={classes}>
+  <slot />
+</div>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-scroll {
+    overflow-x: auto;
+
+    &:focus-visible {
+      outline: 2px solid #{rs-token(color-focus-ring)};
+      outline-offset: 2px;
+    }
+
+    &--both {
+      max-block-size: var(--rs-scroll-max-block-size, 70dvh);
+      overflow-y: auto;
+    }
+  }
+</style>

@@ -170,6 +170,108 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - A hover border reads as focus, sticks on touch screens after a tap, and made Select behave differently from Input and Textarea in the same form.
 - The affordance for Select is `cursor: pointer` and the chevron.
 
+### 40. Table is one `<table>`; scrolling belongs to whoever places it
+
+- Extends decision 22. Table renders `<table {...attrs} class="rs-table">`: `class`, `id`, `aria-*`, modifiers and hooks all land on the semantic element. No component-rendered wrapper (the PR's `rs-table-holder` was a second block that the table's class, modifiers and hooks could not reach, because custom properties do not flow up).
+- Rows, cells and the caption are consumer-written with element classes (decisions 3 and 5), as in GOV.UK Frontend's `govuk-table`.
+- Overflow scrolling is not part of Table. A scrollable region must be focusable and named, and that wiring stays in the consumer's markup (decision 14), so the scroll wrapper is placed by the consumer, the way spacing is placed by Stack (decision 13).
+- Never make the table itself scroll: `overflow` needs `display: block`, which strips table semantics in Safari/VoiceOver.
+- A bordered, rounded table keeps its box on `rs-table` with `border-collapse: separate; border-spacing: 0`; cell backgrounds are clipped to the radius by `clip-path` on the block (decision 48).
+
+### 41. Scroll is a layout primitive; the consumer names the region
+
+- New `Scroll` (`rs-scroll`) in `Base/`, beside Stack and Container: `<div {...attrs} class="rs-scroll"><slot /></div>`. Built in this PR because Table's overflow example needs it, and reviewed line by line like Stack.
+- `axis?: 'inline' | 'both'`. `inline` is the default (wide tables) and emits no modifier (decision 4). There is no block-only axis: when one `overflow` axis is `auto`, CSS computes `visible` on the other to `auto` (and `clip` to `hidden`), so "block" would either duplicate `both` or silently clip wide content.
+- Vertical scrolling only happens when the box is constrained. That height belongs to whoever places it (decision 13): one opt-in hook, `--rs-scroll-max-block-size`, never assigned by the library, or the parent's own layout. No preset heights (decision 9).
+- No visual styling (border, padding, background). The box belongs to the content; a table's border stays on `rs-table` (decision 40). The only paint is the library focus ring on `:focus-visible`, because the region is focusable.
+- A11y is consumer-written, never implied (decisions 2 and 14): `<Scroll tabindex="0" role="region" aria-labelledby="…">`, labelled by the table's `<caption id>` or a heading. A scrollable region must be keyboard-reachable (Safari does not focus scroll containers on its own) and a focusable region needs a name. The skill and a11y rule make the three attributes mandatory, and stories always show them.
+
+### 42. `striped` is a boolean that sets a variable; body rows read it
+
+- `striped?: boolean` emits `rs-table--striped`. Independent display options that combine are booleans; mutually exclusive sets are a `variant` union (Alert). Off is the default and emits no class (decision 4).
+- Decision 3 holds with no exceptions: the modifier never reaches into rows. It assigns the variant-owned local `--rs-table-stripe-bg: #{rs-token(color-surface-elevated)}`, and `.rs-table__body-row:nth-child(even)` reads `var(--rs-table-stripe-bg, transparent)`. A structural pseudo-class on the element's own class is allowed.
+- Stripes belong to body rows only, so the row class is `rs-table__body-row`. A generic `__row` would stripe a second header row. (Header rows get no class; decision 46.)
+- Stripe/surface contrast (about 1.06) is fine because striping is a scanning aid that carries no meaning (WCAG 1.4.11 does not apply). Body text keeps 4.5:1 on both surfaces.
+
+### 43. Table has one density; padding hooks make it denser
+
+- Applies decisions 9 and 21 to Table: no `compact` prop, no `--rs-table-compact-padding-*` hooks. A density step is cosmetic, and a component with one layout has one size.
+- Header and body cells read `--rs-table-cell-padding-block` (default `space-2`) and `--rs-table-cell-padding-inline` (default `space-3`). Consumers set them on the table, a section, or `:root` for a dense app.
+- Cell text inherits the page size (decisions 11 and 17). Dense means tighter spacing, never smaller type.
+
+### 44. Static tables have no hover state
+
+- Extends decision 23 beyond form controls: a hover highlight promises an action. On a static table nothing happens on click, the highlight sticks on touch after a tap, and it matched the stripe colour, so it disappeared on striped rows.
+- No `hover` prop and no `--rs-table-hover-bg`. Striping is the place-keeping aid, and it works without a pointer.
+- Interactive rows (selection, a row that opens a record) make a data table: focus states, `aria-selected`, keyboard handling, highlight driven by focus and selection. That is a separate JS component and a novel pattern, hand-written first under the skill's tier rule.
+
+### 45. The table is its own box
+
+- The surface, border and radius live on `rs-table` itself; the box is the default look (Alert, Card), not a `bordered` modifier. An open GOV.UK-style table is `--rs-table-border-width: 0` plus `--rs-table-bg: transparent`.
+- `border-collapse: separate; border-spacing: 0`, because `collapse` ignores `border-radius`. Cells draw only their dividers, so the look matches `collapse`.
+- Borders and dividers use `color-border`: they are decorative hairlines, and structure is carried by the markup (`th`, `scope`). WCAG 1.4.11 applies to control edges (`color-border-control`), not table rules (decision 18).
+- `inline-size: 100%` and `text-align: start` (logical, correct in RTL). No `font-family`, `font-size` or `line-height`: the table inherits the page (decisions 8 and 11).
+- Opt-in hooks only: `--rs-table-bg`, `--rs-table-color`, `--rs-table-border-width`, `--rs-table-border-color`, `--rs-table-border-radius`.
+
+### 46. Table element classes exist only where Rocketship has a rule
+
+- Vocabulary: `rs-table__caption`, `rs-table__column-header` (`<th scope="col">`), `rs-table__row-header` (`<th scope="row">`), `rs-table__cell` (`<td>`), `rs-table__body-row`, `rs-table__foot-row`.
+- Header classes are named for the ARIA role their `scope` produces (`columnheader`, `rowheader`), so the class and the attribute visibly agree. Row headers get a look of their own (weight on the body surface), which `thead th` never covered.
+- `<thead>`, `<tbody>`, `<tfoot>` and header rows get no class: they have no rules. Applies decision 4: an `rs-` class with no rule promises styling the library does not provide. Consumers who want to style a row add their own class; they own the markup. A class such as `__head-row` arrives together with its first real rule (e.g. a sticky header).
+- `__foot-row` (totals) sets `--rs-table-cell-font-weight: semibold`, and cells read `var(--rs-table-cell-font-weight, inherit)`. Rows style their cells only by setting variables the cells inherit (decision 3).
+- `__caption` is shared vocabulary with Figure (decision 5).
+
+### 47. Rows switch dividers by variable; cells draw them
+
+- Header cells, row headers and cells draw `border-block-end` from `var(--rs-table-row-divider-width, <table border width>)` and `border-block-start` from `var(--rs-table-row-divider-start-width, 0)`, both in the table's border colour.
+- `__body-row:last-child` and `__foot-row:last-child` set `--rs-table-row-divider-width: 0` so the last line does not double the table border. `__foot-row:first-child` sets the start width, so a totals row draws its own line above it. Replaces `tbody tr:last-child td` (decision 3), and row headers in the last row now lose their line too.
+- Dividers reuse `--rs-table-border-width` / `--rs-table-border-color`. No `--rs-table-head-border-width`: the header background already separates it.
+- The divider widths are internal locals set by row pseudo-classes, not documented hooks; `--rs-table-row-divider-width: 0` on a table removes all row dividers.
+- Accepted edge: several `<tbody>` groups lose the divider between groups.
+
+### 48. Corners are clipped on the block, not rounded per cell
+
+- `border-radius` rounds only the table's own box; cell backgrounds (header, stripes) paint square corners over it.
+- `.rs-table` sets `clip-path: inset(0 round var(--rs-table-border-radius, #{rs-token(radius-md)}))`, reading the same hook as `border-radius`, so the clip and the radius always match.
+- No per-cell corner radii: they would need row-set corner variables, four cell rules and a `calc()` inner radius, plus a case for tables without `<thead>`.
+- Accepted cost: anything painted outside the table's box is clipped. The table has no shadow, and focus rings of links in cells sit inside the cell padding.
+
+### 49. Header cells cancel browser defaults and share one weight
+
+- `__column-header` and `__row-header` set `text-align: inherit` (browsers centre `th`), their own `color` from `--rs-table-color` (decision 11), and `font-weight: var(--rs-table-header-font-weight, semibold)`. The class, not the tag, is the look (decision 12).
+- `__column-header` alone gets the header background, `var(--rs-table-head-bg, #{rs-token(color-surface-elevated)})`, and `vertical-align: bottom`, so wrapped and single-line headers share a baseline above the data. Row headers sit on the body surface and stripes.
+- No `white-space: nowrap`: long labels wrap instead of forcing the table wider than its content.
+- No `--rs-table-head-color`: `color-fg` keeps 4.5:1 on both surfaces. The header and stripes share `color-surface-elevated` (the same raised-surface role, decision 18); a separate token only if a theme needs them to differ.
+
+### 50. Cells read their own colour; numeric columns are an element modifier
+
+- `__cell` sets `color: var(--rs-table-color, #{rs-token(color-fg)})` (decision 11) and `font-weight: var(--rs-table-cell-font-weight, inherit)` (decision 46). No `text-align`: `td` inherits the table's `start`.
+- `__cell` and `__row-header` use `vertical-align: top`, so short cells line up with the first line of a wrapped neighbour.
+- `rs-table__cell--numeric` and `rs-table__column-header--numeric` set `text-align: end` and `font-variant-numeric: tabular-nums`, so place values line up and the header sits over its figures. Plain cells stay the default (decision 4); each selector is one class (decision 3). Same as GOV.UK's `govuk-table__cell--numeric`.
+- No other alignment modifiers; consumers own their own classes for those.
+
+### 51. The caption is the table's title
+
+- `rs-table__caption` is styled like a `__title` (decision 12): `font-size: inherit`, `font-weight: var(--rs-table-caption-font-weight, semibold)`, `line-height-tight`, its own `color: var(--rs-table-caption-color, color-fg)` (decision 11), `text-align: start` (browsers centre captions).
+- It is the table's accessible name and the usual target of `<Scroll aria-labelledby>`, so it is not muted small print.
+- It sits outside the table's box on the page surface: aligned with the box edge, `padding-block-end: space-2`, no inline padding. Verified in Chromium that the block's `clip-path` does not clip it (top or bottom); Firefox and Safari to verify.
+- No `caption-side` rule (top is the browser default) and no `--bottom` modifier.
+- When a page heading already names the table, the consumer omits the caption and points `aria-labelledby` at the heading; no prop.
+
+### 52. Table stories: the full anatomy, then stripes; overflow belongs to Scroll
+
+- `Components/Table` → `Default` (`Table.stories.tsx`, `TableDefault.astro`): one table showing the whole vocabulary: caption, column headers (one `--numeric`), body rows with a row header, numeric cells, and a `<tfoot>` totals row. It doubles as the copy-paste reference.
+- `Components/Table` → `Striped` (`Table.striped.stories.tsx`, `TableStriped.astro`): six rows, so the stripes read. One aspect per file, like `Stack` / `Stack.gaps`.
+- The overflow example moves to `Base/Scroll`; Table stories import only Table, Container and Stack.
+- Content is real data in the library's voice, with figures and a total (monthly build usage: Project, Owner, Builds, Minutes; caption "Build usage this month"). The PR's roster of historical people had no figures for `--numeric` and no natural total.
+
+### 53. Scroll's vertical axis works out of the box
+
+- Extends decision 41. `rs-scroll--both` sets `max-block-size: var(--rs-scroll-max-block-size, 70dvh)` and `overflow-y: auto`. Without a limit it never scrolls vertically, a silent no-op, and stories (no CSS) could not show it.
+- The hook is still never assigned by the library; `70dvh` is only its fallback, so there is still one height and no presets. `dvh` follows the mobile browser bar. No token: a viewport fraction is a layout limit, not a themeable design value.
+- `Base/Scroll` → `Default` (a six-column table labelled by its caption, overflowing inline) and `Both` (an `h2` with an id labelling an `axis="both"` Scroll of Cards). Scroll joins the `Base/` sort order.
+- Sticky table headers inside a vertical Scroll are undecided; they would bring `__head-row` with them (decision 46).
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

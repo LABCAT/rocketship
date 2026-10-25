@@ -1,0 +1,55 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & HTMLAttributes<'figure'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<figure {...attrs} class:list={['rs-figure', className]}>
+  <slot />
+  {
+    Astro.slots.has('caption') && (
+      <figcaption class="rs-figure__caption">
+        <slot name="caption" />
+      </figcaption>
+    )
+  }
+</figure>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  /// The figure is as wide as its media, so the caption sits under the image rather than
+  /// across the column.
+  .rs-figure {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rs-figure-gap, #{rs-token(space-3)});
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    margin: 0;
+
+    /// Only max sizes are set, so the aspect ratio holds: no upscaling, and a tall image stops
+    /// at 80% of the viewport without cropping.
+    &__media {
+      display: block;
+      inline-size: auto;
+      block-size: auto;
+      max-inline-size: 100%;
+      max-block-size: var(--rs-figure-media-max-block-size, 80svh);
+      border-radius: var(--rs-figure-media-radius, #{rs-token(radius-md)});
+    }
+
+    /// `contain: inline-size` keeps a long caption from widening the figure, so it wraps to the
+    /// media's width.
+    &__caption {
+      color: var(--rs-figure-caption-color, #{rs-token(color-muted)});
+      contain: inline-size;
+      margin: 0;
+      text-align: start;
+    }
+  }
+</style>

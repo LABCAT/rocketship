@@ -1,0 +1,42 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import FileInput from '@labcat2020/rocketship/components/FileInput'
+import Label from '@labcat2020/rocketship/components/Label'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <p>Fields marked * are required.</p>
+    <Field>
+      <Label for="file-notes">Release notes</Label>
+      <FileInput
+        id="file-notes"
+        name="notes"
+        accept="application/pdf"
+        multiple
+        aria-describedby="file-notes-hint"
+      />
+      <p class="rs-field__hint" id="file-notes-hint">PDF only. You can attach several files.</p>
+    </Field>
+    <Field>
+      <Label for="file-certificate" required>Signing certificate</Label>
+      <FileInput
+        id="file-certificate"
+        name="certificate"
+        accept=".pem"
+        required
+        aria-invalid="true"
+        aria-describedby="file-certificate-error"
+      />
+      <p class="rs-field__error" id="file-certificate-error">
+        Add a .pem certificate to sign the build.
+      </p>
+    </Field>
+    <Field>
+      <Label for="file-artifact">Build artifact</Label>
+      <FileInput id="file-artifact" name="artifact" disabled />
+    </Field>
+  </Stack>
+</Container>

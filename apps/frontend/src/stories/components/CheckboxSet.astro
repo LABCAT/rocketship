@@ -1,0 +1,54 @@
+---
+import Checkbox from '@labcat2020/rocketship/components/Checkbox'
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Fieldset from '@labcat2020/rocketship/components/Fieldset'
+import Label from '@labcat2020/rocketship/components/Label'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Fieldset>
+    <Fragment slot="legend">Notify me about</Fragment>
+    <Stack gap="small">
+      <Field inline>
+        <Checkbox id="notify-all" name="notify" value="all" />
+        <Label for="notify-all">All topics</Label>
+      </Field>
+      <Field inline>
+        <Checkbox id="notify-builds" name="notify" value="builds" checked />
+        <Label for="notify-builds">Failed builds</Label>
+      </Field>
+      <Field inline>
+        <Checkbox id="notify-deployments" name="notify" value="deployments" />
+        <Label for="notify-deployments">Finished deployments</Label>
+      </Field>
+      <Field inline>
+        <Checkbox
+          id="notify-security"
+          name="notify"
+          value="security"
+          checked
+          disabled
+          aria-describedby="notify-security-hint"
+        />
+        <Label for="notify-security">Security alerts</Label>
+        <p class="rs-field__hint" id="notify-security-hint">We always send these.</p>
+      </Field>
+      <Field inline>
+        <Checkbox
+          id="notify-usage"
+          name="notify"
+          value="usage"
+          disabled
+          aria-describedby="notify-usage-hint"
+        />
+        <Label for="notify-usage">Usage reports</Label>
+        <p class="rs-field__hint" id="notify-usage-hint">Available on the Pro plan.</p>
+      </Field>
+    </Stack>
+  </Fieldset>
+  <script is:inline>
+    document.getElementById('notify-all').indeterminate = true
+  </script>
+</Container>

@@ -389,11 +389,54 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - The JSON ships in the package (`@labcat2020/rocketship/tokens/*`) for Figma and other tools.
 - Verified on the switch: every component stylesheet compiles byte-identical; `:root` has the same declarations in a new order, and single-word font family names are now quoted.
 
+### 56. Figure is a fixed `<figure>` (applies decision 1)
+
+- No `as` prop. `figure` is the only semantically valid root.
+- PR #5's `as="div"` existed only to swap `<figcaption>` for `<div role="note">`, which decision 2 forbids. Content that is not a figure does not use Figure.
+- The Svelte-first Figure (PR #51) still has `as`, and must be re-ported once the Astro Figure lands.
+
+### 57. The caption is a named slot, rendered last (applies decisions 31 and 54)
+
+- `<figcaption>` names its figure only as the first or last child, a structural position. Figure renders `<figcaption class="rs-figure__caption"><slot name="caption" /></figcaption>` after the default slot, only when the slot is filled.
+- No `caption` string prop. Consumers write the words and may use markup (`<cite>`, links).
+- No position option, as in decision 51. Media sits directly in the figure: no `__media` wrapper (decision 5).
+
+### 58. Media carries a consumer-written element class (applies decisions 3 and 5)
+
+- Consumers write `<img class="rs-figure__media">` (or on a `<video>`, `<svg>`, or a `<picture>`'s `<img>`). One rule: `display: block; inline-size: auto; block-size: auto; max-inline-size: 100%; max-block-size: var(--rs-figure-media-max-block-size, 80svh)`.
+- Media never upscales past its natural size, and a tall image never exceeds 80% of the viewport. Only max sizes are set, so the aspect ratio holds with no cropping or `object-fit`. Set the hook to `none` to lift the cap.
+- No descendant selectors for media types, as PR #5 had. A Table inside a Figure needs no class; it is already full width.
+
+### 59. Media corners are rounded by default; no bordered variant
+
+- `rs-figure__media` sets `border-radius: var(--rs-figure-media-radius, rs-token(radius-md))`, matching Table, Card and Alert. Set the variable to `0` to square it.
+- `border-radius` clips an `<img>` directly, so no `overflow: hidden` wrapper is needed.
+- No `bordered` variant until something needs it; borders look wrong on transparent images and diagrams. If added, it is a boolean that sets a variable (decision 42).
+
+### 60. The caption reads like a hint (applies decisions 8, 9, 11 and 17)
+
+- `rs-figure__caption` inherits font size and line height, takes `color: var(--rs-figure-caption-color, rs-token(color-muted))`, `margin: 0` and `text-align: start` (some hosts centre figcaptions).
+- No `font-family`, no font-size hook and no container-query size step.
+
+### 61. Figure is a flex column with no outer margin (applies decisions 5, 9 and 13)
+
+- `rs-figure`: `display: flex; flex-direction: column; gap: var(--rs-figure-gap, rs-token(space-3)); margin: 0`. The gap owns media-to-caption spacing; `margin: 0` cancels the browser's `1em 40px`.
+- `space-3` is tighter than Table's caption spacing (`space-4`) so a caption reads as attached to its image.
+- No `container-type`: Figure's layout never changes with width.
+- The figure is as wide as its media: `inline-size: fit-content; max-inline-size: 100%`. The caption sets `contain: inline-size`, so it wraps to the image's width instead of stretching the figure (Chrome 105, Safari 15.4, Firefox 101). Tall images are capped by default, so consumers don't each have to fix a 1000px portrait.
+
+### 62. Figure stories: one `Default`, a landscape and a portrait photo
+
+- `Components/Figure` → `Default` (`Figure.stories.tsx`, `FigureDefault.astro`) shows two figures: Artemis II on Pad 39B at sunset (landscape) and Apollo 11 from the launch-tower camera (portrait). Photos match the library's theme.
+- Images are NASA public domain, committed as WebP in `apps/frontend/src/stories/assets/` with `CREDITS.md`. Each `<img>` has real `alt`, `width` and `height`; the caption adds what alt does not, with the credit in `<cite>`.
+- Story images are served by Storybook's `staticDirs` at `/story-assets/`, not imported: Astro image imports give dev-only `/@fs/` paths in the static build.
+- PR #5's no-caption, rich-caption, table and prose stories are dropped: an empty slot teaches nothing, a table already has its caption, and prose is parked.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
 - **Card review:** stories use `<p class="rs-card__title">`; titles should be headings.
-- **Typography mixins:** `lists.scss` uses tag and child selectors (`ol > li > ul`). Decide deliberately whether prose is an exception to rule 3.
+- **Typography mixins:** `lists.scss` uses tag and child selectors (`ol > li > ul`). Decide deliberately whether prose is an exception to rule 3. Prose `figure`/`figcaption` (Markdown output, no classes) waits on the same decision; RCL-11 leaves Typography untouched.
 - **Alert:** once the role goes, "error" is conveyed by colour plus title text only. Decide on a non-colour signal.
 - **Style queries:** check current browser support (Firefox) before making rule 3's style-query clause binding. Resolved 2026-10-24: Firefox 151 (19 May 2026) shipped `@container style()` for custom properties, completing cross-browser support (Chrome/Edge 111, Safari 18). The clause is binding for exact-value matches only; range syntax (`>`, `<`) is still behind a Firefox flag and is not allowed.
 - **Svelte:** `Alert.svelte` has the same issues, and `packages/svelte/test/components.test.mjs` asserts the prop-beats-slot title behaviour. The `@labcat2020/rocketship/styles/mixins` subpath export is needed for `rs-token()` to reach Svelte.
@@ -414,6 +457,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #13 (RCL-28): Fieldset rebuilt with decisions 24–32 as an unboxed `<fieldset>` group whose `legend` slot renders a floated `rs-fieldset__legend` as its first child; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - PR #15 (RCL-30): Checkbox and Radio rebuilt with decisions 33–39 as one `<input>` each with a clipped `::before` mark, 24px, in `<Field inline>` rows. Field gains `inline`, Label `--rs-label-offset`, Fieldset `__hint`/`__error`. `Components/Checkbox` → `States` and `Components/Radio` → `States`. Mark on fill measured 5.8:1 light, 3.2:1 dark. Svelte ports of Field inline, Label offset, Fieldset hint/error and Stack xlarge are still to do.
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
+- RCL-11: Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` with two NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and needs porting; its README row still says Svelte-first.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

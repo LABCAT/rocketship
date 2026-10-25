@@ -46,7 +46,8 @@
     "./components/Select": "./src/components/Select.astro",
     "./components/Checkbox": "./src/components/Checkbox.astro",
     "./components/Radio": "./src/components/Radio.astro",
-    "./components/Table": "./src/components/Table.astro"
+    "./components/Table": "./src/components/Table.astro",
+    "./components/Figure": "./src/components/Figure.astro"
   },
   "files": [
     "dist",

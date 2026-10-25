@@ -27,6 +27,7 @@ const config: StorybookConfig & {
 } = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-a11y'],
+  staticDirs: [{ from: '../src/stories/assets', to: '/story-assets' }],
   framework: {
     name: '@storybook-astro/framework',
     options: { integrations: [] },

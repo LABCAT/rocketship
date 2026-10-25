@@ -425,10 +425,12 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - No `container-type`: Figure's layout never changes with width.
 - The figure is as wide as its media: `inline-size: fit-content; max-inline-size: 100%`. The caption sets `contain: inline-size`, so it wraps to the image's width instead of stretching the figure (Chrome 105, Safari 15.4, Firefox 101). Tall images are capped by default, so consumers don't each have to fix a 1000px portrait.
 
-### 62. Figure stories: one `Default`, a landscape and a portrait photo
+### 62. Figure stories: `Default` is landscape; `Portrait` is its own aspect
 
-- `Components/Figure` → `Default` (`Figure.stories.tsx`, `FigureDefault.astro`) shows two figures: Artemis II on Pad 39B at sunset (landscape) and Apollo 11 from the launch-tower camera (portrait). Photos match the library's theme.
+- `Components/Figure` → `Default` (`Figure.stories.tsx`, `FigureDefault.astro`): Artemis II on Pad 39B at sunset, the everyday landscape case.
+- `Components/Figure` → `Portrait` (`Figure.portrait.stories.tsx`, `FigurePortrait.astro`): Apollo 11 from the launch-tower camera. It shows behaviour the landscape does not, the 80svh cap and the caption wrapping to the image's width, so it is a second aspect, not a state (decision 29). Photos match the library's theme.
 - Images are NASA public domain, committed as WebP in `apps/frontend/src/stories/assets/` with `CREDITS.md`. Each `<img>` has real `alt`, `width` and `height`; the caption adds what alt does not, with the credit in `<cite>`.
+- A `<cite>` (or any inline element) moved to its own line needs `{' '}` at the end of the line before it: Astro drops the line break instead of rendering a space.
 - Story images are served by Storybook's `staticDirs` at `/story-assets/`, not imported: Astro image imports give dev-only `/@fs/` paths in the static build.
 - PR #5's no-caption, rich-caption, table and prose stories are dropped: an empty slot teaches nothing, a table already has its caption, and prose is parked.
 
@@ -457,7 +459,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #13 (RCL-28): Fieldset rebuilt with decisions 24–32 as an unboxed `<fieldset>` group whose `legend` slot renders a floated `rs-fieldset__legend` as its first child; `Components/Fieldset` → `Default`, groups in an xlarge Stack. Stack (Astro) gains `xlarge`; the Svelte Stack still has three gaps. Astro and Svelte skills, a11y/bem-scss/svelte rules and the port checklist updated. The Svelte Fieldset (PR #62) still copies the unreviewed design.
 - PR #15 (RCL-30): Checkbox and Radio rebuilt with decisions 33–39 as one `<input>` each with a clipped `::before` mark, 24px, in `<Field inline>` rows. Field gains `inline`, Label `--rs-label-offset`, Fieldset `__hint`/`__error`. `Components/Checkbox` → `States` and `Components/Radio` → `States`. Mark on fill measured 5.8:1 light, 3.2:1 dark. Svelte ports of Field inline, Label offset, Fieldset hint/error and Stack xlarge are still to do.
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
-- RCL-11: Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` with two NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and needs porting; its README row still says Svelte-first.
+- PR #64 (RCL-11): Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` (landscape) and `Portrait`, with NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and needs porting; its README row still says Svelte-first.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 

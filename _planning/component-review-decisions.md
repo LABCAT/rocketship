@@ -131,7 +131,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 ### 18. A token's name is its contrast contract; use one only for the role it names
 
-- `color-danger-fg` is text *on* `danger-bg` (near-black in light mode), so on a page surface an error styled with it reads as body text. Never pick a token by the message ("danger") when its role ("text on a danger surface") does not match.
+- `color-danger-fg` is text _on_ `danger-bg` (near-black in light mode), so on a page surface an error styled with it reads as body text. Never pick a token by the message ("danger") when its role ("text on a danger surface") does not match.
 - Accent tokens are strokes and fills (non-text, 3:1). Text needs 4.5:1. Using an accent for text couples two contracts: retuning the accent for softer borders would silently break text contrast.
 - New token `color-danger-text: (alias: color-danger-accent)`: red text on page surfaces, must keep 4.5:1 (today 5.18–5.80 light, 5.43–7.08 dark). `rs-field__error` and `rs-label__required` read it through `--rs-field-error-color` / `--rs-label-required-color`.
 - When a role needs a value nothing else has, give it its own token, even as an alias. If the accent ever changes, the alias becomes a value and no component changes.
@@ -718,7 +718,12 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - People look for an X in the corner, and on a touch screen there is no Escape key. The consumer writes the button and names it; the library paints the X (decisions 5, 16 and 22):
   ```astro
-  <button class="rs-dialog__close" type="button" command="close" commandfor="delete-project" aria-label="Close"></button>
+  <button
+    class="rs-dialog__close"
+    type="button"
+    command="close"
+    commandfor="delete-project"
+    aria-label="Close"></button>
   ```
 - A native `<button>`, not `<Button>`: Button's own pill, padding and colours would fight the element class (two blocks on one element, decision 3). The class makes it a library part, as `rs-dialog__actions` does for the native form.
 - 32px square (target size, decision 35), `position: absolute` at `space-4` from the top and end. A modal dialog is `position: fixed`, so it is the containing block. `radius-sm`, focus ring on `:focus-visible`.
@@ -816,7 +821,6 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - The skill's stop rule drops `[open]` and `popover`: native open state follows the row. Open state the platform does not own, `:has()`, `::backdrop`, focus trapping and script still go to Shane first.
 - `rocketship-stories.mdc` gains "Docs pages (Astro)" and the template's story wrapper becomes the docs page plus its example file (decision 80, amended), so components built next start as docs pages. Popover and Tooltip move over in RCL-21.
 - Dialog (RCL-13) landed first and joins the row: `Dialog.astro` (modal `<dialog>`, `:modal`, `::backdrop`, invoker commands). The stop rule no longer lists `::backdrop`; Dialog is its reference.
-
 
 ## Parked for later
 

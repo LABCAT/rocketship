@@ -317,7 +317,7 @@ test('the Alert and Stack stories mirror the Astro story structure', () => {
 
   assert.match(stackGaps, /<Container size="content" padded>/)
   assert.match(stackGaps, /<Stack gap="large">/, 'the gaps story separates the groups')
-  for (const gap of ['small', 'medium', 'large']) {
+  for (const gap of ['small', 'medium', 'large', 'xlarge']) {
     assert.ok(stackGaps.includes(`'${gap}'`), `the gaps story must document the ${gap} gap`)
   }
 

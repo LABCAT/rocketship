@@ -31,6 +31,15 @@
         'Distinct groups that need room to breathe.',
       ],
     },
+    {
+      gap: 'xlarge',
+      title: 'Extra large gap',
+      lines: [
+        '40px between items.',
+        'For groups made of spaced parts.',
+        'Consecutive fieldsets in a form.',
+      ],
+    },
   ] as const
 </script>
 

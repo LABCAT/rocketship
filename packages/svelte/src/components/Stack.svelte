@@ -3,7 +3,7 @@
   import type { HTMLAttributes } from 'svelte/elements'
 
   export type StackTag = 'div' | 'ul' | 'ol'
-  export type StackGap = 'small' | 'medium' | 'large'
+  export type StackGap = 'small' | 'medium' | 'large' | 'xlarge'
 
   type Props = {
     as?: StackTag
@@ -49,6 +49,10 @@
 
       &--large {
         --rs-stack-gap: #{rs-token(space-6)};
+      }
+
+      &--xlarge {
+        --rs-stack-gap: #{rs-token(space-8)};
       }
     }
   }

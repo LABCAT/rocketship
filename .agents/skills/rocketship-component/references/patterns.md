@@ -83,4 +83,5 @@ Copy: `Disclosure.astro` (`<details>`), `Popover.astro` (`popover`), `Dialog.ast
 - A part with a fixed position (`summary`) is a named slot rendered first. Content goes in the browser's own slot (`::details-content`), never a wrapper.
 - Decoration survives forced colours: Disclosure's chevron is a border-drawn `::after`; Dialog's X is a clipped `::before` with a `ButtonText` fallback.
 - Motion: Disclosure transitions `block-size` through `interpolate-size: allow-keywords` and `transition-medium`, with `content-visibility` `allow-discrete`; Dialog fades opacity over `transition-fast`; Popover is instant. Reduced motion makes every one instant.
+- Every animated component reads its duration from one local, `--rs-<name>-duration: var(--rs-<name>-transition-duration, #{rs-token(transition-…)})`, so consumers can retime one component without the global token.
 - One open at a time is composition: Disclosures that share a `name`. No Accordion component.

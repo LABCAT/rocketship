@@ -18,6 +18,7 @@ const { class: className, ...attrs } = Astro.props as Props
 
   .rs-dialog {
     --rs-dialog-color: #{rs-token(color-fg)};
+    --rs-dialog-duration: var(--rs-dialog-transition-duration, #{rs-token(transition-fast)});
     box-sizing: border-box;
     flex-direction: column;
     gap: var(--rs-dialog-gap, #{rs-token(space-4)});
@@ -31,15 +32,15 @@ const { class: className, ...attrs } = Astro.props as Props
     color: var(--rs-dialog-color);
     opacity: 0;
     padding: var(--rs-dialog-padding, #{rs-token(space-6)});
-    transition: opacity #{rs-token(transition-fast)} ease;
+    transition: opacity var(--rs-dialog-duration) ease;
 
     /// Fading out needs `overlay`, which keeps the closing dialog in the top layer. Without it
     /// the dialog would drop into the page while fading, so other browsers close instantly.
     @supports (overlay: auto) {
       transition:
-        opacity #{rs-token(transition-fast)} ease,
-        display #{rs-token(transition-fast)} ease allow-discrete,
-        overlay #{rs-token(transition-fast)} ease allow-discrete;
+        opacity var(--rs-dialog-duration) ease,
+        display var(--rs-dialog-duration) ease allow-discrete,
+        overlay var(--rs-dialog-duration) ease allow-discrete;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -60,13 +61,13 @@ const { class: className, ...attrs } = Astro.props as Props
     &::backdrop {
       background: var(--rs-dialog-backdrop, #{rs-token(color-backdrop)});
       opacity: 0;
-      transition: opacity #{rs-token(transition-fast)} ease;
+      transition: opacity var(--rs-dialog-duration) ease;
 
       @supports (overlay: auto) {
         transition:
-          opacity #{rs-token(transition-fast)} ease,
-          display #{rs-token(transition-fast)} ease allow-discrete,
-          overlay #{rs-token(transition-fast)} ease allow-discrete;
+          opacity var(--rs-dialog-duration) ease,
+          display var(--rs-dialog-duration) ease allow-discrete,
+          overlay var(--rs-dialog-duration) ease allow-discrete;
       }
 
       @media (prefers-reduced-motion: reduce) {

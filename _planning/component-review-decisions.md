@@ -708,6 +708,11 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Re-checked light and dark, axe clean: `Base/Button` → `Variants`, `Sizes`; `Components/Checkbox` → `States`, `Set`; `Components/Radio` → `States`; `Components/Dialog` → `Default`, both closed and open.
 - The pre-review Button still falls back to `#ffffff` when tokens are not loaded (`var(--rs-color-accent-contrast, #ffffff)`). Moving it to `rs-token()` belongs to the Button review.
 
+### 105. Dialog and Popover differ on purpose: trigger and motion
+
+- Settles decision 81's "revisit if Dialog standardises on invoker commands". Each component uses the best declarative trigger its element has. Dialog: `command="show-modal"` / `commandfor` (decision 96), the only script-free way to open a modal dialog. Popover: `popovertarget`, supported everywhere; `commandfor` would lose that for no gain.
+- Dialog fades (decision 102); Popover stays instant (decision 85). Popover was reviewed and looks right as it is.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

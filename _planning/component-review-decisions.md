@@ -234,7 +234,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - Extends decision 22 (decoration is painted, not added). Checkbox and Radio are one `<input>` with `appearance: none`; the tick, dash and dot are the input's own `::before`, shaped with `clip-path` (tick polygon, dash inset, Radio's circle) and filled with `background: var(--rs-checkbox-mark-color)`, so the mark follows the theme and dark mode.
 - Not an SVG data URI (its colour is a literal and cannot follow the theme, decision 6) and not gradients (they cannot draw a tick).
-- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 3.2:1 dark (graphics need 3:1, WCAG 1.4.11).
+- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 6.0:1 dark since decision 104 (graphics need 3:1, WCAG 1.4.11).
 - Forced colours restore `appearance: auto` (decision 22); the native control returns and the pseudo-element is not drawn.
 
 ### 35. Choice controls meet target size on their own: 24px
@@ -643,7 +643,92 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `Components/Tooltip` → `Default` (`Tooltip.stories.tsx`, `TooltipDefault.astro`): a primary "Deploy" and a secondary "Roll back" button, each in its own `<Tooltip>` and described by its content, placed straight in the Container like Button → Variants. A Stack would stretch the buttons to full width. No instruction copy in the canvas (decision 80).
 - The buttons sit at the top of the canvas, so the tooltips flip below, which shows `flip-block` working.
 
-### 95. Disclosure is a fixed `<details>`; the platform owns the state (applies decisions 1 and 24)
+### 95. Dialog is a native modal `<dialog>`; the platform does the behaviour
+
+- Applies decisions 1 and 22. `Dialog` renders `<dialog {...attrs} class="rs-dialog"><slot /></dialog>`. No `as`.
+- Modal only. `showModal()` gives the top layer, an inert page behind, focus moved inside, Escape to close and focus returned to the trigger. No hand-written focus trap or key handling. A non-modal panel is a different component (Popover).
+- Props: `role?: 'alertdialog'` (decision 2: the consumer opts in for a confirmation that interrupts) and `class?`. `open` and `closedby` are native and flow through `...attrs` (decision 24).
+- The name and description are consumer-written: `aria-labelledby` points at `rs-dialog__title`, `aria-describedby` at `rs-dialog__description` (decisions 5 and 14). No id props.
+
+### 96. Opening and closing need no script
+
+- The trigger is an invoker command: `<Button command="show-modal" commandfor="delete-project">`. Closing is `<form method="dialog">`: its submit buttons close the dialog and set `returnValue` (`"cancel"`, `"delete"`). Escape closes it too.
+- Verified in Chromium: open, `:modal`, Escape, focus returning to the trigger, `returnValue`. Firefox and Safari support for `command`/`commandfor` comes from memory (Firefox 144, Safari 26.2) and still needs checking.
+
+### 97. Layout applies only while modal: `.rs-dialog:modal`
+
+- `display: flex` on the block would beat the browser's `display: none` for a closed dialog and show it. The flex column sits under `&:modal`, a pseudo-class on the block's own class (decision 3). No `[open]` attribute selector.
+- `:modal` is supported everywhere we test (Chrome 105, Firefox 103, Safari 15.6). It also means an `open`-attribute, non-modal dialog gets no layout, which matches decision 95.
+
+### 98. New token `color-backdrop`
+
+- `Foundations/Colors` shows it under Surfaces, after Control border.
+
+- No token states a scrim role. `color-fg` turns light in dark mode and `color-bg` is light in light mode, so neither works for both.
+- `color-backdrop`: light `#131a2f` at 0.5 (the `fg` navy), dark `#060b18` at 0.7 (the `bg` near-black). Added to `light.tokens.json` / `dark.tokens.json`, and the map is regenerated.
+- `.rs-dialog::backdrop` reads `var(--rs-dialog-backdrop, color-backdrop)`. A pseudo-element on the block (decision 3).
+- In dark mode the scrim barely changes an already dark page. The panel is separated by `shadow-lg`'s dark-mode glow and the surface colour.
+
+### 99. The panel is a raised surface with one width
+
+- `color-surface`, `color-border` hairline (decorative, decision 45), `radius-md`, `shadow-lg`, padding `space-6`, gap `space-4`, `color-fg`. Hooks: `--rs-dialog-bg`, `-border-width`, `-border-color`, `-border-radius`, `-padding`, `-gap`.
+- `inline-size: min(100%, var(--rs-dialog-inline-size, 560px))`. A literal, because it is the component's own geometry and no token states the role (decision 35). The browser's modal `max-width`/`max-height` keep a gutter on phones, and its `overflow: auto` scrolls a tall dialog.
+- `overscroll-behavior: contain`, so scrolling the dialog never scrolls the page. No page scroll lock: it would need `:has()` on `html` (decision 3).
+
+### 100. The dialog title is a size step, like a legend
+
+- Extends decision 27. `rs-dialog__title`: `font-size-lg` through `--rs-dialog-title-font-size`, semibold through `--rs-dialog-title-font-weight`, `line-height-tight`, its own `color`, `margin: 0`. It heads a whole surface, so weight alone is not enough.
+- `rs-dialog__description` is Alert's: `color` and `margin: 0`, page size.
+
+### 101. Actions are an element class, usually on the closing form
+
+- `rs-dialog__actions`: a flex row, wrapping, end-aligned, gap `space-3` (`--rs-dialog-actions-gap`), `margin: 0`. The consumer puts it on `<form method="dialog">`, so no extra wrapper is needed.
+- Cancel comes first. The browser focuses the first focusable element, so a destructive confirmation opens on the safe choice. No `autofocus`.
+- No named `actions` slot (decision 31: no structural position). A component-rendered wrapper would choose `div` or `form` for the consumer, and would split a form dialog's buttons from the fields they submit. The default slot takes any markup; the class is optional.
+
+### 102. Dialog fades; reduced motion turns it off
+
+- Unlike form controls (decision 38), the dialog and its backdrop fade in and out on opacity only, over `transition-fast` (140ms, `ease`), written directly with `rs-token()`: no dialog hook, so the global `--rs-transition-fast` sets the speed, as for Button. No slide or scale: opacity is not movement, and it is the safest kind of animation for vestibular-sensitive users.
+- `@media (prefers-reduced-motion: reduce) { transition: none; }` on the block and on `::backdrop`, so those users get an instant open and close (WCAG 2.3.3).
+- Fading in uses `@starting-style` inside `&:modal`, and `&:modal::backdrop` for the backdrop (one class plus pseudo-classes and a pseudo-element, decision 3).
+- Fading out needs `overlay` and `display` transitions with `allow-discrete`, which keep the closing dialog in the top layer. Only browsers that pass `@supports (overlay: auto)` get them (Chromium today). Elsewhere a fading dialog would drop into the page flow, so it closes instantly instead.
+- Verified in Chromium: the fade runs in and out, it is instant with reduced motion, and axe is clean in light and dark once open. Firefox and Safari not yet checked.
+
+### 103. Dialog story: one alert dialog, opened by its trigger
+
+- `Components/Dialog` → `Default` (`Dialog.stories.tsx`, `DialogDefault.astro`): a "Delete project" Button opens an alert dialog, "Delete Apollo?", with a description and Cancel / Delete project actions. Real copy, no script, no story CSS.
+- The canvas shows the closed state. It never opens on load, because that steals focus (decision 39). Axe was run with the dialog opened by clicking the trigger in the check harness.
+- Checked light and dark: the closed and open states are axe clean (after decision 104).
+
+### 104. Text on accent is dark navy in dark mode
+
+- Dark `color-accent-contrast` changes from `#f8fbff` to `#060b18` (the dark `bg` navy). Light stays `#ffffff`.
+- The primary Button's dark text was 3.18:1 on `#4f89ff`, below the 4.5:1 text minimum. It is now 5.95:1. Found by the Dialog story's axe check; `Base/Button` → `Variants` failed the same way on main.
+- One token fixes every fill: the Checkbox and Radio marks on `color-accent` go from 3.2:1 to 6.0:1 (decision 34).
+- `color-accent` is unchanged, so accent strokes and fills keep their contrast against dark surfaces. Darkening the accent to keep white text (`#3366e0`, 4.91:1) would have dimmed every accent stroke and left it 3.43:1 on `color-surface`.
+- Re-checked light and dark, axe clean: `Base/Button` → `Variants`, `Sizes`; `Components/Checkbox` → `States`, `Set`; `Components/Radio` → `States`; `Components/Dialog` → `Default`, both closed and open.
+- The pre-review Button still falls back to `#ffffff` when tokens are not loaded (`var(--rs-color-accent-contrast, #ffffff)`). Moving it to `rs-token()` belongs to the Button review.
+
+### 105. Dialog and Popover differ on purpose: trigger and motion
+
+- Settles decision 81's "revisit if Dialog standardises on invoker commands". Each component uses the best declarative trigger its element has. Dialog: `command="show-modal"` / `commandfor` (decision 96), the only script-free way to open a modal dialog. Popover: `popovertarget`, supported everywhere; `commandfor` would lose that for no gain.
+- Dialog fades (decision 102); Popover stays instant (decision 85). Popover was reviewed and looks right as it is.
+
+### 106. An optional close X is the `rs-dialog__close` element class
+
+- People look for an X in the corner, and on a touch screen there is no Escape key. The consumer writes the button and names it; the library paints the X (decisions 5, 16 and 22):
+  ```astro
+  <button class="rs-dialog__close" type="button" command="close" commandfor="delete-project" aria-label="Close"></button>
+  ```
+- A native `<button>`, not `<Button>`: Button's own pill, padding and colours would fight the element class (two blocks on one element, decision 3). The class makes it a library part, as `rs-dialog__actions` does for the native form.
+- 32px square (target size, decision 35), `position: absolute` at `space-4` from the top and end. A modal dialog is `position: fixed`, so it is the containing block. `radius-sm`, focus ring on `:focus-visible`.
+- The X is the button's `::before`: a 16px box clipped to an X polygon (2px strokes) and filled with `currentColor`, like Checkbox's tick (decision 34). `color-muted` at rest (about 6.9:1, graphics need 3:1), `--rs-dialog-color` on hover. Hook `--rs-dialog-close-color`.
+- `rs-dialog__title` always pads its end by the X's width plus `space-2`, so a long title wraps before the button. A dialog without an X loses 32px of title width; accepted, because the title cannot know whether an X exists without `:has()` (decision 3).
+- Forced colours: the `::before` gets `background: ButtonText` with `forced-color-adjust: none`, because forced colours would repaint its background in the canvas colour and hide the X. Reasoned from the spec, not yet seen on Windows.
+- In the story it comes after the actions in the source. The browser focuses the first focusable element, so the dialog still opens on Cancel (decision 101), and Tab runs Cancel, Delete project, Close.
+- Checked in Chromium, light and dark: axe clean with the dialog open; the X closes the dialog and returns focus to the trigger.
+
+### 107. Disclosure is a fixed `<details>`; the platform owns the state (applies decisions 1 and 24)
 
 **Agreed 2026-10-26.**
 
@@ -651,7 +736,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - No `as` prop: `details` is the only element that discloses without script. The Svelte `as?: 'details'` was a union of one.
 - No `open` prop. `open` and `name` are native attributes and flow through `...attrs`, typed by `HTMLAttributes<'details'>`. The browser toggles the state, so there is no JavaScript and no `bind:open` to mirror.
 
-### 96. The summary is a named slot, rendered first (applies decision 31)
+### 108. The summary is a named slot, rendered first (applies decision 31)
 
 **Agreed 2026-10-26.**
 
@@ -659,21 +744,21 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - The slot is required in practice: without it the browser renders its own "Details" label, in its language, not the consumer's.
 - No heading inside the summary: it has the button role, whose children are presentational, so a heading level is lost to assistive tech in some browsers. A heading above the group names the set ("Frequently asked questions"); each summary is a named button, so screen readers still list and tab through the items.
 
-### 97. An accordion is composition, not a component (applies decision 80)
+### 109. An accordion is composition, not a component (applies decision 80)
 
 **Agreed 2026-10-26.** A joined look (one box with dividers) waits until a real design needs it.
 
 - A set of disclosures is `<Stack gap="small">` of Disclosures. No Accordion component, no `mode` prop and no registry script.
 - One-open-at-a-time is native: give each Disclosure the same `name`. The browser closes the others.
 
-### 98. The open state is `:open`, and it only reassigns variables (applies decision 3)
+### 110. The open state is `:open`, and it only reassigns variables (applies decision 3)
 
 **Agreed 2026-10-26.** No `[open]` fallback: Safari before 26.5 still toggles, with the chevron down and no bottom padding. The panel collapses to `0px` only inside `@supports selector(:open)`, so where `:open` is missing the panel keeps `auto` and its content shows (found at wrap-up: an unconditional `0px` hid it). The locals are internal, set by state, not documented hooks (like decision 47).
 
 - `.rs-disclosure:open` is one class plus a pseudo-class. No `[open]` attribute selector and no descendant `&[open] .rs-disclosure__indicator`, as the Svelte version had.
 - It sets block locals that its parts read: `--rs-disclosure-icon-turn` (the chevron), `--rs-disclosure-panel-block-size` and `--rs-disclosure-panel-padding-block-end` (the panel).
 
-### 99. The chevron is a painted border on the summary's `::after` (applies decision 22)
+### 111. The chevron is a painted border on the summary's `::after` (applies decision 22)
 
 **Agreed 2026-10-26.**
 
@@ -682,14 +767,14 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - At the inline end, centred on the summary's first line (`padding + 0.5lh`), so it stays put when the summary wraps.
 - The summary is `display: block`, which drops the native marker in Chromium and Firefox; `::-webkit-details-marker` hides WebKit's (a prefixed selector reaching a native part, decision 76). The summary stays one text box: no flex row (decision 19).
 
-### 100. The panel is the browser's `::details-content`; no wrapper (applies decision 5)
+### 112. The panel is the browser's `::details-content`; no wrapper (applies decision 5)
 
 **Agreed 2026-10-26.** Before Chrome 131, Firefox 143 and Safari 18.4 the panel still toggles but loses its side padding and gap.
 
 - Content goes in the default slot. `.rs-disclosure::details-content` is a flex column whose gap (`--rs-disclosure-gap`, `space-2`) spaces the consumer's elements; it pads the sides and, only when open, the bottom. A closed slot keeps its box, so unconditional padding would leave a gap under a closed summary.
 - Body copy is `<p class="rs-disclosure__description">`: `color` and `margin: 0`, the shared vocabulary of Alert and Card.
 
-### 101. The box: a hairline border, no surface, a semibold summary
+### 113. The box: a hairline border, no surface, a semibold summary
 
 **Agreed 2026-10-26.** The summary is 51px tall at 16px text (`space-4` block padding, matching Alert's).
 
@@ -697,7 +782,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `__summary` is styled as a title (decision 12): inherited size, `font-weight-semibold` through `--rs-disclosure-summary-font-weight`, `line-height-tight`, its own `color-fg`. One padding pair for summary and panel, `--rs-disclosure-padding-block` / `--rs-disclosure-padding-inline` (`space-4`).
 - No container-query size step and no `font-family` (decisions 8 and 9).
 
-### 102. Open and close transition smoothly, in CSS only; no hover (applies decision 23)
+### 114. Open and close transition smoothly, in CSS only; no hover (applies decision 23)
 
 **Agreed 2026-10-26.**
 
@@ -708,13 +793,13 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `interpolate-size` is Chromium only (129); Firefox and Safari open and close instantly while the chevron still turns. No Firefox implementation bug or Mozilla position found (2026-10-26); the code needs no change when it ships. Shane tested Chrome and Firefox: Chrome is clearly better; keep `interpolate-size` as the only mechanism, no `max-height` or grid hack.
 - No hover: the affordance is `cursor: pointer` and the chevron.
 
-### 103. Focus is the library ring on the summary
+### 115. Focus is the library ring on the summary
 
 **Agreed 2026-10-26.**
 
 - `&__summary:focus-visible` uses the standard `2px` `color-focus-ring` outline at `2px` offset. The summary is the only focusable part.
 
-### 104. Disclosure stories: `Default`, then `Accordion` as its own aspect (applies decision 29)
+### 116. Disclosure stories: `Default`, then `Accordion` as its own aspect (applies decision 29)
 
 **Agreed 2026-10-26.** The usage code stays on every docs page: the canvas shows rendered HTML, so only the source shows the slot syntax, element classes and imports.
 
@@ -723,14 +808,15 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `Components/Disclosure` → `Accordion` (`Disclosure.accordion.stories.tsx`, `DisclosureAccordion.astro`, example `DisclosureAccordionExample.astro`): one open at a time through a shared `name`, three plan questions in `<Stack gap="small">`, and the usage code. No second API table: the API is the same.
 - Axe clean in light and dark with every panel opened (headless Chromium, a11y addon's axe).
 
-### 105. Disclosure and Popover are the reference for native open state
+### 117. Disclosure, Popover and Dialog are the reference for native open state
 
 **Agreed 2026-10-26.**
 
 - Skill table row "Native open state (`<details>`, popover)" → `Disclosure.astro`, `Popover.astro`, with a `patterns.md` section of that name: the platform owns the state; style it with its pseudo-class (`:open`, `:popover-open`), never `[open]`; the state only reassigns locals; fixed-position parts are slots rendered first; content goes in the browser's own slot; border-drawn decoration; `transition-medium` with reduced motion; one open at a time is a shared `name`.
 - The skill's stop rule drops `[open]` and `popover`: native open state follows the row. Open state the platform does not own, `:has()`, `::backdrop`, focus trapping and script still go to Shane first.
 - `rocketship-stories.mdc` gains "Docs pages (Astro)" and the template's story wrapper becomes the docs page plus its example file (decision 80, amended), so components built next start as docs pages. Popover and Tooltip move over in RCL-21.
-- Dialog (RCL-13) joins the row when it lands.
+- Dialog (RCL-13) landed first and joins the row: `Dialog.astro` (modal `<dialog>`, `:modal`, `::backdrop`, invoker commands). The stop rule no longer lists `::backdrop`; Dialog is its reference.
+
 
 ## Parked for later
 
@@ -764,7 +850,8 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
-- RCL-12: Disclosure built with decisions 95–105 as a fixed `<details>` with a `summary` slot, styled from `:open` and `::details-content`, a border chevron, and a CSS-only height transition (`interpolate-size`, Chromium; instant elsewhere). New token `transition-medium` (210ms). No Accordion component: a shared `name`. Stories `Components/Disclosure` → `Default` and `Accordion` are the first docs pages (decision 80, amended). Skill, patterns, stories rule and template updated. Axe clean light and dark. The Svelte Disclosure and Accordion (RCL-58) predate these decisions and need porting.
+- RCL-13: Dialog built with decisions 95–103 and 106 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
+- RCL-12: Disclosure built with decisions 107–117 as a fixed `<details>` with a `summary` slot, styled from `:open` and `::details-content`, a border chevron, and a CSS-only height transition (`interpolate-size`, Chromium; instant elsewhere). New token `transition-medium` (210ms). No Accordion component: a shared `name`. Stories `Components/Disclosure` → `Default` and `Accordion` are the first docs pages (decision 80, amended). Skill (native open state row: Disclosure, Popover, Dialog), patterns, stories rule and template updated. Axe clean light and dark. The Svelte Disclosure and Accordion (RCL-58) predate these decisions and need porting.
 
 ## Sequence
 

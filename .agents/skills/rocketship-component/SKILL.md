@@ -22,24 +22,24 @@ They are binding.
 
 Copy only these files from `packages/base/src/components/`:
 
-| Building                                 | Copy                                            | Also read in `references/patterns.md` |
-| ---------------------------------------- | ----------------------------------------------- | ------------------------------------- |
-| Content block with variants              | `Alert.astro`                                   | —                                     |
-| Layout primitive with `as`               | `Stack.astro`                                   | —                                     |
-| Region the placer constrains (scrolling) | `Scroll.astro`                                  | Scroll                                |
-| Form wrapper, label or group             | `Field.astro`, `Label.astro`, `Fieldset.astro`  | Forms                                 |
-| Text control                             | `Input.astro`, `Textarea.astro`, `Select.astro` | Text controls                         |
-| Choice control                           | `Checkbox.astro`, `Radio.astro`                 | Choice controls                       |
-| Control with a native part (file, range) | `FileInput.astro`, `RangeInput.astro`           | Native-part controls                  |
-| Structured content (rows, cells)         | `Table.astro`                                   | Table                                 |
-| Native open state (`<details>`, popover) | `Disclosure.astro`, `Popover.astro`             | Native open state                     |
+| Building                                     | Copy                                                | Also read in `references/patterns.md` |
+| -------------------------------------------- | --------------------------------------------------- | ------------------------------------- |
+| Content block with variants                  | `Alert.astro`                                       | —                                     |
+| Layout primitive with `as`                   | `Stack.astro`                                       | —                                     |
+| Region the placer constrains (scrolling)     | `Scroll.astro`                                      | Scroll                                |
+| Form wrapper, label or group                 | `Field.astro`, `Label.astro`, `Fieldset.astro`      | Forms                                 |
+| Text control                                 | `Input.astro`, `Textarea.astro`, `Select.astro`     | Text controls                         |
+| Choice control                               | `Checkbox.astro`, `Radio.astro`                     | Choice controls                       |
+| Control with a native part (file, range)     | `FileInput.astro`, `RangeInput.astro`               | Native-part controls                  |
+| Structured content (rows, cells)             | `Table.astro`                                       | Table                                 |
+| Native open state (details, popover, dialog) | `Disclosure.astro`, `Popover.astro`, `Dialog.astro` | Native open state                     |
 
 Button, Card, Container, Grid and Typography predate the review. Never copy them. A button-like control may read `Button.astro`, but follows the rules wherever it differs.
 
 ## 3. Stop and ask Shane if
 
-- The component needs `:has()`, `::backdrop`, focus trapping or JavaScript state. Shane writes the first one by hand.
-- It needs open state the platform does not own. Native open state (`<details>`, `popover`) follows the row above.
+- The component needs `:has()`, focus trapping or JavaScript state. Shane writes the first one by hand.
+- It needs open state the platform does not own. Native open state (`<details>`, `popover`, a modal `<dialog>` and its `::backdrop`) follows the row above.
 - A token you need does not exist, or no token states the role you need.
 - Nothing in the table above is close.
 

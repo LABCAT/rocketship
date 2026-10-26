@@ -74,13 +74,13 @@ Copy: `Scroll.astro`.
 - Scroll has no border, padding or background. Its only paint is the focus ring.
 - The consumer makes it focusable and names it. Never make the content itself scroll.
 
-## Native open state (Disclosure, Popover)
+## Native open state (Disclosure, Popover, Dialog)
 
-Copy: `Disclosure.astro` (`<details>`), `Popover.astro` (`popover`).
+Copy: `Disclosure.astro` (`<details>`), `Popover.astro` (`popover`), `Dialog.astro` (modal `<dialog>`).
 
-- The platform owns the state. `open` and `name` flow through `...attrs`. No `open` prop, no script.
-- Style the state with its pseudo-class (`:open`, `:popover-open`), never `[open]`. The state only reassigns block locals; parts read them.
+- The platform owns the state. `open`, `name` and `popover` flow through `...attrs`; triggers are declarative (`popovertarget`, `command`/`commandfor`). No `open` prop, no script.
+- Style the state with its pseudo-class (`:open`, `:popover-open`, `:modal`), never `[open]`. The state only reassigns block locals; parts read them.
 - A part with a fixed position (`summary`) is a named slot rendered first. Content goes in the browser's own slot (`::details-content`), never a wrapper.
-- Decoration is a border-drawn `::after`, so forced colours keep it.
-- Opening and closing transition `block-size` through `interpolate-size: allow-keywords` and `transition-medium`, with `content-visibility` `allow-discrete`. `prefers-reduced-motion: reduce` sets the duration local to `0s`.
+- Decoration survives forced colours: Disclosure's chevron is a border-drawn `::after`; Dialog's X is a clipped `::before` with a `ButtonText` fallback.
+- Motion: Disclosure transitions `block-size` through `interpolate-size: allow-keywords` and `transition-medium`, with `content-visibility` `allow-discrete`; Dialog fades opacity over `transition-fast`; Popover is instant. Reduced motion makes every one instant.
 - One open at a time is composition: Disclosures that share a `name`. No Accordion component.

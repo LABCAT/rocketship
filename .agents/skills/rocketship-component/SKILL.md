@@ -1,6 +1,6 @@
 ---
 name: rocketship-component
-description: 'Create a new Rocketship Astro component by copying a reviewed reference. Use when asked to add, build, or scaffold a component in packages/base (Astro + SCSS + BEM rs- prefix + --rs-* tokens), including its Storybook stories in apps/frontend.'
+description: 'Create a new Rocketship Astro component by copying a reviewed reference. Use when asked to add, build, or scaffold a component in packages/base (Astro + SCSS + BEM rs- prefix + --rs-* tokens), including its Storybook stories in apps/astro.'
 ---
 
 # Rocketship component (Astro)
@@ -44,7 +44,7 @@ Button, Card, Container, Grid and Typography predate the review. Never copy them
 
 1. `packages/base/src/components/<Name>.astro`: copy the reference. Rename `Alert` → `<Name>` and `rs-alert` → `rs-<name>` everywhere. Keep the order: frontmatter, markup, `<style is:global lang="scss">`. Skeleton: [component-template.md](./references/component-template.md).
 2. `packages/base/package.json` → `exports`: add `"./components/<Name>": "./src/components/<Name>.astro"`. When rebuilding a pre-review component, also remove it from `ignoreFiles` in `stylelint.config.mjs`.
-3. `apps/frontend/src/stories/<Name>.stories.tsx` and `apps/frontend/src/stories/components/<Name>Default.astro`: see the template and `rocketship-stories.mdc`.
+3. `apps/astro/src/stories/<Name>.stories.tsx` and `apps/astro/src/stories/components/<Name>Default.astro`: see the template and `rocketship-stories.mdc`.
 
 ## 5. Verify
 

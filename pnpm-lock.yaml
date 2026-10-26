@@ -33,7 +33,7 @@ importers:
         specifier: ~4.149.0
         version: 4.149.0(@types/node@25.4.0)
 
-  apps/frontend:
+  apps/astro:
     dependencies:
       '@labcat2020/rocketship':
         specifier: workspace:*

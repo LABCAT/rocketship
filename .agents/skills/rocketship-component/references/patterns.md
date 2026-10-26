@@ -28,7 +28,7 @@ Copy: `Input.astro`, `Textarea.astro`, `Select.astro`.
   ```astro
   const invalid = attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true'
   ```
-- No hover state. No transitions. (`transition-fast` is for Button and links only.)
+- No hover state. No transitions. (`transition-fast` is for Button and links; `transition-medium` is for revealed content, Disclosure.)
 - Select's chevron is a `background-image` coloured by `--rs-select-icon-color`, never an element.
 - When `multiple` or `size > 1` makes Select a list box, add the derived modifier `rs-select--list`. Never an attribute selector.
 
@@ -73,3 +73,15 @@ Copy: `Scroll.astro`.
 
 - Scroll has no border, padding or background. Its only paint is the focus ring.
 - The consumer makes it focusable and names it. Never make the content itself scroll.
+
+## Native open state (Disclosure, Popover, Dialog)
+
+Copy: `Disclosure.astro` (`<details>`), `Popover.astro` (`popover`), `Dialog.astro` (modal `<dialog>`).
+
+- The platform owns the state. `open`, `name` and `popover` flow through `...attrs`; triggers are declarative (`popovertarget`, `command`/`commandfor`). No `open` prop, no script.
+- Style the state with its pseudo-class (`:open`, `:popover-open`, `:modal`), never `[open]`. The state only reassigns block locals; parts read them.
+- A part with a fixed position (`summary`) is a named slot rendered first. Content goes in the browser's own slot (`::details-content`), never a wrapper.
+- Decoration survives forced colours: Disclosure's chevron is a border-drawn `::after`; Dialog's X is a clipped `::before` with a `ButtonText` fallback.
+- Motion: Disclosure transitions `block-size` through `interpolate-size: allow-keywords` and `transition-medium`, with `content-visibility` `allow-discrete`; Dialog fades opacity over `transition-fast`; Popover is instant. Reduced motion makes every one instant.
+- Every animated component reads its duration from one local, `--rs-<name>-duration: var(--rs-<name>-transition-duration, #{rs-token(transition-…)})`, so consumers can retime one component without the global token.
+- One open at a time is composition: Disclosures that share a `name`. No Accordion component.

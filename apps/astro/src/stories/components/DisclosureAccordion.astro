@@ -1,0 +1,34 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import DisclosureAccordionExample from './DisclosureAccordionExample.astro'
+import exampleSource from './DisclosureAccordionExample.astro?raw'
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Accordion</h1>
+      <p>
+        An accordion is a set of disclosures that keeps one open at a time. Give each disclosure the
+        same <code>name</code>: opening one closes the others. The browser does this, so there is no
+        accordion component and no script.
+      </p>
+      <p>
+        A heading above the set names it. Summaries are buttons, so screen readers list and tab
+        through them.
+      </p>
+    </Typography>
+
+    <DisclosureAccordionExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+  </Stack>
+</Container>

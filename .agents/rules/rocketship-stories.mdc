@@ -12,7 +12,7 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 
 ## Files
 
-- Astro: `apps/astro/src/stories/<Name>.stories.tsx` and `apps/astro/src/stories/components/<Name>Default.astro`.
+- Astro: `apps/astro/src/stories/<Name>.stories.tsx`, the docs page `apps/astro/src/stories/components/<Name>Default.astro` and its example `apps/astro/src/stories/components/<Name>DefaultExample.astro`.
 - Svelte: `apps/svelte/src/stories/<Name>.stories.ts` and `apps/svelte/src/stories/components/<Name>Default.svelte`.
 - Every story file sets `parameters: { a11y: { disable: false } }`.
 - Astro story files import the wrapper plus each library component it uses: `import '@labcat2020/rocketship/components/Stack'`.
@@ -25,12 +25,25 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 - `Foundations/`: tokens.
 - Titles are spaced words: `Components/File Input`, not `Components/FileInput`.
 - A Svelte story uses the same title as its Astro story.
+- A component with a second story is listed in the sort order with `Default` first: `'Disclosure', ['Default', 'Accordion']`.
 
 ## Wrappers
 
 - Import only library components: `@labcat2020/rocketship` (Astro) or `@labcat2020/rocketship-svelte` (Svelte).
 - Put examples in a `<Stack>` inside one `<Container size="content" padded>`. Stacks may nest; Containers never act as spacers. No `as="main"`.
 - No `<style>` blocks, no story-only CSS, no story-only classes. If content needs a look, add it to the library.
+
+## Docs pages (Astro)
+
+Storybook is the docs site, so a component story is a docs page, like the Foundations stories. Reference: `DisclosureDefault.astro`.
+
+- One `<Container size="content" padded>` holding a `<Stack gap="large">`, in this order:
+  1. `<Typography as="article">` with an `<h1>` (the component or aspect) and a short usage description.
+  2. The live example: `<<Name><Aspect>Example />`.
+  3. `<Typography as="article">` with `<h2 id="usage-heading">Usage</h2>` and the example's source, imported with `?raw`: `<pre tabindex="0" role="region" aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>`. The code block scrolls on narrow screens, so it is a named focusable region.
+  4. On `Default` only: the API as library `<Table>`s, each named by its caption: props and attributes (name, type, default, description), slots, CSS hooks (property, token default).
+- The example file holds only the component markup and its imports, so the usage code is exactly what renders.
+- Keep the tables accurate: update them with every prop, slot or hook change.
 
 ## Scope and names
 

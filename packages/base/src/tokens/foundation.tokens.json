@@ -186,6 +186,12 @@
         "value": 140,
         "unit": "ms"
       }
+    },
+    "medium": {
+      "$value": {
+        "value": 210,
+        "unit": "ms"
+      }
     }
   },
   "container": {

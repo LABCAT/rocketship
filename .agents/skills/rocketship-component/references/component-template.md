@@ -129,6 +129,8 @@ import NameDefault from './components/NameDefault.astro'
 import '@labcat2020/rocketship/components/Name'
 import '@labcat2020/rocketship/components/Container'
 import '@labcat2020/rocketship/components/Stack'
+import '@labcat2020/rocketship/components/Table'
+import '@labcat2020/rocketship/components/Typography'
 
 const meta: Meta<typeof NameDefault> = {
   title: 'Components/Name',
@@ -144,21 +146,71 @@ type Story = StoryObj<typeof NameDefault>
 export const Default: Story = {}
 ```
 
-## Story wrapper: `apps/astro/src/stories/components/NameDefault.astro`
+## Example: `apps/astro/src/stories/components/NameDefaultExample.astro`
+
+Only the component markup and its imports. The docs page renders it and shows its source.
+
+```astro
+---
+import Name from '@labcat2020/rocketship/components/Name'
+---
+
+<Name>
+  <h2 class="rs-name__title">Example title</h2>
+  <p class="rs-name__description">Example description.</p>
+</Name>
+```
+
+## Docs page: `apps/astro/src/stories/components/NameDefault.astro`
+
+Full reference: `DisclosureDefault.astro`. The API tables (props and attributes, slots, CSS hooks) follow the description, usage and example; one is shown.
 
 ```astro
 ---
 import Container from '@labcat2020/rocketship/components/Container'
-import Name from '@labcat2020/rocketship/components/Name'
 import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import NameDefaultExample from './NameDefaultExample.astro'
+import exampleSource from './NameDefaultExample.astro?raw'
 ---
 
 <Container size="content" padded>
-  <Stack>
-    <Name>
-      <h2 class="rs-name__title">Example title</h2>
-      <p class="rs-name__description">Example description.</p>
-    </Name>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Name</h1>
+      <p>What it is and when to use it, in one or two sentences.</p>
+    </Typography>
+
+    <NameDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Table>
+      <Fragment slot="caption">Props and attributes</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Type</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row"><code>variant</code></th>
+          <td class="rs-table__cell"><code>'default' | 'muted'</code></td>
+          <td class="rs-table__cell"><code>'default'</code></td>
+          <td class="rs-table__cell">The look.</td>
+        </tr>
+      </tbody>
+    </Table>
   </Stack>
 </Container>
 ```

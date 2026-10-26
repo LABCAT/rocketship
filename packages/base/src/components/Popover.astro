@@ -1,0 +1,62 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & HTMLAttributes<'div'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<div popover="auto" {...attrs} class:list={['rs-popover', className]}>
+  <slot />
+</div>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  /// A closed popover is hidden by the browser's `:not(:popover-open)` rule. Setting `display`
+  /// here would beat it, so the flex column is set only on `:popover-open`.
+  .rs-popover {
+    --rs-popover-color: #{rs-token(color-fg)};
+    box-sizing: border-box;
+    max-inline-size: var(--rs-popover-max-inline-size, 320px);
+    background: var(--rs-popover-bg, #{rs-token(color-surface-elevated)});
+    border: var(--rs-popover-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-popover-border-color, #{rs-token(color-border)});
+    border-radius: var(--rs-popover-border-radius, #{rs-token(radius-md)});
+    box-shadow: var(--rs-popover-shadow, #{rs-token(shadow-md)});
+    color: var(--rs-popover-color);
+    padding: var(--rs-popover-padding, #{rs-token(space-4)});
+
+    &:popover-open {
+      display: flex;
+      flex-direction: column;
+      gap: var(--rs-popover-gap, #{rs-token(space-2)});
+    }
+
+    /// Opened by `popovertarget`, the trigger is the popover's implicit anchor. The panel sits
+    /// below it, aligned to its start edge, and flips when there is no room. Without anchor
+    /// positioning the browser default stays: centred in the viewport.
+    @supports (position-area: block-end) {
+      position-anchor: auto;
+      position-area: block-end span-inline-end;
+      position-try-fallbacks: flip-block, flip-inline;
+      margin: 0;
+      margin-block-start: var(--rs-popover-offset, #{rs-token(space-2)});
+    }
+
+    &__title {
+      color: var(--rs-popover-color);
+      font-size: inherit;
+      font-weight: var(--rs-popover-title-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
+      margin: 0;
+    }
+
+    &__description {
+      color: var(--rs-popover-color);
+      margin: 0;
+    }
+  }
+</style>

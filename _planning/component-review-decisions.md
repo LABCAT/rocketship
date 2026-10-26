@@ -234,7 +234,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - Extends decision 22 (decoration is painted, not added). Checkbox and Radio are one `<input>` with `appearance: none`; the tick, dash and dot are the input's own `::before`, shaped with `clip-path` (tick polygon, dash inset, Radio's circle) and filled with `background: var(--rs-checkbox-mark-color)`, so the mark follows the theme and dark mode.
 - Not an SVG data URI (its colour is a literal and cannot follow the theme, decision 6) and not gradients (they cannot draw a tick).
-- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 6.0:1 dark since decision 90 (graphics need 3:1, WCAG 1.4.11).
+- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 6.0:1 dark since decision 104 (graphics need 3:1, WCAG 1.4.11).
 - Forced colours restore `appearance: auto` (decision 22); the native control returns and the pseudo-element is not drawn.
 
 ### 35. Choice controls meet target size on their own: 24px
@@ -546,24 +546,120 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Two stories, so the sidebar names what each canvas shows (decision 29: the story is named for what it shows). `Components/Checkbox` → `States` (`Checkbox.stories.tsx`): each state as its own `<Field inline>` in a `<Stack gap="large">`, like Input → States: unchecked with a hint, checked, disabled, disabled checked, and a required terms box in error with the "Fields marked * are required." line. `Components/Checkbox` → `Set` (`Checkbox.set.stories.tsx`, `CheckboxSet.astro`): a "Notify me about" Fieldset with an indeterminate "All topics" (indeterminate only means something over a group), checked, unchecked, and two disabled rows with hints.
 - No headings or explanation copy in a canvas. Bare `<h2>`/`<p>` brought browser margins and three competing titles, and an Input in a Checkbox story was noise. A states comparison is not a form, so a list of rows there is fine; the PR #15 story read as a set because it mixed that comparison with grouping.
 
-### 81. Dialog is a native modal `<dialog>`; the platform does the behaviour
+### 81. The Astro library ships no JavaScript; Popover is the native `popover` attribute
+
+- No Astro component ships a script. Behaviour comes from the platform (`popover`, `<details>`, `<dialog>`, invoker attributes), never from a component's `<script>`.
+- One exception: Tooltip may ship a small script, because the platform cannot dismiss a hover or focus tooltip with Escape (WCAG 1.4.13).
+- Popover renders `<div popover="auto" {...attrs} class="rs-popover"><slot /></div>`. The platform gives the top layer, light dismiss, Escape, one `auto` popover open at a time, the trigger's expanded state, and Tab order from the trigger into the panel. No focus trap: a popover is non-modal (modal is Dialog, RCL-13).
+- The consumer writes the trigger: `<Button popovertarget="id">` (Button already spreads native attributes). `popovertarget` over `commandfor`/`command` because it is supported everywhere; revisit if Dialog standardises on invoker commands.
+- `popover="auto"` sits before `{...attrs}`, so `popover="manual"` or `"hint"` overrides it with no prop (decision 24).
+
+### 82. Popover is a fixed `div` with no role (applies decisions 1 and 2)
+
+- One valid root, so no `as`. A popover is not a dialog: no role by default. A consumer whose panel is a named group adds `role` and `aria-labelledby` through attrs.
+
+### 83. A closed popover stays hidden: flex only on `:popover-open`
+
+- `display: flex` on `.rs-popover` would beat the browser's `[popover]:not(:popover-open) { display: none }` and show a closed popover. The flex column and its `gap` sit on `.rs-popover:popover-open`, a pseudo-class on the block (decision 3).
+
+### 84. Popover anchors to its trigger where anchor positioning exists
+
+- `popovertarget` makes the trigger the popover's implicit anchor. Inside `@supports (position-area: block-end)`: `position-anchor: auto`, `position-area: block-end span-inline-end`, `position-try-fallbacks: flip-block, flip-inline`, `margin: 0`, and `margin-block-start` through `--rs-popover-offset` (`space-2`). Without support the browser default stays: centred in the viewport.
+- `position-anchor: auto` is explicit because Firefox computes `normal` (mdn/content#45514). Verified in Chromium only; Firefox and Safari to check.
+
+### 85. Popover surface: an elevated card with a shadow
+
+- `color-surface-elevated`, `color-border` hairline, `radius-md`, `shadow-md`, padding `space-4`, gap `space-2`, `color: color-fg`. All opt-in hooks (`--rs-popover-bg`, `-border-color`, `-border-width`, `-border-radius`, `-shadow`, `-padding`, `-gap`) except `--rs-popover-color`, which elements read.
+- `max-inline-size: var(--rs-popover-max-inline-size, 320px)`. No size token states a panel width, so this is a literal in a hook, as Figure's `80svh` is. Decide whether a token is needed.
+- No transition (decision 38's reasoning). A fade needs `@starting-style` and `transition-behavior: allow-discrete`, its own decision.
+
+### 86. Popover content is consumer-written `__title` and `__description` (applies decision 5)
+
+- Same vocabulary and rules as Alert. No close button and no words (decision 16): light dismiss and Escape close it; a consumer may add `<Button popovertarget="id" popovertargetaction="hide">` with their own words.
+- A toggletip (a click-to-open "more info" button) is a Popover, not a Tooltip mode: `<Button popovertarget="x">` plus `<Popover id="x">`. Tooltip stays hover and focus only.
+
+### 87. Popover story: a closed trigger; axe runs with it open
+
+- `Components/Popover` → `Default` (`Popover.stories.tsx`, `PopoverDefault.astro`): a secondary Button "Build 482" opening a "Build 482 passed" panel. The story loads closed, as a consumer's page would.
+- No Stack: one example, and Stack's stretch made the trigger (and so the anchor) full width. Button and Popover sit in the Container, as the Button stories do.
+- No script opens it: the story shows real use, and the library ships no JavaScript (decision 81). Axe checks the open panel after the trigger is clicked; it was run that way in light and dark.
+
+### 88. Tooltip is a plain wrapper, like Field; CSS shows it
+
+- Tooltip renders `<span {...attrs} class="rs-tooltip"><slot /></span>` around a consumer-written trigger and content: the same pattern as Field (decision 14). The open state must come from a common ancestor, because sibling and `:has()` selectors are out (decision 3).
+- `.rs-tooltip:hover` and `.rs-tooltip:focus-within` set `--rs-tooltip-open: true`. The content shows through `@container style(--rs-tooltip-open: true)`, the parent-state pattern from decision 3, with no `container-type`. The block resets it to `false`, so the content never inherits it from an outer tooltip.
+- It shows on hover, on focus (a click focuses the button too) and on a tap. It hides when the pointer and focus have both left. It stays open while the pointer is over it (decision 92).
+- A `span` with `display: inline-block`, a narrow exception to decision 19: its box must hug the trigger to be the anchor (decision 91). An inline box is only one text line tall, so a tooltip anchored to it overlapped a 44px button by 3px. Side effect: a link with a tooltip cannot wrap across lines. No `as` (decision 1), no variants (decision 4), no `title` prop (decision 5), and no props beyond `class` and native attributes.
+- Native HTML has no cross-browser hover tooltip yet. The `title` attribute cannot be reached by keyboard or touch, and `interestfor` with `popover="hint"` only works in Chrome and Edge (142+). A click-to-open toggletip is a button plus a native `popover`, so it belongs to Popover (RCL-14), not Tooltip. Most libraries keep the two apart, as Carbon (`Tooltip` and `Toggletip`) and Spectrum (`Tooltip` and `ContextualHelp`) do.
+
+### 89. A small script adds Escape; CSS does everything else
+
+- WCAG 1.4.13 needs hover and focus content to be dismissible without moving the pointer or focus. CSS cannot react to a key, so a short guarded `<script is:inline>` adds only that.
+- On Escape it adds `rs-tooltip--dismissed` to each open block and prevents the key's default, so a surrounding `<dialog>` stays open. `.rs-tooltip--dismissed:hover` and `.rs-tooltip--dismissed:focus-within` set `--rs-tooltip-open: false`. Each is one class plus a pseudo-class (decision 3), and they come after the open state at the same specificity, so they win.
+- It removes the class once the pointer and focus have both left the block (`pointerout` and `focusout`, checking `relatedTarget`), so the next hover or focus opens it again.
+- It is inline because the Storybook host does not serve bundled Astro component scripts (the request 404s); it does run inline ones, as Checkbox → Set's does. The script repeats with each Tooltip, but a `Symbol.for('rs-tooltip')` guard on `window` attaches the listeners once per page. It listens on `document`, so tooltips added later work too.
+- Without the script, the tooltip still opens and closes on hover and focus; only Escape is lost.
+- This is the one exception to decision 81 (RCL-14 Popover): no Astro component ships a script. Shane approved it on 2026-10-26 ("tooltips will be allowed a small amount of js"), because no platform feature dismisses a hover or focus tooltip with Escape.
+
+### 90. The consumer writes the content element and the wiring
+
+- Decisions 5 and 58: the consumer writes both elements inside `<Tooltip>`:
+  ```astro
+  <Tooltip>
+    <Button aria-describedby="tooltip-deploy">Deploy</Button>
+    <span class="rs-tooltip__content" role="tooltip" id="tooltip-deploy">…</span>
+  </Tooltip>
+  ```
+- `aria-describedby` when the tooltip adds information, `aria-labelledby` when it is the trigger's only name. The consumer writes both ends (decision 14). Screen readers read it while it is hidden.
+- `role="tooltip"` is written by the consumer, so roles stay opt-in (decision 2).
+- The content is phrasing text only: no links or buttons, because it disappears when focus moves into it.
+- No trigger class. The consumer writes only what Field already asks for: the content's class, `role` and `id`, plus the trigger's `aria-describedby`. An earlier `rs-tooltip__trigger` class was dropped because a forgotten class misplaced the tooltip silently.
+
+### 91. Placement is CSS anchor positioning: above, flipping below
+
+- The block sets `anchor-name: --rs-tooltip` and `anchor-scope: --rs-tooltip`, so each content anchors to its own wrapper, although every wrapper uses the same name.
+- `__content` is `position: fixed` with `position-area: block-start` and `position-try-fallbacks: flip-block`. Fixed positioning escapes a scrolling ancestor's overflow, such as `Scroll`. An ancestor's `clip-path`, such as Table's (decision 48), still clips it.
+- CSS anchor positioning is Baseline since Firefox 147 (January 2026). `anchor-scope` is in Chrome, Safari 26 and Firefox 147, so there is no fallback.
+- The gap is the `--rs-tooltip-offset` hook (`space-2`), a block-end margin that `flip-block` mirrors.
+- No `z-index`: it is not in the top layer, so a positioned element later in the page can paint over it. Left out until a real page hits this; the fix is then a `z-index` token, not a hand-written number.
+
+### 92. A transparent bridge keeps it open across the gap
+
+- `__content::before` is an empty, absolutely positioned box that extends offset plus border width beyond both block edges, so moving the pointer from the trigger onto the tooltip never leaves the block's `:hover`.
+- It covers the border too, because `::before` is placed from the padding box. Without the border width there was a 1px dead strip, and the tooltip closed when the pointer crossed it.
+- The bridge only overlaps empty space, never the trigger, so it cannot steal its clicks.
+
+### 93. The tooltip looks like a small raised surface
+
+- `color-surface` background, `color-fg` text, `color-border` edge, `radius-sm`, `shadow-md`, `space-1` / `space-2` padding. Every token is used in its named role (decision 18). No inverted dark bubble, because no token names that role.
+- Colours are block locals (`--rs-tooltip-bg`, `--rs-tooltip-color`, `--rs-tooltip-border-color`), read by the content. Offset, max width, border width, radius and padding are opt-in hooks.
+- `inline-size: max-content` up to `max-inline-size: 280px` (hook `--rs-tooltip-max-inline-size`, no token), so short text stays on one line and long text wraps.
+- Font size and line height come from the page (decisions 8 and 11). No arrow. In forced colours the border keeps the edge where the shadow drops out.
+- It differs from Popover (decision 85) on purpose: a smaller radius, tighter padding and narrower width read as a quick label, not a panel; and `color-surface` stands out more than Popover's `color-surface-elevated` on the light page, which suits short-lived text. Do not align them.
+
+### 94. Tooltip story: two buttons, each with a tooltip
+
+- `Components/Tooltip` → `Default` (`Tooltip.stories.tsx`, `TooltipDefault.astro`): a primary "Deploy" and a secondary "Roll back" button, each in its own `<Tooltip>` and described by its content, placed straight in the Container like Button → Variants. A Stack would stretch the buttons to full width. No instruction copy in the canvas (decision 80).
+- The buttons sit at the top of the canvas, so the tooltips flip below, which shows `flip-block` working.
+
+### 95. Dialog is a native modal `<dialog>`; the platform does the behaviour
 
 - Applies decisions 1 and 22. `Dialog` renders `<dialog {...attrs} class="rs-dialog"><slot /></dialog>`. No `as`.
 - Modal only. `showModal()` gives the top layer, an inert page behind, focus moved inside, Escape to close and focus returned to the trigger. No hand-written focus trap or key handling. A non-modal panel is a different component (Popover).
 - Props: `role?: 'alertdialog'` (decision 2: the consumer opts in for a confirmation that interrupts) and `class?`. `open` and `closedby` are native and flow through `...attrs` (decision 24).
 - The name and description are consumer-written: `aria-labelledby` points at `rs-dialog__title`, `aria-describedby` at `rs-dialog__description` (decisions 5 and 14). No id props.
 
-### 82. Opening and closing need no script
+### 96. Opening and closing need no script
 
 - The trigger is an invoker command: `<Button command="show-modal" commandfor="delete-project">`. Closing is `<form method="dialog">`: its submit buttons close the dialog and set `returnValue` (`"cancel"`, `"delete"`). Escape closes it too.
 - Verified in Chromium: open, `:modal`, Escape, focus returning to the trigger, `returnValue`. Firefox and Safari support for `command`/`commandfor` comes from memory (Firefox 144, Safari 26.2) and still needs checking.
 
-### 83. Layout applies only while modal: `.rs-dialog:modal`
+### 97. Layout applies only while modal: `.rs-dialog:modal`
 
 - `display: flex` on the block would beat the browser's `display: none` for a closed dialog and show it. The flex column sits under `&:modal`, a pseudo-class on the block's own class (decision 3). No `[open]` attribute selector.
-- `:modal` is supported everywhere we test (Chrome 105, Firefox 103, Safari 15.6). It also means an `open`-attribute, non-modal dialog gets no layout, which matches decision 81.
+- `:modal` is supported everywhere we test (Chrome 105, Firefox 103, Safari 15.6). It also means an `open`-attribute, non-modal dialog gets no layout, which matches decision 95.
 
-### 84. New token `color-backdrop`
+### 98. New token `color-backdrop`
 
 - `Foundations/Colors` shows it under Surfaces, after Control border.
 
@@ -572,24 +668,24 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `.rs-dialog::backdrop` reads `var(--rs-dialog-backdrop, color-backdrop)`. A pseudo-element on the block (decision 3).
 - In dark mode the scrim barely changes an already dark page. The panel is separated by `shadow-lg`'s dark-mode glow and the surface colour.
 
-### 85. The panel is a raised surface with one width
+### 99. The panel is a raised surface with one width
 
 - `color-surface`, `color-border` hairline (decorative, decision 45), `radius-md`, `shadow-lg`, padding `space-6`, gap `space-4`, `color-fg`. Hooks: `--rs-dialog-bg`, `-border-width`, `-border-color`, `-border-radius`, `-padding`, `-gap`.
 - `inline-size: min(100%, var(--rs-dialog-inline-size, 560px))`. A literal, because it is the component's own geometry and no token states the role (decision 35). The browser's modal `max-width`/`max-height` keep a gutter on phones, and its `overflow: auto` scrolls a tall dialog.
 - `overscroll-behavior: contain`, so scrolling the dialog never scrolls the page. No page scroll lock: it would need `:has()` on `html` (decision 3).
 
-### 86. The dialog title is a size step, like a legend
+### 100. The dialog title is a size step, like a legend
 
 - Extends decision 27. `rs-dialog__title`: `font-size-lg` through `--rs-dialog-title-font-size`, semibold through `--rs-dialog-title-font-weight`, `line-height-tight`, its own `color`, `margin: 0`. It heads a whole surface, so weight alone is not enough.
 - `rs-dialog__description` is Alert's: `color` and `margin: 0`, page size.
 
-### 87. Actions are an element class, usually on the closing form
+### 101. Actions are an element class, usually on the closing form
 
 - `rs-dialog__actions`: a flex row, wrapping, end-aligned, gap `space-3` (`--rs-dialog-actions-gap`), `margin: 0`. The consumer puts it on `<form method="dialog">`, so no extra wrapper is needed.
 - Cancel comes first. The browser focuses the first focusable element, so a destructive confirmation opens on the safe choice. No `autofocus`.
 - No named `actions` slot (decision 31: no structural position). A component-rendered wrapper would choose `div` or `form` for the consumer, and would split a form dialog's buttons from the fields they submit. The default slot takes any markup; the class is optional.
 
-### 88. Dialog fades; reduced motion turns it off
+### 102. Dialog fades; reduced motion turns it off
 
 - Unlike form controls (decision 38), the dialog and its backdrop fade in and out on opacity only, over `transition-fast` (140ms, `ease`), written directly with `rs-token()`: no dialog hook, so the global `--rs-transition-fast` sets the speed, as for Button. No slide or scale: opacity is not movement, and it is the safest kind of animation for vestibular-sensitive users.
 - `@media (prefers-reduced-motion: reduce) { transition: none; }` on the block and on `::backdrop`, so those users get an instant open and close (WCAG 2.3.3).
@@ -597,13 +693,13 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Fading out needs `overlay` and `display` transitions with `allow-discrete`, which keep the closing dialog in the top layer. Only browsers that pass `@supports (overlay: auto)` get them (Chromium today). Elsewhere a fading dialog would drop into the page flow, so it closes instantly instead.
 - Verified in Chromium: the fade runs in and out, it is instant with reduced motion, and axe is clean in light and dark once open. Firefox and Safari not yet checked.
 
-### 89. Dialog story: one alert dialog, opened by its trigger
+### 103. Dialog story: one alert dialog, opened by its trigger
 
 - `Components/Dialog` → `Default` (`Dialog.stories.tsx`, `DialogDefault.astro`): a "Delete project" Button opens an alert dialog, "Delete Apollo?", with a description and Cancel / Delete project actions. Real copy, no script, no story CSS.
 - The canvas shows the closed state. It never opens on load, because that steals focus (decision 39). Axe was run with the dialog opened by clicking the trigger in the check harness.
-- Checked light and dark: the closed and open states are axe clean (after decision 90).
+- Checked light and dark: the closed and open states are axe clean (after decision 104).
 
-### 90. Text on accent is dark navy in dark mode
+### 104. Text on accent is dark navy in dark mode
 
 - Dark `color-accent-contrast` changes from `#f8fbff` to `#060b18` (the dark `bg` navy). Light stays `#ffffff`.
 - The primary Button's dark text was 3.18:1 on `#4f89ff`, below the 4.5:1 text minimum. It is now 5.95:1. Found by the Dialog story's axe check; `Base/Button` → `Variants` failed the same way on main.
@@ -644,7 +740,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
-- RCL-13: Dialog built with decisions 81–89 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 90 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
+- RCL-13: Dialog built with decisions 95–103 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
 
 ## Sequence
 

@@ -15,15 +15,15 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Button`     | `@labcat2020/rocketship-svelte/components/Button`     | `Button.astro`     |
 | `Alert`      | `@labcat2020/rocketship-svelte/components/Alert`      | `Alert.astro`      |
 | `Stack`      | `@labcat2020/rocketship-svelte/components/Stack`      | `Stack.astro`      |
-| `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | — (Svelte-first)   |
-| `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | — (Svelte-first)   |
-| `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | — (Svelte-first)   |
-| `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | — (Svelte-first)   |
-| `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | — (Svelte-first)   |
-| `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | — (Svelte-first)   |
-| `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
+| `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | `Table.astro`      |
+| `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | `Field.astro`      |
+| `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | `Label.astro`      |
+| `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | `Input.astro`      |
+| `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | `Textarea.astro`   |
+| `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | `Select.astro`     |
+| `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | `Disclosure.astro` |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
-| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
+| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | `Figure.astro`     |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 

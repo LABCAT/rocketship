@@ -364,7 +364,7 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid, Stack an
   )
 })
 
-test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+test('packages/svelte exports Table from the barrel and as a subpath, like the Astro package', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
@@ -376,9 +376,10 @@ test('packages/svelte exports Table from the barrel and as a subpath, without an
     './src/components/Table.svelte',
     'packages/svelte must export ./components/Table',
   )
-  assert.ok(
-    !basePkg.exports?.['./components/Table'],
-    'Table is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports?.['./components/Table'],
+    './src/components/Table.astro',
+    'Table is a port, so the import path matches the Astro entry',
   )
   assert.match(
     barrel,
@@ -2223,6 +2224,29 @@ test('the README Astro-original column matches what is actually on disk', () => 
   }
 })
 
+test('the Checks workflow runs the Svelte package tests after the type check', () => {
+  const workflow = readFileSync(join(repoRoot, '.github', 'workflows', 'checks.yml'), 'utf8')
+
+  const steps = [...workflow.matchAll(/^\s*- name: (.+)$[\s\S]*?^\s*run: (.+)$/gm)].map(
+    ([, name, run]) => ({ name: name.trim(), run: run.trim() }),
+  )
+
+  const typeCheck = steps.findIndex((step) => step.name === 'Svelte type check')
+  const packageTests = steps.findIndex((step) => step.name === 'Svelte package tests')
+
+  assert.ok(typeCheck !== -1, 'checks.yml must keep the Svelte type check step')
+  assert.ok(packageTests !== -1, 'checks.yml must run the Svelte package tests')
+  assert.ok(
+    typeCheck < packageTests,
+    'the Svelte package tests run after the type check, so a type error fails first',
+  )
+  assert.equal(
+    steps[packageTests].run,
+    'pnpm --filter @labcat2020/rocketship-svelte test',
+    'the step must run the package test script, not a different command',
+  )
+})
+
 test('Figure is exported from the barrel, as a subpath, with its prop union types', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
@@ -2923,9 +2947,10 @@ test('Select is exported from the barrel, as a subpath, with its prop union type
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
 
   assert.equal(pkg.exports['./components/Select'], './src/components/Select.svelte')
-  assert.ok(
-    !basePkg.exports?.['./components/Select'],
-    'Select is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports?.['./components/Select'],
+    './src/components/Select.astro',
+    'Select is a port, so the import path matches the Astro entry',
   )
   assert.match(barrel, /export \{ default as Select \} from '\.\/components\/Select\.svelte'/)
   assert.match(barrel, /export type \* from '\.\/components\/Select\.svelte'/)

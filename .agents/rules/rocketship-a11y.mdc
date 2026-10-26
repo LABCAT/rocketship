@@ -46,7 +46,7 @@ Reasons: `_planning/component-review-decisions.md`.
 - The control's `required` attribute is the source of truth. The asterisk is `aria-hidden`. Never add hidden "(required)" text. The consumer explains the asterisk once per form.
 - A control in error sets `aria-invalid="true"`. Style errors from `aria-invalid`, never `:invalid`.
 - Text controls never go below the page's font size (iOS zooms below 16px).
-- `appearance: none` needs `@media (forced-colors: active) { appearance: auto; }`.
+- `appearance: none` needs `@media (forced-colors: active) { appearance: auto; }`, also on `::-webkit-slider-thumb`. A part that keeps its shape but loses its edge gets `border: 1px solid ButtonBorder` instead.
 - A group's hint or error goes after the legend as `rs-fieldset__hint` / `rs-fieldset__error`, linked with `aria-describedby` on the fieldset. Each radio in an invalid group sets `aria-invalid="true"`. Never use `rs-field__error` inside a fieldset.
 - Never show a state the control does not have: style native `:indeterminate`, set by script.
 

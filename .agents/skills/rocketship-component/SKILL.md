@@ -30,6 +30,7 @@ Copy only these files from `packages/base/src/components/`:
 | Form wrapper, label or group             | `Field.astro`, `Label.astro`, `Fieldset.astro`  | Forms                                 |
 | Text control                             | `Input.astro`, `Textarea.astro`, `Select.astro` | Text controls                         |
 | Choice control                           | `Checkbox.astro`, `Radio.astro`                 | Choice controls                       |
+| Control with a native part (file, range) | `FileInput.astro`, `RangeInput.astro`           | Native-part controls                  |
 | Structured content (rows, cells)         | `Table.astro`                                   | Table                                 |
 
 Button, Card, Container, Grid and Typography predate the review. Never copy them. A button-like control may read `Button.astro`, but follows the rules wherever it differs.

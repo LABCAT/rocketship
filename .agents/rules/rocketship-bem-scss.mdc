@@ -76,6 +76,7 @@ Use only these two patterns:
 
 - No outer margin.
 - Never set `font-family`.
+- No vendor-prefixed properties: `appearance`, never `-webkit-appearance`. A prefixed selector only to reach a native part.
 - Inline components (Label) set no `display`. A text container is never a flex row.
 - Logical properties: `inline-size`, `padding-block-end`, `text-align: start`.
 - Density: padding hooks only (`--rs-table-cell-padding-block`). Text never shrinks.

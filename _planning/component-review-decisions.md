@@ -234,7 +234,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - Extends decision 22 (decoration is painted, not added). Checkbox and Radio are one `<input>` with `appearance: none`; the tick, dash and dot are the input's own `::before`, shaped with `clip-path` (tick polygon, dash inset, Radio's circle) and filled with `background: var(--rs-checkbox-mark-color)`, so the mark follows the theme and dark mode.
 - Not an SVG data URI (its colour is a literal and cannot follow the theme, decision 6) and not gradients (they cannot draw a tick).
-- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 3.2:1 dark (graphics need 3:1, WCAG 1.4.11).
+- States reassign the block's variables: rest is `color-surface` with a `color-border-control` edge and a transparent mark; `:checked` and `:indeterminate` set fill and border to `color-accent` (a fill, 3:1) and the mark to `color-accent-contrast`. Mark on fill: 5.8:1 light, 6.0:1 dark since decision 90 (graphics need 3:1, WCAG 1.4.11).
 - Forced colours restore `appearance: auto` (decision 22); the native control returns and the pseudo-element is not drawn.
 
 ### 35. Choice controls meet target size on their own: 24px
@@ -546,6 +546,72 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Two stories, so the sidebar names what each canvas shows (decision 29: the story is named for what it shows). `Components/Checkbox` → `States` (`Checkbox.stories.tsx`): each state as its own `<Field inline>` in a `<Stack gap="large">`, like Input → States: unchecked with a hint, checked, disabled, disabled checked, and a required terms box in error with the "Fields marked * are required." line. `Components/Checkbox` → `Set` (`Checkbox.set.stories.tsx`, `CheckboxSet.astro`): a "Notify me about" Fieldset with an indeterminate "All topics" (indeterminate only means something over a group), checked, unchecked, and two disabled rows with hints.
 - No headings or explanation copy in a canvas. Bare `<h2>`/`<p>` brought browser margins and three competing titles, and an Input in a Checkbox story was noise. A states comparison is not a form, so a list of rows there is fine; the PR #15 story read as a set because it mixed that comparison with grouping.
 
+### 81. Dialog is a native modal `<dialog>`; the platform does the behaviour
+
+- Applies decisions 1 and 22. `Dialog` renders `<dialog {...attrs} class="rs-dialog"><slot /></dialog>`. No `as`.
+- Modal only. `showModal()` gives the top layer, an inert page behind, focus moved inside, Escape to close and focus returned to the trigger. No hand-written focus trap or key handling. A non-modal panel is a different component (Popover).
+- Props: `role?: 'alertdialog'` (decision 2: the consumer opts in for a confirmation that interrupts) and `class?`. `open` and `closedby` are native and flow through `...attrs` (decision 24).
+- The name and description are consumer-written: `aria-labelledby` points at `rs-dialog__title`, `aria-describedby` at `rs-dialog__description` (decisions 5 and 14). No id props.
+
+### 82. Opening and closing need no script
+
+- The trigger is an invoker command: `<Button command="show-modal" commandfor="delete-project">`. Closing is `<form method="dialog">`: its submit buttons close the dialog and set `returnValue` (`"cancel"`, `"delete"`). Escape closes it too.
+- Verified in Chromium: open, `:modal`, Escape, focus returning to the trigger, `returnValue`. Firefox and Safari support for `command`/`commandfor` comes from memory (Firefox 144, Safari 26.2) and still needs checking.
+
+### 83. Layout applies only while modal: `.rs-dialog:modal`
+
+- `display: flex` on the block would beat the browser's `display: none` for a closed dialog and show it. The flex column sits under `&:modal`, a pseudo-class on the block's own class (decision 3). No `[open]` attribute selector.
+- `:modal` is supported everywhere we test (Chrome 105, Firefox 103, Safari 15.6). It also means an `open`-attribute, non-modal dialog gets no layout, which matches decision 81.
+
+### 84. New token `color-backdrop`
+
+- `Foundations/Colors` shows it under Surfaces, after Control border.
+
+- No token states a scrim role. `color-fg` turns light in dark mode and `color-bg` is light in light mode, so neither works for both.
+- `color-backdrop`: light `#131a2f` at 0.5 (the `fg` navy), dark `#060b18` at 0.7 (the `bg` near-black). Added to `light.tokens.json` / `dark.tokens.json`, and the map is regenerated.
+- `.rs-dialog::backdrop` reads `var(--rs-dialog-backdrop, color-backdrop)`. A pseudo-element on the block (decision 3).
+- In dark mode the scrim barely changes an already dark page. The panel is separated by `shadow-lg`'s dark-mode glow and the surface colour.
+
+### 85. The panel is a raised surface with one width
+
+- `color-surface`, `color-border` hairline (decorative, decision 45), `radius-md`, `shadow-lg`, padding `space-6`, gap `space-4`, `color-fg`. Hooks: `--rs-dialog-bg`, `-border-width`, `-border-color`, `-border-radius`, `-padding`, `-gap`.
+- `inline-size: min(100%, var(--rs-dialog-inline-size, 560px))`. A literal, because it is the component's own geometry and no token states the role (decision 35). The browser's modal `max-width`/`max-height` keep a gutter on phones, and its `overflow: auto` scrolls a tall dialog.
+- `overscroll-behavior: contain`, so scrolling the dialog never scrolls the page. No page scroll lock: it would need `:has()` on `html` (decision 3).
+
+### 86. The dialog title is a size step, like a legend
+
+- Extends decision 27. `rs-dialog__title`: `font-size-lg` through `--rs-dialog-title-font-size`, semibold through `--rs-dialog-title-font-weight`, `line-height-tight`, its own `color`, `margin: 0`. It heads a whole surface, so weight alone is not enough.
+- `rs-dialog__description` is Alert's: `color` and `margin: 0`, page size.
+
+### 87. Actions are an element class, usually on the closing form
+
+- `rs-dialog__actions`: a flex row, wrapping, end-aligned, gap `space-3` (`--rs-dialog-actions-gap`), `margin: 0`. The consumer puts it on `<form method="dialog">`, so no extra wrapper is needed.
+- Cancel comes first. The browser focuses the first focusable element, so a destructive confirmation opens on the safe choice. No `autofocus`.
+- No named `actions` slot (decision 31: no structural position). A component-rendered wrapper would choose `div` or `form` for the consumer, and would split a form dialog's buttons from the fields they submit. The default slot takes any markup; the class is optional.
+
+### 88. Dialog fades; reduced motion turns it off
+
+- Unlike form controls (decision 38), the dialog and its backdrop fade in and out on opacity only, over `transition-fast` (140ms, `ease`), written directly with `rs-token()`: no dialog hook, so the global `--rs-transition-fast` sets the speed, as for Button. No slide or scale: opacity is not movement, and it is the safest kind of animation for vestibular-sensitive users.
+- `@media (prefers-reduced-motion: reduce) { transition: none; }` on the block and on `::backdrop`, so those users get an instant open and close (WCAG 2.3.3).
+- Fading in uses `@starting-style` inside `&:modal`, and `&:modal::backdrop` for the backdrop (one class plus pseudo-classes and a pseudo-element, decision 3).
+- Fading out needs `overlay` and `display` transitions with `allow-discrete`, which keep the closing dialog in the top layer. Only browsers that pass `@supports (overlay: auto)` get them (Chromium today). Elsewhere a fading dialog would drop into the page flow, so it closes instantly instead.
+- Verified in Chromium: the fade runs in and out, it is instant with reduced motion, and axe is clean in light and dark once open. Firefox and Safari not yet checked.
+
+### 89. Dialog story: one alert dialog, opened by its trigger
+
+- `Components/Dialog` → `Default` (`Dialog.stories.tsx`, `DialogDefault.astro`): a "Delete project" Button opens an alert dialog, "Delete Apollo?", with a description and Cancel / Delete project actions. Real copy, no script, no story CSS.
+- The canvas shows the closed state. It never opens on load, because that steals focus (decision 39). Axe was run with the dialog opened by clicking the trigger in the check harness.
+- Checked light and dark: the closed and open states are axe clean (after decision 90).
+
+### 90. Text on accent is dark navy in dark mode
+
+- Dark `color-accent-contrast` changes from `#f8fbff` to `#060b18` (the dark `bg` navy). Light stays `#ffffff`.
+- The primary Button's dark text was 3.18:1 on `#4f89ff`, below the 4.5:1 text minimum. It is now 5.95:1. Found by the Dialog story's axe check; `Base/Button` → `Variants` failed the same way on main.
+- One token fixes every fill: the Checkbox and Radio marks on `color-accent` go from 3.2:1 to 6.0:1 (decision 34).
+- `color-accent` is unchanged, so accent strokes and fills keep their contrast against dark surfaces. Darkening the accent to keep white text (`#3366e0`, 4.91:1) would have dimmed every accent stroke and left it 3.43:1 on `color-surface`.
+- Re-checked light and dark, axe clean: `Base/Button` → `Variants`, `Sizes`; `Components/Checkbox` → `States`, `Set`; `Components/Radio` → `States`; `Components/Dialog` → `Default`, both closed and open.
+- The pre-review Button still falls back to `#ffffff` when tokens are not loaded (`var(--rs-color-accent-contrast, #ffffff)`). Moving it to `rs-token()` belongs to the Button review.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -578,6 +644,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
+- RCL-13: Dialog built with decisions 81–89 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 90 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
 
 ## Sequence
 

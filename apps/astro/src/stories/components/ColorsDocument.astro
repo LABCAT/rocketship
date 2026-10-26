@@ -40,7 +40,8 @@ const consumeExample = `.rs-card {
     <h2>Surfaces</h2>
     <p>
       The page, the panels that sit on it, and the lines that separate them. Borders are decorative;
-      control borders mark where to type and keep 3:1 against every surface.
+      control borders mark where to type and keep 3:1 against every surface. The backdrop is
+      translucent and dims the page behind a modal dialog.
     </p>
   </Typography>
 </Container>
@@ -76,6 +77,12 @@ const consumeExample = `.rs-card {
       <p class="rs-card__description">Edges of inputs (3:1)</p>
       <span slot="meta" class="rs-card__token">--rs-color-border-control</span>
     </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-backdrop);">
+      <div slot="media"></div>
+      <p class="rs-card__title">Backdrop</p>
+      <p class="rs-card__description">Dims the page behind a dialog</p>
+      <span slot="meta" class="rs-card__token">--rs-color-backdrop</span>
+    </Card>
   </Grid>
 </Container>
 
@@ -106,7 +113,8 @@ const consumeExample = `.rs-card {
   <Typography as="article">
     <h2>Interactive</h2>
     <p>
-      Buttons, links, and keyboard focus. Accent contrast is only for text that sits on accent.
+      Buttons, links, and keyboard focus. Accent contrast is only for text and marks that sit on
+      accent.
     </p>
   </Typography>
 </Container>
@@ -121,7 +129,7 @@ const consumeExample = `.rs-card {
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent-contrast);">
       <div slot="media"></div>
       <p class="rs-card__title">Accent contrast</p>
-      <p class="rs-card__description">Text on accent</p>
+      <p class="rs-card__description">Text and marks on accent</p>
       <span slot="meta" class="rs-card__token">--rs-color-accent-contrast</span>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-link);">

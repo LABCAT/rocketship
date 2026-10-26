@@ -49,7 +49,8 @@
     "./components/Table": "./src/components/Table.astro",
     "./components/Figure": "./src/components/Figure.astro",
     "./components/FileInput": "./src/components/FileInput.astro",
-    "./components/RangeInput": "./src/components/RangeInput.astro"
+    "./components/RangeInput": "./src/components/RangeInput.astro",
+    "./components/Dialog": "./src/components/Dialog.astro"
   },
   "files": [
     "dist",

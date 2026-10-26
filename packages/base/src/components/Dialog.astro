@@ -1,0 +1,106 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  role?: 'alertdialog'
+  class?: string
+} & HTMLAttributes<'dialog'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<dialog {...attrs} class:list={['rs-dialog', className]}>
+  <slot />
+</dialog>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-dialog {
+    --rs-dialog-color: #{rs-token(color-fg)};
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: var(--rs-dialog-gap, #{rs-token(space-4)});
+    inline-size: min(100%, var(--rs-dialog-inline-size, 560px));
+    overscroll-behavior: contain;
+    background: var(--rs-dialog-bg, #{rs-token(color-surface)});
+    border: var(--rs-dialog-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-dialog-border-color, #{rs-token(color-border)});
+    border-radius: var(--rs-dialog-border-radius, #{rs-token(radius-md)});
+    box-shadow: #{rs-token(shadow-lg)};
+    color: var(--rs-dialog-color);
+    opacity: 0;
+    padding: var(--rs-dialog-padding, #{rs-token(space-6)});
+    transition: opacity #{rs-token(transition-fast)} ease;
+
+    /// Fading out needs `overlay`, which keeps the closing dialog in the top layer. Without it
+    /// the dialog would drop into the page while fading, so other browsers close instantly.
+    @supports (overlay: auto) {
+      transition:
+        opacity #{rs-token(transition-fast)} ease,
+        display #{rs-token(transition-fast)} ease allow-discrete,
+        overlay #{rs-token(transition-fast)} ease allow-discrete;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    /// The flex column applies only while open: on the block it would beat the browser's
+    /// `display: none` for a closed dialog.
+    &:modal {
+      display: flex;
+      opacity: 1;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    &::backdrop {
+      background: var(--rs-dialog-backdrop, #{rs-token(color-backdrop)});
+      opacity: 0;
+      transition: opacity #{rs-token(transition-fast)} ease;
+
+      @supports (overlay: auto) {
+        transition:
+          opacity #{rs-token(transition-fast)} ease,
+          display #{rs-token(transition-fast)} ease allow-discrete,
+          overlay #{rs-token(transition-fast)} ease allow-discrete;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    &:modal::backdrop {
+      opacity: 1;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    &__title {
+      color: var(--rs-dialog-color);
+      font-size: var(--rs-dialog-title-font-size, #{rs-token(font-size-lg)});
+      font-weight: var(--rs-dialog-title-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
+      margin: 0;
+    }
+
+    &__description {
+      color: var(--rs-dialog-color);
+      margin: 0;
+    }
+
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--rs-dialog-actions-gap, #{rs-token(space-3)});
+      margin: 0;
+    }
+  }
+</style>

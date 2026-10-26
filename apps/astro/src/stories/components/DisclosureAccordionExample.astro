@@ -1,0 +1,27 @@
+---
+import Disclosure from '@labcat2020/rocketship/components/Disclosure'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Stack gap="small">
+  <Disclosure name="plans" open>
+    <Fragment slot="summary">Which plan fits a small team?</Fragment>
+    <p class="rs-disclosure__description">
+      Starter covers five seats and one production environment. It includes the full deployment
+      history and ninety days of build logs.
+    </p>
+  </Disclosure>
+  <Disclosure name="plans">
+    <Fragment slot="summary">Can I change plans later?</Fragment>
+    <p class="rs-disclosure__description">
+      Yes. Upgrades apply immediately and downgrades apply at the end of the current billing cycle.
+    </p>
+  </Disclosure>
+  <Disclosure name="plans">
+    <Fragment slot="summary">Do you offer annual billing?</Fragment>
+    <p class="rs-disclosure__description">
+      Annual billing takes two months off the list price. Contact support to switch an existing
+      workspace.
+    </p>
+  </Disclosure>
+</Stack>

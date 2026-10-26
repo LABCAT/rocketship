@@ -48,6 +48,7 @@
     "./components/Radio": "./src/components/Radio.astro",
     "./components/Table": "./src/components/Table.astro",
     "./components/Figure": "./src/components/Figure.astro",
+    "./components/Disclosure": "./src/components/Disclosure.astro",
     "./components/FileInput": "./src/components/FileInput.astro",
     "./components/RangeInput": "./src/components/RangeInput.astro",
     "./components/Popover": "./src/components/Popover.astro",

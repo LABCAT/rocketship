@@ -1,0 +1,148 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import DisclosureDefaultExample from './DisclosureDefaultExample.astro'
+import exampleSource from './DisclosureDefaultExample.astro?raw'
+
+const attributes = [
+  { name: 'class', type: 'string', default: '—', description: 'Added to the <details>.' },
+  {
+    name: 'open',
+    type: 'boolean',
+    default: 'false',
+    description: 'Native attribute. Starts the disclosure open; the browser toggles it.',
+  },
+  {
+    name: 'name',
+    type: 'string',
+    default: '—',
+    description: 'Native attribute. Disclosures that share a name keep one open at a time.',
+  },
+]
+
+const slots = [
+  {
+    name: 'summary',
+    description:
+      'The words that stay visible and open the panel. Rendered as the first-child <summary>. Text or inline markup, never a heading.',
+  },
+  {
+    name: '(default)',
+    description:
+      'The panel. Block elements, spaced by the panel’s gap. Body copy is <p class="rs-disclosure__description">.',
+  },
+]
+
+const hooks = [
+  { name: '--rs-disclosure-border-width', default: '--rs-border-width-sm' },
+  { name: '--rs-disclosure-border-color', default: '--rs-color-border' },
+  { name: '--rs-disclosure-border-radius', default: '--rs-radius-md' },
+  { name: '--rs-disclosure-padding-block', default: '--rs-space-4' },
+  { name: '--rs-disclosure-padding-inline', default: '--rs-space-4' },
+  { name: '--rs-disclosure-gap', default: '--rs-space-2' },
+  { name: '--rs-disclosure-summary-color', default: '--rs-color-fg' },
+  { name: '--rs-disclosure-summary-font-weight', default: '--rs-font-weight-semibold' },
+  { name: '--rs-disclosure-icon-color', default: '--rs-color-muted' },
+  { name: '--rs-disclosure-color', default: '--rs-color-fg' },
+  { name: '--rs-disclosure-transition-duration', default: '--rs-transition-medium' },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Disclosure</h1>
+      <p>
+        A disclosure shows and hides content under a summary. It is a native
+        <code>&lt;details&gt;</code>, so it opens by keyboard and assistive tech announces it as
+        expanded or collapsed, with no script. Each disclosure opens and closes on its own.
+      </p>
+    </Typography>
+
+    <DisclosureDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Table>
+      <Fragment slot="caption">Props and attributes</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Type</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          attributes.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">
+                <code>{row.type}</code>
+              </td>
+              <td class="rs-table__cell">{row.default}</td>
+              <td class="rs-table__cell">{row.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Table>
+      <Fragment slot="caption">Slots</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          slots.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">{row.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Table>
+      <Fragment slot="caption">CSS hooks</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Property</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          hooks.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">
+                <code>{row.default}</code>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+  </Stack>
+</Container>

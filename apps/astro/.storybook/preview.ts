@@ -36,6 +36,8 @@ export default {
             ['Default'],
             'Alert',
             'Checkbox',
+            'Disclosure',
+            ['Default', 'Accordion'],
             'Field',
             'Fieldset',
             'Figure',

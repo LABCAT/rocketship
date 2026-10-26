@@ -545,6 +545,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - A standalone checkbox (terms, "Email me a monthly summary") is its own `<Field inline>` in the form's `<Stack gap="large">` (decision 79), spaced like any field.
 - Two stories, so the sidebar names what each canvas shows (decision 29: the story is named for what it shows). `Components/Checkbox` → `States` (`Checkbox.stories.tsx`): each state as its own `<Field inline>` in a `<Stack gap="large">`, like Input → States: unchecked with a hint, checked, disabled, disabled checked, and a required terms box in error with the "Fields marked * are required." line. `Components/Checkbox` → `Set` (`Checkbox.set.stories.tsx`, `CheckboxSet.astro`): a "Notify me about" Fieldset with an indeterminate "All topics" (indeterminate only means something over a group), checked, unchecked, and two disabled rows with hints.
 - No headings or explanation copy in a canvas. Bare `<h2>`/`<p>` brought browser margins and three competing titles, and an Input in a Checkbox story was noise. A states comparison is not a form, so a list of rows there is fine; the PR #15 story read as a set because it mixed that comparison with grouping.
+- **Amended 2026-10-26 (RCL-12, RCL-21):** Storybook is the library's docs site, so a component story is a docs page, written like the Foundations stories. Each page, in one `<Container size="content" padded>` and a `<Stack gap="large">`: a `Typography` article with an `<h1>` and a short usage description; the live example; a "Usage" `<h2>` with the example's source in `<pre><code>`; and the API as library `<Table>`s (props and attributes, slots, CSS hooks), each named by its caption. The example is its own file (`<Name><Aspect>Example.astro`), rendered by the page and shown with `?raw`, so the code cannot drift from what renders. The code block scrolls sideways on narrow screens, so it is a named focusable region like Scroll (decision 41): `<h2 id="usage-heading">` and `<pre tabindex="0" role="region" aria-labelledby="usage-heading">`. The bare-heading problem above came from unstyled `<h2>`/`<p>`; prose now lives in `Typography`. Disclosure is the first; other components move over in RCL-21.
 
 ### 81. The Astro library ships no JavaScript; Popover is the native `popover` attribute
 
@@ -642,6 +643,95 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `Components/Tooltip` → `Default` (`Tooltip.stories.tsx`, `TooltipDefault.astro`): a primary "Deploy" and a secondary "Roll back" button, each in its own `<Tooltip>` and described by its content, placed straight in the Container like Button → Variants. A Stack would stretch the buttons to full width. No instruction copy in the canvas (decision 80).
 - The buttons sit at the top of the canvas, so the tooltips flip below, which shows `flip-block` working.
 
+### 95. Disclosure is a fixed `<details>`; the platform owns the state (applies decisions 1 and 24)
+
+**Agreed 2026-10-26.**
+
+- Browser support, checked 2026-10-26: `:open` Chrome 133, Firefox 136, Safari 26.5; `::details-content` Chrome 131, Firefox 143, Safari 18.4; exclusive `<details name>` Chrome 120, Firefox 130, Safari 17.2.
+- No `as` prop: `details` is the only element that discloses without script. The Svelte `as?: 'details'` was a union of one.
+- No `open` prop. `open` and `name` are native attributes and flow through `...attrs`, typed by `HTMLAttributes<'details'>`. The browser toggles the state, so there is no JavaScript and no `bind:open` to mirror.
+
+### 96. The summary is a named slot, rendered first (applies decision 31)
+
+**Agreed 2026-10-26.**
+
+- `<summary>` only works as the first child, a structural position. Disclosure renders `<summary class="rs-disclosure__summary"><slot name="summary" /></summary>` before the default slot, only when the slot is filled. No `summary` string prop.
+- The slot is required in practice: without it the browser renders its own "Details" label, in its language, not the consumer's.
+- No heading inside the summary: it has the button role, whose children are presentational, so a heading level is lost to assistive tech in some browsers. A heading above the group names the set ("Frequently asked questions"); each summary is a named button, so screen readers still list and tab through the items.
+
+### 97. An accordion is composition, not a component (applies decision 80)
+
+**Agreed 2026-10-26.** A joined look (one box with dividers) waits until a real design needs it.
+
+- A set of disclosures is `<Stack gap="small">` of Disclosures. No Accordion component, no `mode` prop and no registry script.
+- One-open-at-a-time is native: give each Disclosure the same `name`. The browser closes the others.
+
+### 98. The open state is `:open`, and it only reassigns variables (applies decision 3)
+
+**Agreed 2026-10-26.** No `[open]` fallback: Safari before 26.5 still toggles, with the chevron down and no bottom padding. The panel collapses to `0px` only inside `@supports selector(:open)`, so where `:open` is missing the panel keeps `auto` and its content shows (found at wrap-up: an unconditional `0px` hid it). The locals are internal, set by state, not documented hooks (like decision 47).
+
+- `.rs-disclosure:open` is one class plus a pseudo-class. No `[open]` attribute selector and no descendant `&[open] .rs-disclosure__indicator`, as the Svelte version had.
+- It sets block locals that its parts read: `--rs-disclosure-icon-turn` (the chevron), `--rs-disclosure-panel-block-size` and `--rs-disclosure-panel-padding-block-end` (the panel).
+
+### 99. The chevron is a painted border on the summary's `::after` (applies decision 22)
+
+**Agreed 2026-10-26.**
+
+- No `__indicator` span. Two borders of `border-width-md` in `--rs-disclosure-icon-color` (`color-muted`, like Select's chevron, about 6.9:1), an 8px literal box rotated 45° and turned 180° when open. Borders are repainted as text in forced colours, so it needs no fallback, unlike gradients (Select) or `clip-path` (Checkbox).
+- A last `translate(-25%, -25%)` moves it back along its diagonal, so the drawn corner, not the rotated box, sits on the line centre in both states. The summary reserves `space-5` at the end so text never runs under it.
+- At the inline end, centred on the summary's first line (`padding + 0.5lh`), so it stays put when the summary wraps.
+- The summary is `display: block`, which drops the native marker in Chromium and Firefox; `::-webkit-details-marker` hides WebKit's (a prefixed selector reaching a native part, decision 76). The summary stays one text box: no flex row (decision 19).
+
+### 100. The panel is the browser's `::details-content`; no wrapper (applies decision 5)
+
+**Agreed 2026-10-26.** Before Chrome 131, Firefox 143 and Safari 18.4 the panel still toggles but loses its side padding and gap.
+
+- Content goes in the default slot. `.rs-disclosure::details-content` is a flex column whose gap (`--rs-disclosure-gap`, `space-2`) spaces the consumer's elements; it pads the sides and, only when open, the bottom. A closed slot keeps its box, so unconditional padding would leave a gap under a closed summary.
+- Body copy is `<p class="rs-disclosure__description">`: `color` and `margin: 0`, the shared vocabulary of Alert and Card.
+
+### 101. The box: a hairline border, no surface, a semibold summary
+
+**Agreed 2026-10-26.** The summary is 51px tall at 16px text (`space-4` block padding, matching Alert's).
+
+- `rs-disclosure`: `border-width-sm` `color-border` edge and `radius-md`, like Table and Alert. No background, so it sits on whatever surface places it. Hooks `--rs-disclosure-border-width`, `--rs-disclosure-border-color`, `--rs-disclosure-border-radius`.
+- `__summary` is styled as a title (decision 12): inherited size, `font-weight-semibold` through `--rs-disclosure-summary-font-weight`, `line-height-tight`, its own `color-fg`. One padding pair for summary and panel, `--rs-disclosure-padding-block` / `--rs-disclosure-padding-inline` (`space-4`).
+- No container-query size step and no `font-family` (decisions 8 and 9).
+
+### 102. Open and close transition smoothly, in CSS only; no hover (applies decision 23)
+
+**Agreed 2026-10-26.**
+
+- Shane: a smooth open and close, CSS only. Decision 38's instant change stays for form controls; a disclosure reveals content, so motion shows where it came from.
+- The block sets `interpolate-size: allow-keywords`, and `:open` reassigns `--rs-disclosure-panel-block-size` from `0px` to `auto`. `::details-content` transitions `block-size` and `padding-block-end`, plus `content-visibility` with `allow-discrete` so the panel stays visible until it has closed. `overflow: clip` hides the content while it grows. The chevron transitions `transform`.
+- One local, `--rs-disclosure-duration`, reads the hook `--rs-disclosure-transition-duration` (fallback `transition-medium`). `prefers-reduced-motion: reduce` sets the local to `0s`, so everything is instant.
+- New token `transition-medium: 210ms` (foundation, both modes). `transition-fast` (140ms) stays for colour changes on Button and links; a height change reads smoother slower. Shane's value.
+- `interpolate-size` is Chromium only (129); Firefox and Safari open and close instantly while the chevron still turns. No Firefox implementation bug or Mozilla position found (2026-10-26); the code needs no change when it ships. Shane tested Chrome and Firefox: Chrome is clearly better; keep `interpolate-size` as the only mechanism, no `max-height` or grid hack.
+- No hover: the affordance is `cursor: pointer` and the chevron.
+
+### 103. Focus is the library ring on the summary
+
+**Agreed 2026-10-26.**
+
+- `&__summary:focus-visible` uses the standard `2px` `color-focus-ring` outline at `2px` offset. The summary is the only focusable part.
+
+### 104. Disclosure stories: `Default`, then `Accordion` as its own aspect (applies decision 29)
+
+**Agreed 2026-10-26.** The usage code stays on every docs page: the canvas shows rendered HTML, so only the source shows the slot syntax, element classes and imports.
+
+- Both are docs pages (decision 80, amended), sorted `Default` then `Accordion` in `preview.ts`.
+- `Components/Disclosure` → `Default` (`Disclosure.stories.tsx`, `DisclosureDefault.astro`, example `DisclosureDefaultExample.astro`): what a disclosure is, two that open on their own (one closed with two paragraphs, one `open`), the usage code, and three tables: props and attributes (`class`, `open`, `name`), slots (`summary`, default), CSS hooks with their token defaults.
+- `Components/Disclosure` → `Accordion` (`Disclosure.accordion.stories.tsx`, `DisclosureAccordion.astro`, example `DisclosureAccordionExample.astro`): one open at a time through a shared `name`, three plan questions in `<Stack gap="small">`, and the usage code. No second API table: the API is the same.
+- Axe clean in light and dark with every panel opened (headless Chromium, a11y addon's axe).
+
+### 105. Disclosure and Popover are the reference for native open state
+
+**Agreed 2026-10-26.**
+
+- Skill table row "Native open state (`<details>`, popover)" → `Disclosure.astro`, `Popover.astro`, with a `patterns.md` section of that name: the platform owns the state; style it with its pseudo-class (`:open`, `:popover-open`), never `[open]`; the state only reassigns locals; fixed-position parts are slots rendered first; content goes in the browser's own slot; border-drawn decoration; `transition-medium` with reduced motion; one open at a time is a shared `name`.
+- The skill's stop rule drops `[open]` and `popover`: native open state follows the row. Open state the platform does not own, `:has()`, `::backdrop`, focus trapping and script still go to Shane first.
+- `rocketship-stories.mdc` gains "Docs pages (Astro)" and the template's story wrapper becomes the docs page plus its example file (decision 80, amended), so components built next start as docs pages. Popover and Tooltip move over in RCL-21.
+- Dialog (RCL-13) joins the row when it lands.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -674,6 +764,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
+- RCL-12: Disclosure built with decisions 95–105 as a fixed `<details>` with a `summary` slot, styled from `:open` and `::details-content`, a border chevron, and a CSS-only height transition (`interpolate-size`, Chromium; instant elsewhere). New token `transition-medium` (210ms). No Accordion component: a shared `name`. Stories `Components/Disclosure` → `Default` and `Accordion` are the first docs pages (decision 80, amended). Skill, patterns, stories rule and template updated. Axe clean light and dark. The Svelte Disclosure and Accordion (RCL-58) predate these decisions and need porting.
 
 ## Sequence
 

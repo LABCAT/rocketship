@@ -23,6 +23,7 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 - `Base/`: Container, Grid, Stack, Scroll, Button, Typography. Add new `Base/` stories to the sort order in `.storybook/preview.ts`.
 - `Components/`: every other component.
 - `Foundations/`: tokens.
+- Titles are spaced words: `Components/File Input`, not `Components/FileInput`.
 - A Svelte story uses the same title as its Astro story.
 
 ## Wrappers
@@ -47,6 +48,8 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 - Show a live-region `role` only where the example is genuinely dynamic.
 - Forms: every control has a `<Label for>`. Error examples set `aria-invalid="true"` and `aria-describedby` on the control. A story with a required asterisk also shows "Fields marked * are required."
 - Compose forms as in `.agents/skills/rocketship-component/references/patterns.md` → Forms.
+- Every attribute does what the copy says. No markup with no effect (a `<datalist>` on a styled range).
+- An error example shows a rule the control cannot express. Rule out impossible values with `min`, `max` or `accept` instead of reporting them.
 - Use library controls only. If a control is still under review, the example waits; no native stand-ins.
 - A state only script can set (`indeterminate`) gets a one-line `<script is:inline>` in the wrapper. Never fake it with a class. If the story host does not run the script, leave the example out.
 - No `autofocus`.

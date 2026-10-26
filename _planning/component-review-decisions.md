@@ -434,6 +434,118 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Story images are served by Storybook's `staticDirs` at `/story-assets/`, not imported: Astro image imports give dev-only `/@fs/` paths in the static build.
 - PR #5's no-caption, rich-caption, table and prose stories are dropped: an empty slot teaches nothing, a table already has its caption, and prose is parked.
 
+### 63. File Input shares Input's box
+
+- Applies decisions 17, 20, 21 and 9 to File Input. `rs-file-input` is Input's box: `font: inherit`, `line-height-base`, `color-border-control` edge, `radius-sm`, `color-surface`. No `min-height`, no `font-size-sm`, no container-query step.
+- The browse button sits inside the box, so the box pads `space-1` (one hook, `--rs-file-input-padding`) and the button pads `space-1` × `space-3`. 1px + 4px + 31.2px button + 4px + 1px = 41.2px, Input's height at 16px, so the two line up in a form at any page font size.
+- The PR's own box (44px, 14px text, `radius-md`, a bigger button above `$rs-cq-sm`) made the file field taller, rounder and smaller-texted than the Input beside it.
+
+### 64. Story titles are human words
+
+- A story title is what a reader calls the component, with spaces: `Components/File Input`, `Components/Range Input`. The import name stays `FileInput`; the title is docs, not code.
+- Existing camel-case titles (`Foundations/BordersAndRadius`) are aligned when next touched.
+
+### 65. The browse button is the library's button shape
+
+- `::file-selector-button` is a pill (`radius-pill`, hook `--rs-file-input-button-border-radius`), semibold, `color-surface-elevated` fill and `color-fg` text (about 16:1), like Button, so it reads as pressable inside a box that matches every other field.
+- No edge of its own: it is part of the input, whose `color-border-control` edge meets WCAG 1.4.11 for the whole control.
+- No flex centring: one line of text placed by padding.
+
+### 66. The browse button has no hover, active or transition
+
+- Applies decisions 23 and 38. File Input is a form control: no hover or active change on the button, no transition on the box or the button. The affordance is `cursor: pointer` and the pill shape (decision 65).
+- The PR's `brightness(1.05)` was barely visible on a near-white fill, and its transitions animated only the hover and an `aria-invalid` border that never changes under the user.
+- Button keeps its hover: a standalone action has no surrounding control to signal it.
+
+### 67. A disabled File Input dims as a whole; the platform blocks it
+
+- Applies decision 38: `&:disabled` sets `opacity: 0.55` and `cursor: not-allowed` on the block, and the opacity dims the button with it.
+- `&:disabled::file-selector-button` resets only `cursor: not-allowed`, because the button's own `cursor: pointer` would otherwise win.
+- No `pointer-events: none`: the native `disabled` attribute already stops the picker opening (decision 24). Blocking in CSS duplicated it and implied disabling lives in styles.
+
+### 68. An invalid File Input swaps only its border
+
+- Applies decision 20: `rs-file-input--invalid` (derived from `aria-invalid`) reassigns only `--rs-file-input-border-color` to `color-danger-accent`, so every control in a form shows an error the same way.
+- The button keeps its look. The error already has the red edge, the semibold `rs-field__error` text (WCAG 1.4.1) and `aria-describedby`; a pink pill read like a destructive "remove file" action.
+- Nothing swaps the button's colours, so they are opt-in hooks, not locals: `--rs-file-input-button-bg` (`color-surface-elevated`), `--rs-file-input-button-color` (`color-fg`). The border colour stays a local.
+
+### 69. The filename is the value: `color-fg`
+
+- The input's own text ("No file chosen", then the file name or "3 files") reads `var(--rs-file-input-color, #{rs-token(color-fg)})`, like Input's `--rs-input-color`.
+- Once a file is picked, that text is the field's value, the thing the user checks. Input shows its value in `color-fg` and mutes only the placeholder.
+- No pseudo-class separates the empty text from a chosen file, so one colour serves both and the value wins. Contrast was not the issue (`color-muted` is about 6.9:1); hierarchy and parity were.
+
+### 70. In forced colours the browse button gets a system edge
+
+- Extends decision 22's forced-colours rule. The pill is shaped only by its fill with `border: 0`; forced colours repaint the fill in the system button colour, often the box's own colour, leaving floating text.
+- `&::file-selector-button` adds `@media (forced-colors: active) { border: 1px solid ButtonBorder; }`. `ButtonBorder` is a CSS system colour, so it follows the user's theme, and normal rendering is unchanged.
+- Narrower than Select's `appearance: auto`: the button's text and padding survive forced colours, only the edge was lost. The box's border and focus ring already survive.
+- Reasoned from the spec, not yet seen rendered: check on Windows with a contrast theme.
+
+### 71. Range Input has one size: a 24px thumb on a 4px track
+
+- Applies decisions 9 and 35. No container-query step (the PR grew the thumb from 20px to 24px and the track from 4px to 6px above `$rs-cq-sm`), so no `-cq` hooks. The step was backwards: narrow containers are usually phones, where fingers need the larger thumb.
+- The thumb is 24px, Checkbox and Radio's target size (WCAG 2.2 2.5.8 on its own) and their height in the same form. The box is thumb + `space-2` = 32px.
+- The track is a 4px guide; the handle is the thumb. The browser's hit area is the whole input box, so a thicker track would add weight, not usability.
+- Both are the component's own geometry, read as hooks with literal fallbacks like `--rs-checkbox-size`: `--rs-range-input-thumb-size` (24px), `--rs-range-input-track-height` (4px). Never assigned by the library.
+
+### 72. The range track is one colour; the thumb shows the value
+
+- No progress fill before the thumb. Chromium and WebKit have no part for it, so a fill needs a script writing the value into a variable on every input; CSS-only comes first. `::-moz-range-progress` alone would make the slider look different per browser.
+- The thumb's position is the value, and assistive tech reads it from the native control. When the exact number matters, the consumer writes it beside the slider (an `<output>` or the hint).
+- A filled slider, if ever wanted, is a JS-tier pattern added deliberately, like interactive tables (decision 44).
+
+### 73. An invalid range turns both of its edges danger
+
+- Applies decisions 20 and 68: invalid swaps the control's edges, nothing else. A slider has two, the track (its rest outline) and the thumb's ring, so `rs-range-input--invalid` reassigns `--rs-range-input-track-color` and `--rs-range-input-thumb-border-color` to `color-danger-accent`. Checkbox does the same when checked and invalid.
+- Swapping one alone read as two states. Both are strokes, so `danger-accent` is used for its role (decision 18); the thumb's `color-surface` fill is unchanged.
+- A range always satisfies `min`/`max`, but can break a consumer rule ("at least one worker"), so it derives the modifier from `aria-invalid` like every control.
+
+### 74. In forced colours Range Input is the native slider
+
+- Applies decision 34's fallback. Forced colours repaint the track (a background) in `Canvas`, so it vanishes and the thumb floats. `@media (forced-colors: active) { appearance: auto; }` on the block, and again on `::-webkit-slider-thumb` because WebKit sets the thumb's appearance separately; Firefox's thumb follows the input.
+- The native slider draws track, thumb and focus in the user's system colours. File Input only adds an edge (decision 70) because its button keeps text and padding; a range loses its whole track.
+- Reasoned from the spec, not yet seen rendered: check on Windows with a contrast theme.
+
+### 75. Range Input sets its height, never its width
+
+- Applies decisions 13 and 14. No `inline-size: 100%`: Field's flex column stretches it like Input, Select and File Input, and outside a Field the placer decides its width. The PR's rule made a bare range fill any toolbar or cell.
+- `block-size` stays (thumb + `space-2`): the native box is about 16px, so a 24px thumb would overflow it and the focus ring would cut through it.
+- No `box-sizing`: the input has no padding or border, so it changed nothing.
+
+### 76. No vendor-prefixed properties
+
+- `appearance` only, never `-webkit-appearance`: every engine supports the standard property (Safari since 15.4), and in Chromium and WebKit the prefixed name is an alias, so each pair set one value twice. Checkbox, Radio and Select already use plain `appearance`.
+- A prefixed _selector_ is fine where it is the only way to reach a part (`::-webkit-slider-thumb`, `::-moz-range-track`); the properties inside it are standard.
+
+### 77. The range thumb is a ringed handle
+
+- `color-surface` fill with a `border-width-md` (2px) `color-accent` ring (about 5.6:1 light, 6:1 dark, WCAG 1.4.11), clear over the track in rest and invalid states.
+- Not a solid accent disc: an accent fill means "selected" on Checkbox and Radio, and a slider has no on state. A ring reads as a handle to drag.
+- 2px, not the 1px control edge: the thumb is the moving, primary affordance, and 1px on a 24px disc read faint. Hooks `--rs-range-input-thumb-bg`, `--rs-range-input-thumb-border-width`.
+- `border-radius: #{rs-token(radius-pill)}`, the way Radio draws its circle, not `50%`.
+
+### 78. File and Range stories: every attribute does what the copy says
+
+- Extends decision 39. `Components/File Input` → `States` and `Components/Range Input` → `States`: a default with a hint, an error, and a disabled field, each a `<Field>` with `<Label for>`. File Input's required certificate brings the "Fields marked * are required." line.
+- A hint states what the control allows but cannot show: "PDF only. You can attach several files." for `accept` plus `multiple`. The PR's "Attach one file per release" contradicted `multiple`.
+- No `<datalist>` on the range: browsers draw its tick marks only on the native slider, so with `appearance: none` it rendered nothing. `step` does the snapping. Visible ticks would be a reviewed component feature, not story markup.
+- An error example shows a rule the control cannot express. "Build workers" uses `min={1}` rather than allowing 0 and then reporting it; the error is a rollout below the 50% already released, which `min` and `max` cannot encode, with a message that says which way to move.
+
+### 79. Fields in a form are a large Stack apart
+
+- Extends decision 30. Fields stacked in the default Stack sat 16px apart against Field's 8px inside gap, the bare 2× minimum. With hints and errors they read as one run of text.
+- Consecutive Fields go in `<Stack gap="large">` (`space-6`, 24px, 3× the inside gap). Applied to every form story: Input, Textarea, Select, File Input, Range Input, Field, Label.
+- Option rows stay `<Stack gap="small">` (decision 28), and consecutive fieldsets stay `xlarge` (decision 30).
+- Open: Fieldset's own gap is still `space-4` (decision 28), so Fields inside a fieldset are now closer than standalone Fields. Decide whether Fieldset moves to `space-6`.
+
+### 80. A set of checkboxes is a Fieldset, not a component
+
+- No "Checkbox Set" component. A set of related checkboxes is the same composition as a radio group (decisions 28, 36): `<Fieldset>` whose legend asks the question, holding a `<Stack gap="small">` of `<Field inline>` rows. The legend names the group for assistive tech; a new component would only repeat Fieldset.
+- A standalone checkbox (terms, "Email me a monthly summary") is its own `<Field inline>` in the form's `<Stack gap="large">` (decision 79), spaced like any field.
+- Two stories, so the sidebar names what each canvas shows (decision 29: the story is named for what it shows). `Components/Checkbox` → `States` (`Checkbox.stories.tsx`): each state as its own `<Field inline>` in a `<Stack gap="large">`, like Input → States: unchecked with a hint, checked, disabled, disabled checked, and a required terms box in error with the "Fields marked * are required." line. `Components/Checkbox` → `Set` (`Checkbox.set.stories.tsx`, `CheckboxSet.astro`): a "Notify me about" Fieldset with an indeterminate "All topics" (indeterminate only means something over a group), checked, unchecked, and two disabled rows with hints.
+- No headings or explanation copy in a canvas. Bare `<h2>`/`<p>` brought browser margins and three competing titles, and an Input in a Checkbox story was noise. A states comparison is not a form, so a list of rows there is fine; the PR #15 story read as a set because it mixed that comparison with grouping.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -442,6 +554,9 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - **Alert:** once the role goes, "error" is conveyed by colour plus title text only. Decide on a non-colour signal.
 - **Style queries:** check current browser support (Firefox) before making rule 3's style-query clause binding. Resolved 2026-10-24: Firefox 151 (19 May 2026) shipped `@container style()` for custom properties, completing cross-browser support (Chrome/Edge 111, Safari 18). The clause is binding for exact-value matches only; range syntax (`>`, `<`) is still behind a Firefox flag and is not allowed.
 - **Svelte:** `Alert.svelte` has the same issues, and `packages/svelte/test/components.test.mjs` asserts the prop-beats-slot title behaviour. The `@labcat2020/rocketship/styles/mixins` subpath export is needed for `rs-token()` to reach Svelte.
+
+- **Axe test recipe (from RCL-29's dropped skill-friction log):** build Storybook static, serve it, drive `iframe.html?id=<storyId>&viewMode=story` with Playwright and run axe in the page. Reuse the a11y addon's embedded `window.axe` (injecting a second axe-core fails with "Axe is already running"); exclude only iframe-shell rules (`region`, `landmark-one-main`, `page-has-heading-one`); in axe 4.13 disable rules with `rules: { id: { enabled: false } }`, since `disable: [...]` was a no-op. Decide whether this becomes a scripted check.
+- **Range tick marks:** visible steps would be painted on the track (gradient stops aligned to `step`), not a `<datalist>` (decision 78). A component feature needing its own review.
 
 ## Alert topics still to review
 
@@ -462,6 +577,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #64 (RCL-11): Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` (landscape) and `Portrait`, with NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and needs porting; its README row still says Svelte-first.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
+- PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
 
 ## Sequence
 

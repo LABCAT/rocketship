@@ -1,0 +1,91 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & Omit<HTMLAttributes<'input'>, 'type'>
+
+const { class: className, ...attrs } = Astro.props as Props
+const invalid = attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true'
+const classes = ['rs-range-input', invalid && 'rs-range-input--invalid', className]
+---
+
+<input {...attrs} type="range" class:list={classes} />
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-range-input {
+    --rs-range-input-track-color: #{rs-token(color-border-control)};
+    --rs-range-input-thumb-border-color: #{rs-token(color-accent)};
+    block-size: calc(var(--rs-range-input-thumb-size, 24px) + #{rs-token(space-2)});
+    margin: 0;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid #{rs-token(color-focus-ring)};
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    /// The track and thumb are the input's own parts. WebKit and Firefox name them differently,
+    /// so each part is written twice.
+    &::-webkit-slider-runnable-track {
+      block-size: var(--rs-range-input-track-height, 4px);
+      background: var(--rs-range-input-track-color);
+      border-radius: #{rs-token(radius-pill)};
+    }
+
+    &::-webkit-slider-thumb {
+      box-sizing: border-box;
+      block-size: var(--rs-range-input-thumb-size, 24px);
+      inline-size: var(--rs-range-input-thumb-size, 24px);
+      margin-block-start: calc(
+        (var(--rs-range-input-track-height, 4px) - var(--rs-range-input-thumb-size, 24px)) / 2
+      );
+      appearance: none;
+      background: var(--rs-range-input-thumb-bg, #{rs-token(color-surface)});
+      border: var(--rs-range-input-thumb-border-width, #{rs-token(border-width-md)}) solid
+        var(--rs-range-input-thumb-border-color);
+      border-radius: #{rs-token(radius-pill)};
+
+      /// WebKit sets the thumb's appearance separately from the input's.
+      @media (forced-colors: active) {
+        appearance: auto;
+      }
+    }
+
+    &::-moz-range-track {
+      block-size: var(--rs-range-input-track-height, 4px);
+      background: var(--rs-range-input-track-color);
+      border-radius: #{rs-token(radius-pill)};
+    }
+
+    &::-moz-range-thumb {
+      box-sizing: border-box;
+      block-size: var(--rs-range-input-thumb-size, 24px);
+      inline-size: var(--rs-range-input-thumb-size, 24px);
+      background: var(--rs-range-input-thumb-bg, #{rs-token(color-surface)});
+      border: var(--rs-range-input-thumb-border-width, #{rs-token(border-width-md)}) solid
+        var(--rs-range-input-thumb-border-color);
+      border-radius: #{rs-token(radius-pill)};
+    }
+
+    &--invalid {
+      --rs-range-input-track-color: #{rs-token(color-danger-accent)};
+      --rs-range-input-thumb-border-color: #{rs-token(color-danger-accent)};
+    }
+
+    /// Forced colours repaint the track in the page colour, so high-contrast users get the native
+    /// slider.
+    @media (forced-colors: active) {
+      appearance: auto;
+    }
+  }
+</style>

@@ -1,5 +1,5 @@
 ---
-description: Structure rules for Rocketship Storybook stories, Astro (apps/frontend) and Svelte (apps/svelte) — files, titles, wrappers, naming, scope and content.
+description: Structure rules for Rocketship Storybook stories, Astro (apps/astro) and Svelte (apps/svelte) — files, titles, wrappers, naming, scope and content.
 globs:
   - "apps/*/src/stories/**"
   - "apps/*/.storybook/**"
@@ -12,7 +12,7 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 
 ## Files
 
-- Astro: `apps/frontend/src/stories/<Name>.stories.tsx` and `apps/frontend/src/stories/components/<Name>Default.astro`.
+- Astro: `apps/astro/src/stories/<Name>.stories.tsx` and `apps/astro/src/stories/components/<Name>Default.astro`.
 - Svelte: `apps/svelte/src/stories/<Name>.stories.ts` and `apps/svelte/src/stories/components/<Name>Default.svelte`.
 - Every story file sets `parameters: { a11y: { disable: false } }`.
 - Astro story files import the wrapper plus each library component it uses: `import '@labcat2020/rocketship/components/Stack'`.

@@ -12,7 +12,7 @@ const readJson = (path) => JSON.parse(read(path))
 
 const sveltePkg = readJson(join(appRoot, 'package.json'))
 const rootPkg = readJson(join(repoRoot, 'package.json'))
-const astroPkg = readJson(join(repoRoot, 'apps', 'frontend', 'package.json'))
+const astroPkg = readJson(join(repoRoot, 'apps', 'astro', 'package.json'))
 const mainTs = read(join(appRoot, '.storybook', 'main.ts'))
 
 test('apps/svelte is a private Storybook 10 host package', () => {
@@ -146,7 +146,7 @@ test('the Figure stories cover every caption state, including no caption at all'
 test('the Astro host is left unchanged', () => {
   assert.equal(astroPkg.name, '@rocketship/frontend')
   assert.match(astroPkg.scripts.storybook, /6006\b/, 'the Astro host keeps port 6006')
-  const astroMain = read(join(repoRoot, 'apps', 'frontend', '.storybook', 'main.ts'))
+  const astroMain = read(join(repoRoot, 'apps', 'astro', '.storybook', 'main.ts'))
   assert.match(astroMain, /@storybook-astro\/framework/, 'the Astro host keeps its framework')
 })
 

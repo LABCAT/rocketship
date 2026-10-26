@@ -429,7 +429,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - `Components/Figure` → `Default` (`Figure.stories.tsx`, `FigureDefault.astro`): Artemis II on Pad 39B at sunset, the everyday landscape case.
 - `Components/Figure` → `Portrait` (`Figure.portrait.stories.tsx`, `FigurePortrait.astro`): Apollo 11 from the launch-tower camera. It shows behaviour the landscape does not, the 80svh cap and the caption wrapping to the image's width, so it is a second aspect, not a state (decision 29). Photos match the library's theme.
-- Images are NASA public domain, committed as WebP in `apps/frontend/src/stories/assets/` with `CREDITS.md`. Each `<img>` has real `alt`, `width` and `height`; the caption adds what alt does not, with the credit in `<cite>`.
+- Images are NASA public domain, committed as WebP in `apps/astro/src/stories/assets/` with `CREDITS.md`. Each `<img>` has real `alt`, `width` and `height`; the caption adds what alt does not, with the credit in `<cite>`.
 - A `<cite>` (or any inline element) moved to its own line needs `{' '}` at the end of the line before it: Astro drops the line break instead of rendering a space.
 - Story images are served by Storybook's `staticDirs` at `/story-assets/`, not imported: Astro image imports give dev-only `/@fs/` paths in the static build.
 - PR #5's no-caption, rich-caption, table and prose stories are dropped: an empty slot teaches nothing, a table already has its caption, and prose is parked.

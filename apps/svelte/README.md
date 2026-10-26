@@ -1,6 +1,6 @@
 # Rocketship Svelte Storybook host
 
-Svelte Storybook host for `@labcat2020/rocketship-svelte`. It is separate from the Astro host in `apps/frontend` and does not replace it.
+Svelte Storybook host for `@labcat2020/rocketship-svelte`. It is separate from the Astro host in `apps/astro` and does not replace it.
 
 Stories render components from `@labcat2020/rocketship-svelte`, which reuses the Rocketship design system from `@labcat2020/rocketship`.
 

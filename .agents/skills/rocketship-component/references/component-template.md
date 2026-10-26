@@ -121,7 +121,7 @@ Named slot for an element with a fixed position (Table):
 "./components/Name": "./src/components/Name.astro"
 ```
 
-## Story file: `apps/frontend/src/stories/Name.stories.tsx`
+## Story file: `apps/astro/src/stories/Name.stories.tsx`
 
 ```tsx
 import type { Meta, StoryObj } from '@storybook/html'
@@ -144,7 +144,7 @@ type Story = StoryObj<typeof NameDefault>
 export const Default: Story = {}
 ```
 
-## Story wrapper: `apps/frontend/src/stories/components/NameDefault.astro`
+## Story wrapper: `apps/astro/src/stories/components/NameDefault.astro`
 
 ```astro
 ---

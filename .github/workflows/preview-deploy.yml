@@ -10,7 +10,7 @@
 #     an earlier reviewed head
 #
 # The workflow mirrors the production Cloudflare Pages path filters:
-#   - Astro Storybook  -> rocketship3000 (apps/frontend, packages/base)
+#   - Astro Storybook  -> rocketship3000 (apps/astro, packages/base)
 #   - Svelte Storybook -> rocketship3030 (apps/svelte, packages/svelte)
 # packages/base, pnpm-lock.yaml and the root package.json affect both hosts, so
 # a PR that touches them publishes both previews. A PR that touches neither
@@ -85,7 +85,7 @@ jobs:
             // Keep these prefixes in sync with each Cloudflare Pages project's
             // production path_includes. A shared change (packages/base, the
             // lockfile or the root package.json) rebuilds both Storybooks.
-            const astroPaths = ['packages/base/', 'apps/frontend/'];
+            const astroPaths = ['packages/base/', 'apps/astro/'];
             const sveltePaths = ['packages/base/', 'packages/svelte/', 'apps/svelte/'];
             const sharedPaths = ['pnpm-lock.yaml', 'package.json'];
 
@@ -158,7 +158,7 @@ jobs:
           packageManager: pnpm
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           command: >-
-            pages deploy apps/frontend/storybook-static
+            pages deploy apps/astro/storybook-static
             --project-name=rocketship3000
             --branch=preview-${{ needs.resolve.outputs.number }}
 

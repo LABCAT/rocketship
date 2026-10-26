@@ -10,7 +10,7 @@ alwaysApply: false
 ## What it is
 
 - A themeable, CSS-first component library: Astro in `packages/base` (`@labcat2020/rocketship`), Svelte ports in `packages/svelte` (`@labcat2020/rocketship-svelte`).
-- A pnpm monorepo: library packages in `packages/*`, Storybook hosts in `apps/*` (`apps/frontend` for Astro, `apps/svelte` for Svelte). The apps are not products.
+- A pnpm monorepo: library packages in `packages/*`, Storybook hosts in `apps/*` (`apps/astro` for Astro, `apps/svelte` for Svelte). The apps are not products.
 - Every package is published to npm; the apps use them through workspace references.
 - Later: add-on packages (forms, layout, ecommerce) that extend the base without breaking it, Payload templates and a Figma kit.
 

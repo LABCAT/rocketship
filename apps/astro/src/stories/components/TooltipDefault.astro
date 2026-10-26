@@ -1,0 +1,20 @@
+---
+import Button from '@labcat2020/rocketship/components/Button'
+import Container from '@labcat2020/rocketship/components/Container'
+import Tooltip from '@labcat2020/rocketship/components/Tooltip'
+---
+
+<Container size="content" padded>
+  <Tooltip>
+    <Button aria-describedby="tooltip-deploy">Deploy</Button>
+    <span class="rs-tooltip__content" role="tooltip" id="tooltip-deploy">
+      Builds the main branch and publishes it to production.
+    </span>
+  </Tooltip>
+  <Tooltip>
+    <Button variant="secondary" aria-describedby="tooltip-rollback">Roll back</Button>
+    <span class="rs-tooltip__content" role="tooltip" id="tooltip-rollback">
+      Restores the previous release.
+    </span>
+  </Tooltip>
+</Container>

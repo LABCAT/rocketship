@@ -46,6 +46,7 @@ export default {
             'Select',
             'Table',
             'Textarea',
+            'Tooltip',
           ],
         ],
       },

@@ -584,6 +584,64 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - No Stack: one example, and Stack's stretch made the trigger (and so the anchor) full width. Button and Popover sit in the Container, as the Button stories do.
 - No script opens it: the story shows real use, and the library ships no JavaScript (decision 81). Axe checks the open panel after the trigger is clicked; it was run that way in light and dark.
 
+### 88. Tooltip is a plain wrapper, like Field; CSS shows it
+
+- Tooltip renders `<span {...attrs} class="rs-tooltip"><slot /></span>` around a consumer-written trigger and content: the same pattern as Field (decision 14). The open state must come from a common ancestor, because sibling and `:has()` selectors are out (decision 3).
+- `.rs-tooltip:hover` and `.rs-tooltip:focus-within` set `--rs-tooltip-open: true`. The content shows through `@container style(--rs-tooltip-open: true)`, the parent-state pattern from decision 3, with no `container-type`. The block resets it to `false`, so the content never inherits it from an outer tooltip.
+- It shows on hover, on focus (a click focuses the button too) and on a tap. It hides when the pointer and focus have both left. It stays open while the pointer is over it (decision 92).
+- A `span` with `display: inline-block`, a narrow exception to decision 19: its box must hug the trigger to be the anchor (decision 91). An inline box is only one text line tall, so a tooltip anchored to it overlapped a 44px button by 3px. Side effect: a link with a tooltip cannot wrap across lines. No `as` (decision 1), no variants (decision 4), no `title` prop (decision 5), and no props beyond `class` and native attributes.
+- Native HTML has no cross-browser hover tooltip yet. The `title` attribute cannot be reached by keyboard or touch, and `interestfor` with `popover="hint"` only works in Chrome and Edge (142+). A click-to-open toggletip is a button plus a native `popover`, so it belongs to Popover (RCL-14), not Tooltip. Most libraries keep the two apart, as Carbon (`Tooltip` and `Toggletip`) and Spectrum (`Tooltip` and `ContextualHelp`) do.
+
+### 89. A small script adds Escape; CSS does everything else
+
+- WCAG 1.4.13 needs hover and focus content to be dismissible without moving the pointer or focus. CSS cannot react to a key, so a short guarded `<script is:inline>` adds only that.
+- On Escape it adds `rs-tooltip--dismissed` to each open block and prevents the key's default, so a surrounding `<dialog>` stays open. `.rs-tooltip--dismissed:hover` and `.rs-tooltip--dismissed:focus-within` set `--rs-tooltip-open: false`. Each is one class plus a pseudo-class (decision 3), and they come after the open state at the same specificity, so they win.
+- It removes the class once the pointer and focus have both left the block (`pointerout` and `focusout`, checking `relatedTarget`), so the next hover or focus opens it again.
+- It is inline because the Storybook host does not serve bundled Astro component scripts (the request 404s); it does run inline ones, as Checkbox → Set's does. The script repeats with each Tooltip, but a `Symbol.for('rs-tooltip')` guard on `window` attaches the listeners once per page. It listens on `document`, so tooltips added later work too.
+- Without the script, the tooltip still opens and closes on hover and focus; only Escape is lost.
+- This is the one exception to decision 81 (RCL-14 Popover): no Astro component ships a script. Shane approved it on 2026-10-26 ("tooltips will be allowed a small amount of js"), because no platform feature dismisses a hover or focus tooltip with Escape.
+
+### 90. The consumer writes the content element and the wiring
+
+- Decisions 5 and 58: the consumer writes both elements inside `<Tooltip>`:
+  ```astro
+  <Tooltip>
+    <Button aria-describedby="tooltip-deploy">Deploy</Button>
+    <span class="rs-tooltip__content" role="tooltip" id="tooltip-deploy">…</span>
+  </Tooltip>
+  ```
+- `aria-describedby` when the tooltip adds information, `aria-labelledby` when it is the trigger's only name. The consumer writes both ends (decision 14). Screen readers read it while it is hidden.
+- `role="tooltip"` is written by the consumer, so roles stay opt-in (decision 2).
+- The content is phrasing text only: no links or buttons, because it disappears when focus moves into it.
+- No trigger class. The consumer writes only what Field already asks for: the content's class, `role` and `id`, plus the trigger's `aria-describedby`. An earlier `rs-tooltip__trigger` class was dropped because a forgotten class misplaced the tooltip silently.
+
+### 91. Placement is CSS anchor positioning: above, flipping below
+
+- The block sets `anchor-name: --rs-tooltip` and `anchor-scope: --rs-tooltip`, so each content anchors to its own wrapper, although every wrapper uses the same name.
+- `__content` is `position: fixed` with `position-area: block-start` and `position-try-fallbacks: flip-block`. Fixed positioning escapes a scrolling ancestor's overflow, such as `Scroll`. An ancestor's `clip-path`, such as Table's (decision 48), still clips it.
+- CSS anchor positioning is Baseline since Firefox 147 (January 2026). `anchor-scope` is in Chrome, Safari 26 and Firefox 147, so there is no fallback.
+- The gap is the `--rs-tooltip-offset` hook (`space-2`), a block-end margin that `flip-block` mirrors.
+- No `z-index`: it is not in the top layer, so a positioned element later in the page can paint over it. Left out until a real page hits this; the fix is then a `z-index` token, not a hand-written number.
+
+### 92. A transparent bridge keeps it open across the gap
+
+- `__content::before` is an empty, absolutely positioned box that extends offset plus border width beyond both block edges, so moving the pointer from the trigger onto the tooltip never leaves the block's `:hover`.
+- It covers the border too, because `::before` is placed from the padding box. Without the border width there was a 1px dead strip, and the tooltip closed when the pointer crossed it.
+- The bridge only overlaps empty space, never the trigger, so it cannot steal its clicks.
+
+### 93. The tooltip looks like a small raised surface
+
+- `color-surface` background, `color-fg` text, `color-border` edge, `radius-sm`, `shadow-md`, `space-1` / `space-2` padding. Every token is used in its named role (decision 18). No inverted dark bubble, because no token names that role.
+- Colours are block locals (`--rs-tooltip-bg`, `--rs-tooltip-color`, `--rs-tooltip-border-color`), read by the content. Offset, max width, border width, radius and padding are opt-in hooks.
+- `inline-size: max-content` up to `max-inline-size: 280px` (hook `--rs-tooltip-max-inline-size`, no token), so short text stays on one line and long text wraps.
+- Font size and line height come from the page (decisions 8 and 11). No arrow. In forced colours the border keeps the edge where the shadow drops out.
+- It differs from Popover (decision 85) on purpose: a smaller radius, tighter padding and narrower width read as a quick label, not a panel; and `color-surface` stands out more than Popover's `color-surface-elevated` on the light page, which suits short-lived text. Do not align them.
+
+### 94. Tooltip story: two buttons, each with a tooltip
+
+- `Components/Tooltip` → `Default` (`Tooltip.stories.tsx`, `TooltipDefault.astro`): a primary "Deploy" and a secondary "Roll back" button, each in its own `<Tooltip>` and described by its content, placed straight in the Container like Button → Variants. A Stack would stretch the buttons to full width. No instruction copy in the canvas (decision 80).
+- The buttons sit at the top of the canvas, so the tooltips flip below, which shows `flip-block` working.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

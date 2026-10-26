@@ -82,12 +82,72 @@ const { class: className, ...attrs } = Astro.props as Props
       }
     }
 
+    /// Reserves the corner for `__close`, so a long title wraps before the button.
     &__title {
       color: var(--rs-dialog-color);
       font-size: var(--rs-dialog-title-font-size, #{rs-token(font-size-lg)});
       font-weight: var(--rs-dialog-title-font-weight, #{rs-token(font-weight-semibold)});
       line-height: #{rs-token(line-height-tight)};
       margin: 0;
+      padding-inline-end: calc(
+        32px + #{rs-token(space-4)} +
+          #{rs-token(space-2)} - var(--rs-dialog-padding, #{rs-token(space-6)})
+      );
+    }
+
+    /// A consumer-written `<button>` named by its `aria-label`. The X is painted on its
+    /// `::before` in the button's text colour, so it follows the theme.
+    &__close {
+      all: unset;
+      box-sizing: border-box;
+      position: absolute;
+      inset-block-start: #{rs-token(space-4)};
+      inset-inline-end: #{rs-token(space-4)};
+      display: grid;
+      place-items: center;
+      block-size: 32px;
+      inline-size: 32px;
+      border-radius: #{rs-token(radius-sm)};
+      color: var(--rs-dialog-close-color, #{rs-token(color-muted)});
+      cursor: pointer;
+
+      &::before {
+        content: '';
+        background: currentColor;
+        block-size: 16px;
+        clip-path: polygon(
+          9% 0,
+          0 9%,
+          41% 50%,
+          0 91%,
+          9% 100%,
+          50% 59%,
+          91% 100%,
+          100% 91%,
+          59% 50%,
+          100% 9%,
+          91% 0,
+          50% 41%
+        );
+        inline-size: 16px;
+      }
+
+      &:hover {
+        color: var(--rs-dialog-color);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #{rs-token(color-focus-ring)};
+        outline-offset: 2px;
+      }
+
+      /// Forced colours would repaint the X's background in the system canvas colour.
+      @media (forced-colors: active) {
+        &::before {
+          background: ButtonText;
+          forced-color-adjust: none;
+        }
+      }
     }
 
     &__description {

@@ -713,6 +713,20 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Settles decision 81's "revisit if Dialog standardises on invoker commands". Each component uses the best declarative trigger its element has. Dialog: `command="show-modal"` / `commandfor` (decision 96), the only script-free way to open a modal dialog. Popover: `popovertarget`, supported everywhere; `commandfor` would lose that for no gain.
 - Dialog fades (decision 102); Popover stays instant (decision 85). Popover was reviewed and looks right as it is.
 
+### 106. An optional close X is the `rs-dialog__close` element class
+
+- People look for an X in the corner, and on a touch screen there is no Escape key. The consumer writes the button and names it; the library paints the X (decisions 5, 16 and 22):
+  ```astro
+  <button class="rs-dialog__close" type="button" command="close" commandfor="delete-project" aria-label="Close"></button>
+  ```
+- A native `<button>`, not `<Button>`: Button's own pill, padding and colours would fight the element class (two blocks on one element, decision 3). The class makes it a library part, as `rs-dialog__actions` does for the native form.
+- 32px square (target size, decision 35), `position: absolute` at `space-4` from the top and end. A modal dialog is `position: fixed`, so it is the containing block. `radius-sm`, focus ring on `:focus-visible`.
+- The X is the button's `::before`: a 16px box clipped to an X polygon (2px strokes) and filled with `currentColor`, like Checkbox's tick (decision 34). `color-muted` at rest (about 6.9:1, graphics need 3:1), `--rs-dialog-color` on hover. Hook `--rs-dialog-close-color`.
+- `rs-dialog__title` always pads its end by the X's width plus `space-2`, so a long title wraps before the button. A dialog without an X loses 32px of title width; accepted, because the title cannot know whether an X exists without `:has()` (decision 3).
+- Forced colours: the `::before` gets `background: ButtonText` with `forced-color-adjust: none`, because forced colours would repaint its background in the canvas colour and hide the X. Reasoned from the spec, not yet seen on Windows.
+- In the story it comes after the actions in the source. The browser focuses the first focusable element, so the dialog still opens on Cancel (decision 101), and Tab runs Cancel, Delete project, Close.
+- Checked in Chromium, light and dark: axe clean with the dialog open; the X closes the dialog and returns focus to the trigger.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -745,7 +759,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
 - Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
-- RCL-13: Dialog built with decisions 95–103 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
+- RCL-13: Dialog built with decisions 95–103 and 106 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
 
 ## Sequence
 

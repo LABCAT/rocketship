@@ -101,6 +101,14 @@
         "hex": "#4f5b7d"
       }
     },
+    "backdrop": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.0745, 0.102, 0.1843],
+        "alpha": 0.5,
+        "hex": "#131a2f"
+      }
+    },
     "success": {
       "bg": {
         "$value": {

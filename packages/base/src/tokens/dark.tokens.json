@@ -59,8 +59,8 @@
       "contrast": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.9725, 0.9843, 1],
-          "hex": "#f8fbff"
+          "components": [0.0235, 0.0431, 0.0941],
+          "hex": "#060b18"
         }
       }
     },
@@ -99,6 +99,14 @@
         "colorSpace": "srgb",
         "components": [0.7647, 0.7961, 0.9176],
         "hex": "#c3cbea"
+      }
+    },
+    "backdrop": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.0235, 0.0431, 0.0941],
+        "alpha": 0.7,
+        "hex": "#060b18"
       }
     },
     "success": {

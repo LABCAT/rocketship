@@ -546,6 +546,44 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Two stories, so the sidebar names what each canvas shows (decision 29: the story is named for what it shows). `Components/Checkbox` → `States` (`Checkbox.stories.tsx`): each state as its own `<Field inline>` in a `<Stack gap="large">`, like Input → States: unchecked with a hint, checked, disabled, disabled checked, and a required terms box in error with the "Fields marked * are required." line. `Components/Checkbox` → `Set` (`Checkbox.set.stories.tsx`, `CheckboxSet.astro`): a "Notify me about" Fieldset with an indeterminate "All topics" (indeterminate only means something over a group), checked, unchecked, and two disabled rows with hints.
 - No headings or explanation copy in a canvas. Bare `<h2>`/`<p>` brought browser margins and three competing titles, and an Input in a Checkbox story was noise. A states comparison is not a form, so a list of rows there is fine; the PR #15 story read as a set because it mixed that comparison with grouping.
 
+### 81. The Astro library ships no JavaScript; Popover is the native `popover` attribute
+
+- No Astro component ships a script. Behaviour comes from the platform (`popover`, `<details>`, `<dialog>`, invoker attributes), never from a component's `<script>`.
+- One exception: Tooltip may ship a small script, because the platform cannot dismiss a hover or focus tooltip with Escape (WCAG 1.4.13).
+- Popover renders `<div popover="auto" {...attrs} class="rs-popover"><slot /></div>`. The platform gives the top layer, light dismiss, Escape, one `auto` popover open at a time, the trigger's expanded state, and Tab order from the trigger into the panel. No focus trap: a popover is non-modal (modal is Dialog, RCL-13).
+- The consumer writes the trigger: `<Button popovertarget="id">` (Button already spreads native attributes). `popovertarget` over `commandfor`/`command` because it is supported everywhere; revisit if Dialog standardises on invoker commands.
+- `popover="auto"` sits before `{...attrs}`, so `popover="manual"` or `"hint"` overrides it with no prop (decision 24).
+
+### 82. Popover is a fixed `div` with no role (applies decisions 1 and 2)
+
+- One valid root, so no `as`. A popover is not a dialog: no role by default. A consumer whose panel is a named group adds `role` and `aria-labelledby` through attrs.
+
+### 83. A closed popover stays hidden: flex only on `:popover-open`
+
+- `display: flex` on `.rs-popover` would beat the browser's `[popover]:not(:popover-open) { display: none }` and show a closed popover. The flex column and its `gap` sit on `.rs-popover:popover-open`, a pseudo-class on the block (decision 3).
+
+### 84. Popover anchors to its trigger where anchor positioning exists
+
+- `popovertarget` makes the trigger the popover's implicit anchor. Inside `@supports (position-area: block-end)`: `position-anchor: auto`, `position-area: block-end span-inline-end`, `position-try-fallbacks: flip-block, flip-inline`, `margin: 0`, and `margin-block-start` through `--rs-popover-offset` (`space-2`). Without support the browser default stays: centred in the viewport.
+- `position-anchor: auto` is explicit because Firefox computes `normal` (mdn/content#45514). Verified in Chromium only; Firefox and Safari to check.
+
+### 85. Popover surface: an elevated card with a shadow
+
+- `color-surface-elevated`, `color-border` hairline, `radius-md`, `shadow-md`, padding `space-4`, gap `space-2`, `color: color-fg`. All opt-in hooks (`--rs-popover-bg`, `-border-color`, `-border-width`, `-border-radius`, `-shadow`, `-padding`, `-gap`) except `--rs-popover-color`, which elements read.
+- `max-inline-size: var(--rs-popover-max-inline-size, 320px)`. No size token states a panel width, so this is a literal in a hook, as Figure's `80svh` is. Decide whether a token is needed.
+- No transition (decision 38's reasoning). A fade needs `@starting-style` and `transition-behavior: allow-discrete`, its own decision.
+
+### 86. Popover content is consumer-written `__title` and `__description` (applies decision 5)
+
+- Same vocabulary and rules as Alert. No close button and no words (decision 16): light dismiss and Escape close it; a consumer may add `<Button popovertarget="id" popovertargetaction="hide">` with their own words.
+- A toggletip (a click-to-open "more info" button) is a Popover, not a Tooltip mode: `<Button popovertarget="x">` plus `<Popover id="x">`. Tooltip stays hover and focus only.
+
+### 87. Popover story: a closed trigger; axe runs with it open
+
+- `Components/Popover` → `Default` (`Popover.stories.tsx`, `PopoverDefault.astro`): a secondary Button "Build 482" opening a "Build 482 passed" panel. The story loads closed, as a consumer's page would.
+- No Stack: one example, and Stack's stretch made the trigger (and so the anchor) full width. Button and Popover sit in the Container, as the Button stories do.
+- No script opens it: the story shows real use, and the library ships no JavaScript (decision 81). Axe checks the open panel after the trigger is clicked; it was run that way in light and dark.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

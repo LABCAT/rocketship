@@ -1,0 +1,122 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & HTMLAttributes<'span'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<span {...attrs} class:list={['rs-tooltip', className]}>
+  <slot />
+</span>
+
+<script is:inline>
+  if (!window[Symbol.for('rs-tooltip')]) {
+    window[Symbol.for('rs-tooltip')] = true
+
+    /** Lets a dismissed tooltip open again once the pointer and focus have both left it. */
+    const release = (block, related, stillIn) => {
+      if (block && !block.contains(related) && !block.matches(stillIn)) {
+        block.classList.remove('rs-tooltip--dismissed')
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return
+      const open = document.querySelectorAll(
+        '.rs-tooltip:not(.rs-tooltip--dismissed):is(:hover, :focus-within)',
+      )
+      if (!open.length) return
+      event.preventDefault()
+      open.forEach((block) => block.classList.add('rs-tooltip--dismissed'))
+    })
+
+    document.addEventListener('pointerout', (event) => {
+      release(
+        event.target.closest?.('.rs-tooltip--dismissed'),
+        event.relatedTarget,
+        ':focus-within',
+      )
+    })
+
+    document.addEventListener('focusout', (event) => {
+      release(event.target.closest?.('.rs-tooltip--dismissed'), event.relatedTarget, ':hover')
+    })
+  }
+</script>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  /// The block wraps the trigger and the content. Hovering or focusing anything inside it,
+  /// the content included, sets the open state the content queries. It is inline-block so
+  /// its box hugs the trigger and can be the anchor; an inline box is only one text line
+  /// tall. The anchor name is scoped to the block, so each content finds its own trigger.
+  .rs-tooltip {
+    --rs-tooltip-open: false;
+    --rs-tooltip-bg: #{rs-token(color-surface)};
+    --rs-tooltip-color: #{rs-token(color-fg)};
+    --rs-tooltip-border-color: #{rs-token(color-border)};
+    display: inline-block;
+    anchor-name: --rs-tooltip;
+    anchor-scope: --rs-tooltip;
+
+    &:hover,
+    &:focus-within {
+      --rs-tooltip-open: true;
+    }
+
+    /// Escape adds the modifier, which keeps the content shut until the pointer and focus
+    /// have both left the block. It is written after the open state, at the same
+    /// specificity, so it wins.
+    &--dismissed:hover,
+    &--dismissed:focus-within {
+      --rs-tooltip-open: false;
+    }
+
+    /// Fixed and anchored, so a scrolling ancestor's overflow does not clip it. It sits
+    /// above the trigger and flips below when there is no room.
+    &__content {
+      box-sizing: border-box;
+      display: none;
+      position: fixed;
+      position-anchor: --rs-tooltip;
+      position-area: block-start;
+      position-try-fallbacks: flip-block;
+      margin: 0;
+      margin-block-end: var(--rs-tooltip-offset, #{rs-token(space-2)});
+      inline-size: max-content;
+      max-inline-size: var(--rs-tooltip-max-inline-size, 280px);
+      background: var(--rs-tooltip-bg);
+      border: var(--rs-tooltip-border-width, #{rs-token(border-width-sm)}) solid
+        var(--rs-tooltip-border-color);
+      border-radius: var(--rs-tooltip-border-radius, #{rs-token(radius-sm)});
+      box-shadow: #{rs-token(shadow-md)};
+      color: var(--rs-tooltip-color);
+      padding-block: var(--rs-tooltip-padding-block, #{rs-token(space-1)});
+      padding-inline: var(--rs-tooltip-padding-inline, #{rs-token(space-2)});
+
+      @container style(--rs-tooltip-open: true) {
+        display: block;
+      }
+
+      /// A transparent bridge over the offset on both sides, so the pointer can cross
+      /// the gap onto the tooltip without leaving the block's hover. It is placed from the
+      /// padding box, so it also spans the border.
+      &::before {
+        content: '';
+        position: absolute;
+        inset-block: calc(
+          -1 *
+            (
+              var(--rs-tooltip-offset, #{rs-token(space-2)}) +
+                var(--rs-tooltip-border-width, #{rs-token(border-width-sm)})
+            )
+        );
+        inset-inline: 0;
+      }
+    }
+  }
+</style>

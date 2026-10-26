@@ -50,7 +50,8 @@
     "./components/Figure": "./src/components/Figure.astro",
     "./components/FileInput": "./src/components/FileInput.astro",
     "./components/RangeInput": "./src/components/RangeInput.astro",
-    "./components/Popover": "./src/components/Popover.astro"
+    "./components/Popover": "./src/components/Popover.astro",
+    "./components/Tooltip": "./src/components/Tooltip.astro"
   },
   "files": [
     "dist",

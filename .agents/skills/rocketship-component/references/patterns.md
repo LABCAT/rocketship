@@ -13,6 +13,7 @@ Copy: `Field.astro`, `Label.astro`, `Fieldset.astro`.
 - Fieldset adds no box: no background, border, radius or padding. Reset the native chrome: `border: 0; margin: 0; padding: 0; min-inline-size: 0`.
 - A disabled fieldset gets no legend style.
 - Compose a form like this:
+  - Consecutive Fields: `<Stack gap="large">`.
   - Fields inside a fieldset: Fieldset's own gap (`space-4`).
   - Options (radios, checkboxes): `<Fieldset>` holding a `<Stack gap="small">` of `<Field inline>` rows.
   - Consecutive fieldsets: `<Stack gap="xlarge">`. Never a Fieldset margin.
@@ -27,7 +28,7 @@ Copy: `Input.astro`, `Textarea.astro`, `Select.astro`.
   ```astro
   const invalid = attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true'
   ```
-- No hover state. No transitions. (`transition-fast` is for Button and links only.)
+- No hover state. No transitions. (`transition-fast` is for Button and links; `transition-medium` is for revealed content, Disclosure.)
 - Select's chevron is a `background-image` coloured by `--rs-select-icon-color`, never an element.
 - When `multiple` or `size > 1` makes Select a list box, add the derived modifier `rs-select--list`. Never an attribute selector.
 
@@ -42,6 +43,17 @@ Copy: `Checkbox.astro`, `Radio.astro`.
 - Forced colours: `appearance: auto` and `&::before { content: none; }`.
 - No hover state. No transitions.
 - A choice row is `<Field inline>`: control first, then the Label, hint and error. Field's inline modifier puts the text in column 2 (`--rs-field-text-column`) and centres the Label's first line on the box (`--rs-label-offset`).
+
+## Native-part controls (File Input, Range Input)
+
+Copy: `FileInput.astro`, `RangeInput.astro`.
+
+- One `<input>`. Style its built-in parts through their pseudo-elements: `::file-selector-button`, `::-webkit-slider-runnable-track` / `::-webkit-slider-thumb`, `::-moz-range-track` / `::-moz-range-thumb`. Never `all: unset` on a part.
+- File Input is Input's box. The box pads `space-1` and the browse button (a semibold pill) pads `space-1` × `space-3`, so its height matches Input.
+- Range sets its height, never its width. A 24px thumb on a 4px track, through hooks. The track is one colour; the thumb is a `color-surface` disc with a `border-width-md` `color-accent` ring.
+- Invalid swaps every edge: File Input's border; Range's track and thumb ring.
+- Forced colours: a part that loses only its edge gets `border: 1px solid ButtonBorder`. A part that loses its shape gets `appearance: auto`, on WebKit's thumb too.
+- No hover state. No transitions.
 
 ## Table
 
@@ -61,3 +73,15 @@ Copy: `Scroll.astro`.
 
 - Scroll has no border, padding or background. Its only paint is the focus ring.
 - The consumer makes it focusable and names it. Never make the content itself scroll.
+
+## Native open state (Disclosure, Popover, Dialog)
+
+Copy: `Disclosure.astro` (`<details>`), `Popover.astro` (`popover`), `Dialog.astro` (modal `<dialog>`).
+
+- The platform owns the state. `open`, `name` and `popover` flow through `...attrs`; triggers are declarative (`popovertarget`, `command`/`commandfor`). No `open` prop, no script.
+- Style the state with its pseudo-class (`:open`, `:popover-open`, `:modal`), never `[open]`. The state only reassigns block locals; parts read them.
+- A part with a fixed position (`summary`) is a named slot rendered first. Content goes in the browser's own slot (`::details-content`), never a wrapper.
+- Decoration survives forced colours: Disclosure's chevron is a border-drawn `::after`; Dialog's X is a clipped `::before` with a `ButtonText` fallback.
+- Motion: Disclosure transitions `block-size` through `interpolate-size: allow-keywords` and `transition-medium`, with `content-visibility` `allow-discrete`; Dialog fades opacity over `transition-fast`; Popover is instant. Reduced motion makes every one instant.
+- Every animated component reads its duration from one local, `--rs-<name>-duration: var(--rs-<name>-transition-duration, #{rs-token(transition-…)})`, so consumers can retime one component without the global token.
+- One open at a time is composition: Disclosures that share a `name`. No Accordion component.

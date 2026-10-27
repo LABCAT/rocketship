@@ -1,0 +1,167 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  role?: 'alertdialog'
+  class?: string
+} & HTMLAttributes<'dialog'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<dialog {...attrs} class:list={['rs-dialog', className]}>
+  <slot />
+</dialog>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-dialog {
+    --rs-dialog-color: #{rs-token(color-fg)};
+    --rs-dialog-duration: var(--rs-dialog-transition-duration, #{rs-token(transition-fast)});
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: var(--rs-dialog-gap, #{rs-token(space-4)});
+    inline-size: min(100%, var(--rs-dialog-inline-size, 560px));
+    overscroll-behavior: contain;
+    background: var(--rs-dialog-bg, #{rs-token(color-surface)});
+    border: var(--rs-dialog-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-dialog-border-color, #{rs-token(color-border)});
+    border-radius: var(--rs-dialog-border-radius, #{rs-token(radius-md)});
+    box-shadow: #{rs-token(shadow-lg)};
+    color: var(--rs-dialog-color);
+    opacity: 0;
+    padding: var(--rs-dialog-padding, #{rs-token(space-6)});
+    transition: opacity var(--rs-dialog-duration) ease;
+
+    /// Fading out needs `overlay`, which keeps the closing dialog in the top layer. Without it
+    /// the dialog would drop into the page while fading, so other browsers close instantly.
+    @supports (overlay: auto) {
+      transition:
+        opacity var(--rs-dialog-duration) ease,
+        display var(--rs-dialog-duration) ease allow-discrete,
+        overlay var(--rs-dialog-duration) ease allow-discrete;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    /// The flex column applies only while open: on the block it would beat the browser's
+    /// `display: none` for a closed dialog.
+    &:modal {
+      display: flex;
+      opacity: 1;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    &::backdrop {
+      background: var(--rs-dialog-backdrop, #{rs-token(color-backdrop)});
+      opacity: 0;
+      transition: opacity var(--rs-dialog-duration) ease;
+
+      @supports (overlay: auto) {
+        transition:
+          opacity var(--rs-dialog-duration) ease,
+          display var(--rs-dialog-duration) ease allow-discrete,
+          overlay var(--rs-dialog-duration) ease allow-discrete;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    &:modal::backdrop {
+      opacity: 1;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    /// Reserves the corner for `__close`, so a long title wraps before the button.
+    &__title {
+      color: var(--rs-dialog-color);
+      font-size: var(--rs-dialog-title-font-size, #{rs-token(font-size-lg)});
+      font-weight: var(--rs-dialog-title-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
+      margin: 0;
+      padding-inline-end: calc(
+        32px + #{rs-token(space-4)} +
+          #{rs-token(space-2)} - var(--rs-dialog-padding, #{rs-token(space-6)})
+      );
+    }
+
+    /// A consumer-written `<button>` named by its `aria-label`. The X is painted on its
+    /// `::before` in the button's text colour, so it follows the theme.
+    &__close {
+      all: unset;
+      box-sizing: border-box;
+      position: absolute;
+      inset-block-start: #{rs-token(space-4)};
+      inset-inline-end: #{rs-token(space-4)};
+      display: grid;
+      place-items: center;
+      block-size: 32px;
+      inline-size: 32px;
+      border-radius: #{rs-token(radius-sm)};
+      color: var(--rs-dialog-close-color, #{rs-token(color-muted)});
+      cursor: pointer;
+
+      &::before {
+        content: '';
+        background: currentColor;
+        block-size: 16px;
+        clip-path: polygon(
+          9% 0,
+          0 9%,
+          41% 50%,
+          0 91%,
+          9% 100%,
+          50% 59%,
+          91% 100%,
+          100% 91%,
+          59% 50%,
+          100% 9%,
+          91% 0,
+          50% 41%
+        );
+        inline-size: 16px;
+      }
+
+      &:hover {
+        color: var(--rs-dialog-color);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #{rs-token(color-focus-ring)};
+        outline-offset: 2px;
+      }
+
+      /// Forced colours would repaint the X's background in the system canvas colour.
+      @media (forced-colors: active) {
+        &::before {
+          background: ButtonText;
+          forced-color-adjust: none;
+        }
+      }
+    }
+
+    &__description {
+      color: var(--rs-dialog-color);
+      margin: 0;
+    }
+
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--rs-dialog-actions-gap, #{rs-token(space-3)});
+      margin: 0;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import Button from '@labcat2020/rocketship/components/Button'
+import Container from '@labcat2020/rocketship/components/Container'
+import Dialog from '@labcat2020/rocketship/components/Dialog'
+---
+
+<Container size="content" padded>
+  <Button command="show-modal" commandfor="delete-project">Delete project</Button>
+  <Dialog
+    id="delete-project"
+    role="alertdialog"
+    aria-labelledby="delete-project-title"
+    aria-describedby="delete-project-description"
+  >
+    <h2 class="rs-dialog__title" id="delete-project-title">Delete Apollo?</h2>
+    <p class="rs-dialog__description" id="delete-project-description">
+      Its 214 builds, 3 environments and deployment history go with it. This cannot be undone.
+    </p>
+    <form class="rs-dialog__actions" method="dialog">
+      <Button type="submit" variant="secondary" value="cancel">Cancel</Button>
+      <Button type="submit" value="delete">Delete project</Button>
+    </form>
+    <button
+      class="rs-dialog__close"
+      type="button"
+      command="close"
+      commandfor="delete-project"
+      aria-label="Close"></button>
+  </Dialog>
+</Container>

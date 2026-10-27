@@ -1,0 +1,23 @@
+---
+import Disclosure from '@labcat2020/rocketship/components/Disclosure'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Stack gap="small">
+  <Disclosure>
+    <Fragment slot="summary">What is a deployment window?</Fragment>
+    <p class="rs-disclosure__description">
+      A deployment window is the range of time when changes are allowed to reach production.
+    </p>
+    <p class="rs-disclosure__description">
+      Builds queued outside the window wait for the next one.
+    </p>
+  </Disclosure>
+  <Disclosure open>
+    <Fragment slot="summary">Where do I see build logs?</Fragment>
+    <p class="rs-disclosure__description">
+      Every build keeps its full log for ninety days. Open a build from the deployments list and
+      select Logs to follow it live.
+    </p>
+  </Disclosure>
+</Stack>

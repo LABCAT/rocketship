@@ -21,9 +21,9 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | `Input.astro`      |
 | `Textarea`   | `@labcat2020/rocketship-svelte/components/Textarea`   | `Textarea.astro`   |
 | `Select`     | `@labcat2020/rocketship-svelte/components/Select`     | `Select.astro`     |
-| `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | — (Svelte-first)   |
+| `Disclosure` | `@labcat2020/rocketship-svelte/components/Disclosure` | `Disclosure.astro` |
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
-| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | — (Svelte-first)   |
+| `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | `Figure.astro`     |
 | `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | `Fieldset.astro`   |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.

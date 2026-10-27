@@ -26,7 +26,7 @@ Reasons: `_planning/component-review-decisions.md` (decisions 6, 7, 55).
 - Adding, renaming or removing a token needs Shane's approval.
 - Edit the JSON, then run `pnpm --filter @labcat2020/rocketship tokens`. It regenerates `styles/mixins/token-map.scss`.
 - Never edit `token-map.scss` or the token part of `variables.scss` by hand.
-- In the same change, update the Foundations story for the token: `apps/frontend/src/stories/components/ColorsDocument.astro`, `SpacingDocument.astro`, `BordersDocument.astro` or `ShadowsDocument.astro`, aliases included.
+- In the same change, update the Foundations story for the token: `apps/astro/src/stories/components/ColorsDocument.astro`, `SpacingDocument.astro`, `BordersDocument.astro` or `ShadowsDocument.astro`, aliases included.
 - `variables.scss` holds only custom properties on `:root` and inside `@media`. No class selectors. It is the only Sass file that may `@use` a file inside `styles/mixins/` directly.
 
 ## Light and dark

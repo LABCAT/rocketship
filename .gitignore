@@ -11,9 +11,9 @@
 /coverage
 
 # builds
-/apps/frontend/dist
-/apps/frontend/.astro
-/apps/frontend/storybook-static
+/apps/astro/dist
+/apps/astro/.astro
+/apps/astro/storybook-static
 /packages/*/dist
 /build
 

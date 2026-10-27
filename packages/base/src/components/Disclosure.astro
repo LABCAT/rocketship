@@ -1,0 +1,125 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  class?: string
+} & HTMLAttributes<'details'>
+
+const { class: className, ...attrs } = Astro.props as Props
+---
+
+<details {...attrs} class:list={['rs-disclosure', className]}>
+  {
+    Astro.slots.has('summary') && (
+      <summary class="rs-disclosure__summary">
+        <slot name="summary" />
+      </summary>
+    )
+  }
+  <slot />
+</details>
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  /// `interpolate-size` lets the panel's height transition to and from `auto`. Browsers without
+  /// it open and close instantly; the chevron still turns.
+  .rs-disclosure {
+    --rs-disclosure-duration: var(
+      --rs-disclosure-transition-duration,
+      #{rs-token(transition-medium)}
+    );
+    --rs-disclosure-icon-turn: 0deg;
+    --rs-disclosure-panel-block-size: auto;
+    --rs-disclosure-panel-padding-block-end: 0px;
+    interpolate-size: allow-keywords;
+    border: var(--rs-disclosure-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-disclosure-border-color, #{rs-token(color-border)});
+    border-radius: var(--rs-disclosure-border-radius, #{rs-token(radius-md)});
+
+    /// The panel collapses to zero only where `:open` can restore it; elsewhere the browser's
+    /// own closed state hides it.
+    @supports selector(:open) {
+      --rs-disclosure-panel-block-size: 0px;
+    }
+
+    &:open {
+      --rs-disclosure-icon-turn: 180deg;
+      --rs-disclosure-panel-block-size: auto;
+      --rs-disclosure-panel-padding-block-end: var(
+        --rs-disclosure-padding-block,
+        #{rs-token(space-4)}
+      );
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      --rs-disclosure-duration: 0s;
+    }
+
+    /// `display: block` drops the native marker in Chromium and Firefox; WebKit's marker is its
+    /// own part. The chevron is painted on `::after`, so the summary stays one text box.
+    &__summary {
+      display: block;
+      position: relative;
+      border-radius: inherit;
+      color: var(--rs-disclosure-summary-color, #{rs-token(color-fg)});
+      cursor: pointer;
+      font-weight: var(--rs-disclosure-summary-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
+      padding-block: var(--rs-disclosure-padding-block, #{rs-token(space-4)});
+      padding-inline: var(--rs-disclosure-padding-inline, #{rs-token(space-4)});
+      padding-inline-end: calc(
+        var(--rs-disclosure-padding-inline, #{rs-token(space-4)}) + #{rs-token(space-5)}
+      );
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      /// A border chevron, so forced colours repaint it as text. It turns through a variable the
+      /// open state sets, and centres on the first line wherever the summary wraps. The last
+      /// step moves it back along its diagonal, so the drawn corner, not the box, is centred.
+      &::after {
+        position: absolute;
+        block-size: 8px;
+        border-color: var(--rs-disclosure-icon-color, #{rs-token(color-muted)});
+        border-style: solid;
+        border-width: 0 #{rs-token(border-width-md)} #{rs-token(border-width-md)} 0;
+        content: '';
+        inline-size: 8px;
+        inset-block-start: calc(var(--rs-disclosure-padding-block, #{rs-token(space-4)}) + 0.5lh);
+        inset-inline-end: var(--rs-disclosure-padding-inline, #{rs-token(space-4)});
+        transform: translateY(-50%) rotate(calc(45deg + var(--rs-disclosure-icon-turn)))
+          translate(-25%, -25%);
+        transition: transform var(--rs-disclosure-duration) ease;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #{rs-token(color-focus-ring)};
+        outline-offset: 2px;
+      }
+    }
+
+    /// The panel is the browser's own content slot, so content needs no wrapper. It pads only
+    /// when open: a closed slot keeps its box. `allow-discrete` keeps it visible until the
+    /// closing height transition ends.
+    &::details-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--rs-disclosure-gap, #{rs-token(space-2)});
+      block-size: var(--rs-disclosure-panel-block-size);
+      overflow: clip;
+      padding-block-end: var(--rs-disclosure-panel-padding-block-end);
+      padding-inline: var(--rs-disclosure-padding-inline, #{rs-token(space-4)});
+      transition:
+        block-size var(--rs-disclosure-duration) ease,
+        padding-block-end var(--rs-disclosure-duration) ease,
+        content-visibility var(--rs-disclosure-duration) allow-discrete;
+    }
+
+    &__description {
+      color: var(--rs-disclosure-color, #{rs-token(color-fg)});
+      margin: 0;
+    }
+  }
+</style>

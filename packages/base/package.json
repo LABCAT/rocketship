@@ -46,7 +46,14 @@
     "./components/Select": "./src/components/Select.astro",
     "./components/Checkbox": "./src/components/Checkbox.astro",
     "./components/Radio": "./src/components/Radio.astro",
-    "./components/Table": "./src/components/Table.astro"
+    "./components/Table": "./src/components/Table.astro",
+    "./components/Figure": "./src/components/Figure.astro",
+    "./components/Disclosure": "./src/components/Disclosure.astro",
+    "./components/FileInput": "./src/components/FileInput.astro",
+    "./components/RangeInput": "./src/components/RangeInput.astro",
+    "./components/Popover": "./src/components/Popover.astro",
+    "./components/Tooltip": "./src/components/Tooltip.astro",
+    "./components/Dialog": "./src/components/Dialog.astro"
   },
   "files": [
     "dist",
@@ -62,5 +69,8 @@
     "build": "node scripts/build-tokens.mjs && tsc -p tsconfig.json",
     "test": "node --test",
     "tokens": "node scripts/build-tokens.mjs"
+  },
+  "peerDependencies": {
+    "sass": "^1.98.0"
   }
 }

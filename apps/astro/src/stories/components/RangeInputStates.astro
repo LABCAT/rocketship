@@ -1,0 +1,44 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Field from '@labcat2020/rocketship/components/Field'
+import Label from '@labcat2020/rocketship/components/Label'
+import RangeInput from '@labcat2020/rocketship/components/RangeInput'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Field>
+      <Label for="range-workers">Build workers</Label>
+      <RangeInput
+        id="range-workers"
+        name="workers"
+        min={1}
+        max={8}
+        value={4}
+        aria-describedby="range-workers-hint"
+      />
+      <p class="rs-field__hint" id="range-workers-hint">Each worker runs one build at a time.</p>
+    </Field>
+    <Field>
+      <Label for="range-rollout">Rollout percentage</Label>
+      <RangeInput
+        id="range-rollout"
+        name="rollout"
+        min={0}
+        max={100}
+        step={25}
+        value={25}
+        aria-invalid="true"
+        aria-describedby="range-rollout-error"
+      />
+      <p class="rs-field__error" id="range-rollout-error">
+        Rollout can't go below the 50% already released.
+      </p>
+    </Field>
+    <Field>
+      <Label for="range-retention">Log retention in days</Label>
+      <RangeInput id="range-retention" name="retention" min={7} max={90} value={30} disabled />
+    </Field>
+  </Stack>
+</Container>

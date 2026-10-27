@@ -1,0 +1,23 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Figure from '@labcat2020/rocketship/components/Figure'
+import Stack from '@labcat2020/rocketship/components/Stack'
+---
+
+<Container size="content" padded>
+  <Stack>
+    <Figure>
+      <img
+        class="rs-figure__media"
+        src="/story-assets/apollo-11-tower.webp"
+        width="801"
+        height="1200"
+        alt="Looking down the Saturn V from the launch tower as it clears the pad, exhaust smoke billowing around its base."
+      />
+      <Fragment slot="caption">
+        Apollo 11 lifts off on 16 July 1969, seen by a fisheye camera on the launch tower.{' '}
+        <cite>NASA</cite>
+      </Fragment>
+    </Figure>
+  </Stack>
+</Container>

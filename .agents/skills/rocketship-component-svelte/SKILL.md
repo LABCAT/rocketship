@@ -28,7 +28,7 @@ All of `.agents/rules/` applies: `rocketship-svelte.mdc`, `rocketship-component-
 | `Checkbox`, `Radio`, `Scroll`                                                            | Not ported yet.                                                                             |
 | `Accordion`, `Button`, `Card`, `Container`, `Disclosure`, `Figure`, `Grid`, `Typography` | Pre-review. Never copy.                                                                     |
 
-- Before Checkbox or Radio: port Field's `inline` and Label's `--rs-label-offset`.
+- Before Checkbox or Radio: port Field's `inline`, Label's `--rs-label-offset` and Fieldset's `__hint` / `__error`.
 - Port Table together with Scroll.
 
 ## 4. Translate

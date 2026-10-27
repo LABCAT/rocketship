@@ -958,7 +958,7 @@ test('Stack is exported from the barrel, as a subpath, with its prop union types
 
   const source = loadComponentSource('Stack')
   assert.match(source, /export type StackTag = 'div' \| 'ul' \| 'ol'/)
-  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large'/)
+  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large' \| 'xlarge'/)
 })
 
 test('Stack renders .rs-stack on a div with no gap modifier for the default medium gap', async () => {
@@ -971,7 +971,7 @@ test('Stack renders .rs-stack on a div with no gap modifier for the default medi
   )
   assert.deepEqual(classList(renderMarkup(Stack, { gap: 'medium' })), ['rs-stack'])
 
-  for (const gap of ['small', 'large']) {
+  for (const gap of ['small', 'large', 'xlarge']) {
     assert.deepEqual(classList(renderMarkup(Stack, { gap })), ['rs-stack', `rs-stack--${gap}`])
   }
 })

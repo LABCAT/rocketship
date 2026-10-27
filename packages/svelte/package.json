@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": false,
   "type": "module",
-  "description": "Rocketship Svelte port \u2014 Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",
+  "description": "Rocketship Svelte port — Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",
   "license": "MIT",
   "repository": {
     "type": "git",

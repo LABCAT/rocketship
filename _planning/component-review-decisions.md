@@ -823,6 +823,23 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `rocketship-stories.mdc` gains "Docs pages (Astro)" and the template's story wrapper becomes the docs page plus its example file (decision 80, amended), so components built next start as docs pages. Popover and Tooltip move over in RCL-21.
 - Dialog (RCL-13) landed first and joins the row: `Dialog.astro` (modal `<dialog>`, `:modal`, `::backdrop`, invoker commands). The stop rule no longer lists `::backdrop`; Dialog is its reference.
 
+### 118. Grid lists keep their semantics; the gap reads a token (applies decisions 6 and 13)
+
+**Agreed 2026-10-26 (RCL-08).**
+
+- When `as` is `ul` or `ol`, Grid adds `role="list"`, as Stack does: `list-style: none` drops list semantics in Safari/VoiceOver. A `role` in `...attrs` still overrides it. Resolves the parked Grid note in Progress.
+- The gap fallback is `var(--rs-grid-gap, #{rs-token(space-4)})`, replacing the hand-written `var(--rs-space-4, 16px)` chain. Same value.
+
+### 119. Grid stories: `Default` is the docs page; the column stories stay
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).**
+
+- The three column stories are a good set and stay separate aspects (decision 29). Two columns is the default, so a separate docs page would repeat `TwoColumns`; instead `TwoColumns` becomes `Default`, the docs page (`Grid.stories.tsx`, `GridDefault.astro`, example `GridDefaultExample.astro`), as with Disclosure → `Default` and `Accordion`. `ThreeColumns` and `FourColumns` are unchanged. Sort order: `Default`, `ThreeColumns`, `FourColumns`.
+- The page follows decision 80 (amended): description, a two-column Grid of four Cards with real `<h2>` titles, the usage code, and tables for props and attributes (`columns`, `as`, `class`), slots and CSS hooks (`--rs-grid-gap`).
+- Shane: teach people to use the CSS variables and to use Grid for their own layouts. After the tables, a `Customising` section with code snippets: changing the gap with `--rs-grid-gap` on their own class (with a spacing token), making any box a container with `container-type: inline-size` so the grid fits a sidebar, giving one item the whole row with `grid-column: 1 / -1` (safe at every step, unlike `span 2`, which adds a column in the one-column layout), and rendering a list. It states why the column steps are fixed: container queries cannot read CSS variables.
+- Snippets are code only: stories have no CSS, so the techniques are not rendered live. Whether every docs page gets a Customising section is part of the RCL-21 proposal (`_planning/rcl-08-audit.md`).
+- The Svelte `Base/Grid` → `TwoColumns` story keeps its old name until it is ported (a Daruma task).
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
@@ -853,7 +870,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
 - PR #64 (RCL-11): Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` (landscape) and `Portrait`, with NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and needs porting; its README row still says Svelte-first.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
-- Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
+- Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles). Resolved by decision 118.
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
 - RCL-13: Dialog built with decisions 95–103 and 106 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
 - RCL-12: Disclosure built with decisions 107–117 as a fixed `<details>` with a `summary` slot, styled from `:open` and `::details-content`, a border chevron, and a CSS-only height transition (`interpolate-size`, Chromium; instant elsewhere). New token `transition-medium` (210ms). No Accordion component: a shared `name`. Stories `Components/Disclosure` → `Default` and `Accordion` are the first docs pages (decision 80, amended). Skill (native open state row: Disclosure, Popover, Dialog), patterns, stories rule and template updated. Axe clean light and dark. The Svelte Disclosure and Accordion (RCL-58) predate these decisions and need porting.

@@ -20,7 +20,7 @@ export default {
             'Container',
             ['Default', 'Content', 'Wide', 'FullWidth'],
             'Grid',
-            ['TwoColumns', 'ThreeColumns', 'FourColumns'],
+            ['Default', 'ThreeColumns', 'FourColumns'],
             'Stack',
             ['Default', 'Gaps'],
             'Scroll',

@@ -1,0 +1,209 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import GridDefaultExample from './GridDefaultExample.astro'
+import exampleSource from './GridDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'columns',
+    type: '2 | 3 | 4',
+    default: '2',
+    description:
+      'Columns at the widest step. Every grid has two from 500px; three or four start at 700px.',
+  },
+  {
+    name: 'as',
+    type: "'div' | 'ul' | 'ol'",
+    default: "'div'",
+    description:
+      'The root element. A list adds role="list", because the grid removes the list markers.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const slots = [
+  {
+    name: '(default)',
+    description: 'The items. Each child is one cell; in a list, each child is an <li>.',
+  },
+]
+
+const hooks = [{ name: '--rs-grid-gap', default: '--rs-space-4' }]
+
+const gapCode = `<Grid class="release-gallery" columns={3}>
+  …
+</Grid>
+
+/* In your stylesheet */
+.release-gallery {
+  --rs-grid-gap: var(--rs-space-7);
+}`
+
+const containerCode = `<aside class="release-sidebar">
+  <Grid>…</Grid>
+</aside>
+
+/* In your stylesheet */
+.release-sidebar {
+  container-type: inline-size;
+}`
+
+const rowCode = `<Grid columns={3}>
+  <Card class="release-feature">…</Card>
+  <Card>…</Card>
+  <Card>…</Card>
+</Grid>
+
+/* In your stylesheet */
+.release-feature {
+  grid-column: 1 / -1;
+}`
+
+const listCode = `<Grid as="ul" columns={3}>
+  <Card as="li">…</Card>
+  <Card as="li">…</Card>
+  <Card as="li">…</Card>
+</Grid>`
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Grid</h1>
+      <p>
+        A grid lays items out in equal columns. It starts as one column and gains columns as its
+        container grows: two from 500px, then three or four from 700px when you ask for them. It
+        measures the box it sits in, so the same grid works across a page and inside a sidebar.
+      </p>
+    </Typography>
+
+    <GridDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Table>
+      <Fragment slot="caption">Props and attributes</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Type</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          attributes.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">
+                <code>{row.type}</code>
+              </td>
+              <td class="rs-table__cell">{row.default}</td>
+              <td class="rs-table__cell">{row.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Table>
+      <Fragment slot="caption">Slots</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          slots.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">{row.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Table>
+      <Fragment slot="caption">CSS hooks</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Property</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          hooks.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">
+                <code>{row.default}</code>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Typography as="article">
+      <h2>Customising</h2>
+      <p>
+        The column steps are fixed at 500px and 700px, because container queries cannot read CSS
+        variables. The number of columns is the <code>columns</code> prop; everything else is CSS you
+        write.
+      </p>
+
+      <h3 id="gap-heading">Change the gap</h3>
+      <p>
+        Set <code>--rs-grid-gap</code> on your own class, on the grid or on any element around it. Use
+        a spacing token so the gap stays on the scale.
+      </p>
+      <pre tabindex="0" role="region" aria-labelledby="gap-heading"><code>{gapCode}</code></pre>
+
+      <h3 id="container-heading">Fit the box it sits in</h3>
+      <p>
+        A grid counts the width of its nearest container, not the screen. Container is one, and any
+        element becomes one with <code>container-type: inline-size</code>. In a narrow sidebar the
+        grid stays one column, even on a wide screen. With no container around it, it stays one
+        column.
+      </p>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="container-heading"><code>{containerCode}</code></pre>
+
+      <h3 id="row-heading">Give one item the whole row</h3>
+      <p>
+        The grid is plain CSS grid, so your own class on an item can place it.
+        <code>grid-column: 1 / -1</code> spans every column at every step, including the one-column layout.
+      </p>
+      <pre tabindex="0" role="region" aria-labelledby="row-heading"><code>{rowCode}</code></pre>
+
+      <h3 id="list-heading">Render a list</h3>
+      <p>
+        When the items are a set, render the grid as a list, so screen readers announce how many
+        there are. Grid adds <code>role="list"</code>, because it removes the list markers.
+      </p>
+      <pre tabindex="0" role="region" aria-labelledby="list-heading"><code>{listCode}</code></pre>
+    </Typography>
+  </Stack>
+</Container>

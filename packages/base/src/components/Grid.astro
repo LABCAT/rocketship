@@ -20,7 +20,7 @@ const classes = [
 ]
 ---
 
-<Tag {...attrs} class:list={classes}>
+<Tag role={as === 'div' ? undefined : 'list'} {...attrs} class:list={classes}>
   <slot />
 </Tag>
 
@@ -29,7 +29,7 @@ const classes = [
 
   .rs-grid {
     display: grid;
-    gap: var(--rs-grid-gap, var(--rs-space-4, 16px));
+    gap: var(--rs-grid-gap, #{rs-token(space-4)});
     grid-template-columns: minmax(0, 1fr);
     list-style: none;
     margin: 0;

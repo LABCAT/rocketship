@@ -60,7 +60,7 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
 | `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                |
-| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`), `class`                                                                         |
+| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                               |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
@@ -118,7 +118,7 @@ Both controls also work standalone. `invalid` raises `aria-invalid` and applies 
 
 ### `Stack`
 
-`Stack` is a flex column whose `gap` owns the space between its children, so components keep no outer margins and the page decides the rhythm. `gap` accepts `small` (8px), `medium` (16px, the default, which emits no modifier) and `large` (24px). Render it as `ul` or `ol` to get list semantics, and it adds `role="list"` so Safari/VoiceOver keep them despite `list-style: none`.
+`Stack` is a flex column whose `gap` owns the space between its children, so components keep no outer margins and the page decides the rhythm. `gap` accepts `small` (8px), `medium` (16px, the default, which emits no modifier), `large` (24px) and `xlarge` (40px). Render it as `ul` or `ol` to get list semantics, and it adds `role="list"` so Safari/VoiceOver keep them despite `list-style: none`.
 
 ```svelte
 <Stack as="ul" gap="small">

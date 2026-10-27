@@ -954,7 +954,7 @@ test('Stack is exported from the barrel, as a subpath, with its prop union types
 
   const source = loadComponentSource('Stack')
   assert.match(source, /export type StackTag = 'div' \| 'ul' \| 'ol'/)
-  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large'/)
+  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large' \| 'xlarge'/)
 })
 
 test('Stack renders .rs-stack on a div with no gap modifier for the default medium gap', async () => {
@@ -967,7 +967,7 @@ test('Stack renders .rs-stack on a div with no gap modifier for the default medi
   )
   assert.deepEqual(classList(renderMarkup(Stack, { gap: 'medium' })), ['rs-stack'])
 
-  for (const gap of ['small', 'large']) {
+  for (const gap of ['small', 'large', 'xlarge']) {
     assert.deepEqual(classList(renderMarkup(Stack, { gap })), ['rs-stack', `rs-stack--${gap}`])
   }
 })
@@ -1009,7 +1009,12 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
   const source = styleBlockOf('Stack')
   const css = await compileStyleBlock(source)
 
-  for (const selector of ['.rs-stack', '.rs-stack--small', '.rs-stack--large']) {
+  for (const selector of [
+    '.rs-stack',
+    '.rs-stack--small',
+    '.rs-stack--large',
+    '.rs-stack--xlarge',
+  ]) {
     assert.ok(css.includes(selector), `compiled Stack CSS must contain ${selector}`)
   }
 
@@ -1019,6 +1024,11 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
     css,
     /\.rs-stack--large\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-6,/,
     'large is 24px',
+  )
+  assert.match(
+    css,
+    /\.rs-stack--xlarge\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-8,/,
+    'xlarge is 40px',
   )
   assert.ok(!css.includes('.rs-stack--medium'), 'medium has no modifier rule')
   assert.match(

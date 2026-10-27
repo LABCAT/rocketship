@@ -86,8 +86,6 @@ const storyFixtures = [
   { label: 'TextareaDefault', file: 'TextareaDefault.svelte' },
   { label: 'TextareaSizes', file: 'TextareaSizes.svelte' },
   { label: 'TextareaStates', file: 'TextareaStates.svelte' },
-  { label: 'SelectDefault', file: 'SelectDefault.svelte' },
-  { label: 'SelectSizes', file: 'SelectSizes.svelte' },
   { label: 'SelectStates', file: 'SelectStates.svelte' },
   { label: 'AlertVariants', file: 'AlertVariants.svelte' },
   { label: 'StackDefault', file: 'StackDefault.svelte' },

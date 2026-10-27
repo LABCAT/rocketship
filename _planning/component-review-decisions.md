@@ -906,6 +906,81 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - One `Sizes` story replaces them (`Container.sizes.stories.tsx`, `ContainerSizes.astro`), like Button → `Sizes` and Stack → `Gaps`: four sibling padded Containers, narrowest to widest, each holding one Card with the size's name and width. `ContainerDocument.astro` and the control are removed. Sort order: `Default`, `Sizes`.
 - Kept rather than dropped (the props table already lists the widths) because a width is easier to judge by eye than from a number.
 
+### 127. Card keeps an opinionated anatomy; only `__content` goes
+
+**Agreed 2026-10-27 (RCL-08).** Amends decision 5's description of Card.
+
+- Shane: a bare `<article class="rs-card"><slot /></article>` has no opinion about what a card is, and component libraries give Card one. They do: Bootstrap (`card-img-top`, `card-body`, `card-footer`), Shoelace (`image`, `header`, `footer` slots), MUI (`CardMedia`, `CardContent`, `CardActions`), Spectrum (preview, title, description, footer). The shared anatomy is media at the top edge to edge, padded content, and details or actions at the bottom.
+- Card keeps that anatomy: the `media` slot first (edge to edge), a padded `__body`, and the `meta` slot last. Both named slots are structural positions (decision 31). Card is the exception to decision 5's "no component-rendered wrappers": `__body` exists so media can bleed to the edges while the content is padded.
+- `__content`, a second wrapper inside `__body` with its own 4px gap, is removed. The body is the one flex column, and `--rs-card-body-gap` (now `space-2`, 8px, as Alert) spaces everything in it. Title to description goes from 4px to 8px; content to meta from 12px to 8px. `--rs-card-content-gap` is gone.
+- Meta pins to the bottom: the block is a flex column, `__body` grows (`flex: 1 1 auto`) and `__meta` takes `margin-block-start: auto`, so meta lines up across cards of different lengths in a Grid row.
+- Meta stays inside `__body`, so it shares the body padding; the sketch in review showed it as a sibling, which would have needed its own padding.
+- No story markup changes. `Card.svelte` and its tests still render `__content` until the Svelte port.
+
+### 128. RCL-08 components read every token through `rs-token()`, without a question each
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: apply the token conversion everywhere, not one component at a time. Card, Button and Typography (including the typography mixins in `styles/mixins/typography/`) replace every hand-written `var(--rs-x, literal)` fallback with `#{rs-token(x)}`. Same values; standalone dark mode works because the fallbacks become `light-dark()` pairs (decision 6).
+- Done for Card: surface, border, radius, gaps, padding, title and description colour and type, and the `__token` chip. The literal `96px` media height and `2px` chip padding wait for the media and `__token` questions.
+- Shane, on the same day: "if the answer is obvious there is no need to ask the question, if not obvious then please ask." Changes that follow directly from an agreed decision or rule (no `font-family`, logical properties, rule order, `///` comments, a default variant with no class, the motion rule) are applied without a question and listed in the review summary. Open design choices are still asked one at a time.
+
+### 129. Card's title and description follow decisions 8, 11 and 100
+
+**Applied 2026-10-27 (RCL-08)** without a question, under decision 128.
+
+- No `font-family` on `__title` or `__description` (decision 8).
+- `__description` sets only `color` (`color-muted`) and `margin: 0`; its `font-size-md` and `line-height-base` go, so card body copy matches the page (decision 11).
+- `__title` heads a whole surface, so it keeps its size step, as Dialog's title does (decision 100): `font-size-lg` through `--rs-card-title-font-size`, semibold through `--rs-card-title-font-weight`, `line-height-tight`, its own `color-fg`, `margin: 0`. Same look as before; the two hooks are new.
+- Logical sizes: `min-height` → `min-block-size` on `__media`, `min-width` → `min-inline-size` on `__meta`.
+
+### 130. No `rs-card__token`; docs pages show token names with Typography's inline code
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `rs-card__token` was a monospace chip that existed only for the Foundations pages: docs styling in the library, not part of what a card is. Its `font-family` was also the last thing keeping Card in stylelint's `ignoreFiles`. Removed; Card now passes the BEM rules and leaves the ignore list.
+- Shane tried plain `<code slot="meta">` first and missed the background. The Foundations pages (Colors, Borders, Spacing, Shadows; 32 cards) now write `<Typography slot="meta"><code>--rs-color-bg</code></Typography>`: Typography's existing inline-code style draws the same pill (elevated surface, `radius-sm`, monospace), so Card stays free of docs styling.
+- Only the swapped lines change in those stories. Prettier would also reformat Borders, Spacing and Shadows (not Prettier-clean on `main`); that churn is left out.
+
+### 131. A linked card is one link on its title, stretched over the card
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: a card should have one link, and there is an accessibility trick for it. The stretched link (Heydon Pickering's pseudo-content trick in _Inclusive Components_; Bootstrap's `.stretched-link`): the consumer writes the link in the title, `<h2 class="rs-card__title"><a class="rs-card__link" href="…">Build 482</a></h2>`, and the link's `::after` covers the whole card (`position: absolute; inset: 0` against `.rs-card { position: relative }`).
+- The whole card is the click target, and screen readers hear one link named by the title. Wrapping the card in an `<a>` instead makes every word of the card the link's name.
+- The link looks like the title (`color: inherit`, no underline). Hovering anywhere on the card hovers the overlay, which belongs to the link, so the title underlines: a clickable card is an action, so decision 44's no-hover rule for static content does not apply.
+- Focus: the link's own outline is replaced by a `2px` `color-focus-ring` outline on its `::after`, offset `-2px`, with the card's radius minus its border width, so the ring outlines the whole card inside its border and `overflow: hidden` never clips it. `.rs-card__link:focus-visible::after` is one class with a pseudo-class and a pseudo-element (decision 3).
+- One link per card. Text in a linked card cannot be selected, and any second link or button must sit above the overlay; the docs say so.
+- `overflow: hidden` stays (the review's concern was overstated: content sits inside 16px of body padding, so ordinary focus rings never reach the edge).
+
+### 132. Card is a `div` by default
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 1 more strictly.
+
+- `article` claims every card is self-contained content, and screen readers announce "article" on entering each one (six in a grid of six). A stat tile or a colour swatch is not an article.
+- `as` defaults to `div`, which claims nothing. `article`, `section` and `li` stay in the union: `as="li"` inside `<Grid as="ul">` for a set of cards ("list, 6 items"), `as="article"` for a card that is standalone content. Props are typed `HTMLAttributes<'div'>`, like Stack.
+- Shane asked whether an `article` reads its heading twice. It does not: an article takes no name from its content, so the heading is read once. It would double only with `aria-labelledby` on the article, which Card does not add.
+- Stories that relied on the default (Stack, Scroll, Grid, Container) now render `div`; the Foundations pages already pass `as="li"`.
+
+### 133. Card media is a consumer-written `rs-card__media`, cropped to 16:9
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 58 (Figure) to Card.
+
+- The `media` slot rendered inside a component-owned `<div class="rs-card__media">`, so an `<img>` in it could only be styled through a descendant selector (decision 3). Images sat inline, with a gap below, and did not fill or crop.
+- Card renders `<slot name="media" />` first, with no wrapper. The consumer writes the class on the element: `<img slot="media" class="rs-card__media" …>`. A colour swatch is `<div slot="media" class="rs-card__media">`.
+- `rs-card__media`: `display: block`, `inline-size: 100%`, `block-size: auto` (cancels the `height` attribute), `aspect-ratio: var(--rs-card-media-aspect-ratio, 16 / 9)`, `object-fit: cover`, `background: var(--rs-card-media-bg)`, `margin: 0`. Every card in a row crops to the same shape. The `96px` minimum and `--rs-card-media-min-height` are gone; swatches are 16:9 now.
+- Cost, as with Figure: an image without the class is unstyled.
+- Applied without a question (decision 128): `__meta` sets its own `color-muted` (decision 11), so dates and details read as secondary.
+
+### 134. Card's docs page shows linked image cards in a list
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).** Shane: the card stories need images.
+
+- `Components/Card` → `Default` (`Card.stories.tsx`, `CardDefault.astro`, example `CardDefaultExample.astro`). Description: what a card is, the one-link rule and its caveats (a second link sits under the overlay; text in a linked card cannot be selected).
+- Example: `<Grid as="ul">` of two `<Card as="li">`: Artemis II on the pad at sunset and Apollo 11 clearing the tower (the NASA photos already in `story-assets`), each with an `rs-card__media` image, an `<h2 class="rs-card__title">` holding an `rs-card__link` to the NASA mission page, a description, and a `<time slot="meta">`.
+- Tables: props and attributes (`as`, `class`), slots (`media`, default, `meta`), element classes (`__media`, `__title`, `__link`, `__description`: the anatomy is consumer-written, so the classes are the API), and CSS hooks. The variant-owned local `--rs-card-media-bg` is not listed.
+- Checked in Chromium: the keyboard focus ring outlines the whole card.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

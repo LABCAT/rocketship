@@ -31,7 +31,6 @@ export default {
   // Pre-review components. Remove each one when it is reviewed (Astro) or ported again (Svelte).
   ignoreFiles: [
     'packages/base/src/components/Button.astro',
-    'packages/base/src/components/Card.astro',
     'packages/base/src/components/Typography.astro',
     'packages/svelte/src/components/Button.svelte',
     'packages/svelte/src/components/Card.svelte',

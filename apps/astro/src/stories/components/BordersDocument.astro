@@ -70,7 +70,7 @@ const consumeExample = `.rs-card {
         />
         <p class="rs-card__title">{width.title}</p>
         <p class="rs-card__description">{width.description}</p>
-        <span slot="meta" class="rs-card__token">{width.token}</span>
+        <Typography slot="meta"><code>{width.token}</code></Typography>
       </Card>
     ))}
   </Grid>
@@ -92,7 +92,7 @@ const consumeExample = `.rs-card {
         />
         <p class="rs-card__title">Radius {radius.name}</p>
         <p class="rs-card__description">{radius.value}</p>
-        <span slot="meta" class="rs-card__token">--rs-radius-{radius.name}</span>
+        <Typography slot="meta"><code>--rs-radius-{radius.name}</code></Typography>
       </Card>
     ))}
   </Grid>

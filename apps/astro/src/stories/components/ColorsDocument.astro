@@ -48,40 +48,40 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-bg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Background</p>
       <p class="rs-card__description">The page itself</p>
-      <span slot="meta" class="rs-card__token">--rs-color-bg</span>
+      <Typography slot="meta"><code>--rs-color-bg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-surface);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Surface</p>
       <p class="rs-card__description">Cards and panels</p>
-      <span slot="meta" class="rs-card__token">--rs-color-surface</span>
+      <Typography slot="meta"><code>--rs-color-surface</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-surface-elevated);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Elevated surface</p>
       <p class="rs-card__description">A step up from surface</p>
-      <span slot="meta" class="rs-card__token">--rs-color-surface-elevated</span>
+      <Typography slot="meta"><code>--rs-color-surface-elevated</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-border);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Border</p>
       <p class="rs-card__description">Hairlines and dividers</p>
-      <span slot="meta" class="rs-card__token">--rs-color-border</span>
+      <Typography slot="meta"><code>--rs-color-border</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-border-control);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Control border</p>
       <p class="rs-card__description">Edges of inputs (3:1)</p>
-      <span slot="meta" class="rs-card__token">--rs-color-border-control</span>
+      <Typography slot="meta"><code>--rs-color-border-control</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-backdrop);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Backdrop</p>
       <p class="rs-card__description">Dims the page behind a dialog</p>
-      <span slot="meta" class="rs-card__token">--rs-color-backdrop</span>
+      <Typography slot="meta"><code>--rs-color-backdrop</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -95,16 +95,16 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-fg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Foreground</p>
       <p class="rs-card__description">Body text</p>
-      <span slot="meta" class="rs-card__token">--rs-color-fg</span>
+      <Typography slot="meta"><code>--rs-color-fg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-muted);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Muted</p>
       <p class="rs-card__description">Labels and captions</p>
-      <span slot="meta" class="rs-card__token">--rs-color-muted</span>
+      <Typography slot="meta"><code>--rs-color-muted</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -121,40 +121,40 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Accent</p>
       <p class="rs-card__description">Primary actions</p>
-      <span slot="meta" class="rs-card__token">--rs-color-accent</span>
+      <Typography slot="meta"><code>--rs-color-accent</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent-contrast);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Accent contrast</p>
       <p class="rs-card__description">Text and marks on accent</p>
-      <span slot="meta" class="rs-card__token">--rs-color-accent-contrast</span>
+      <Typography slot="meta"><code>--rs-color-accent-contrast</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-link);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Link</p>
       <p class="rs-card__description">Unvisited links</p>
-      <span slot="meta" class="rs-card__token">--rs-color-link</span>
+      <Typography slot="meta"><code>--rs-color-link</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-link-hover);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Link hover</p>
       <p class="rs-card__description">Link at hover</p>
-      <span slot="meta" class="rs-card__token">--rs-color-link-hover</span>
+      <Typography slot="meta"><code>--rs-color-link-hover</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-link-visited);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Link visited</p>
       <p class="rs-card__description">Visited links</p>
-      <span slot="meta" class="rs-card__token">--rs-color-link-visited</span>
+      <Typography slot="meta"><code>--rs-color-link-visited</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-focus-ring);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Focus ring</p>
       <p class="rs-card__description">Keyboard focus</p>
-      <span slot="meta" class="rs-card__token">--rs-color-focus-ring</span>
+      <Typography slot="meta"><code>--rs-color-focus-ring</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -170,28 +170,28 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Info accent</p>
       <p class="rs-card__description">Neutral information</p>
-      <span slot="meta" class="rs-card__token">--rs-color-accent</span>
+      <Typography slot="meta"><code>--rs-color-accent</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-success-accent);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Success accent</p>
       <p class="rs-card__description">Positive outcomes</p>
-      <span slot="meta" class="rs-card__token">--rs-color-success-accent</span>
+      <Typography slot="meta"><code>--rs-color-success-accent</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-warning-accent);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Warning accent</p>
       <p class="rs-card__description">Caution and limits</p>
-      <span slot="meta" class="rs-card__token">--rs-color-warning-accent</span>
+      <Typography slot="meta"><code>--rs-color-warning-accent</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-accent);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Danger accent</p>
       <p class="rs-card__description">Errors and failures</p>
-      <span slot="meta" class="rs-card__token">--rs-color-danger-accent</span>
+      <Typography slot="meta"><code>--rs-color-danger-accent</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -208,22 +208,22 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-success-bg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Success background</p>
       <p class="rs-card__description">Container fill</p>
-      <span slot="meta" class="rs-card__token">--rs-color-success-bg</span>
+      <Typography slot="meta"><code>--rs-color-success-bg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-success-border);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Success border</p>
       <p class="rs-card__description">Container edge</p>
-      <span slot="meta" class="rs-card__token">--rs-color-success-border</span>
+      <Typography slot="meta"><code>--rs-color-success-border</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-success-fg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Success foreground</p>
       <p class="rs-card__description">Text on success surfaces</p>
-      <span slot="meta" class="rs-card__token">--rs-color-success-fg</span>
+      <Typography slot="meta"><code>--rs-color-success-fg</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -237,22 +237,22 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-warning-bg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Warning background</p>
       <p class="rs-card__description">Container fill</p>
-      <span slot="meta" class="rs-card__token">--rs-color-warning-bg</span>
+      <Typography slot="meta"><code>--rs-color-warning-bg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-warning-border);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Warning border</p>
       <p class="rs-card__description">Container edge</p>
-      <span slot="meta" class="rs-card__token">--rs-color-warning-border</span>
+      <Typography slot="meta"><code>--rs-color-warning-border</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-warning-fg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Warning foreground</p>
       <p class="rs-card__description">Text on warning surfaces</p>
-      <span slot="meta" class="rs-card__token">--rs-color-warning-fg</span>
+      <Typography slot="meta"><code>--rs-color-warning-fg</code></Typography>
     </Card>
   </Grid>
 </Container>
@@ -269,28 +269,28 @@ const consumeExample = `.rs-card {
 <Container padded>
   <Grid as="ul" columns={3}>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-bg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Danger background</p>
       <p class="rs-card__description">Container fill</p>
-      <span slot="meta" class="rs-card__token">--rs-color-danger-bg</span>
+      <Typography slot="meta"><code>--rs-color-danger-bg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-border);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Danger border</p>
       <p class="rs-card__description">Container edge</p>
-      <span slot="meta" class="rs-card__token">--rs-color-danger-border</span>
+      <Typography slot="meta"><code>--rs-color-danger-border</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-fg);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Danger foreground</p>
       <p class="rs-card__description">Text on danger surfaces</p>
-      <span slot="meta" class="rs-card__token">--rs-color-danger-fg</span>
+      <Typography slot="meta"><code>--rs-color-danger-fg</code></Typography>
     </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-danger-text);">
-      <div slot="media"></div>
+      <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Danger text</p>
       <p class="rs-card__description">Error text on page surfaces</p>
-      <span slot="meta" class="rs-card__token">--rs-color-danger-text</span>
+      <Typography slot="meta"><code>--rs-color-danger-text</code></Typography>
     </Card>
   </Grid>
 </Container>

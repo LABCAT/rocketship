@@ -1,0 +1,39 @@
+---
+import Card from '@labcat2020/rocketship/components/Card'
+import Grid from '@labcat2020/rocketship/components/Grid'
+---
+
+<Grid as="ul">
+  <Card as="li">
+    <img
+      slot="media"
+      class="rs-card__media"
+      src="/story-assets/artemis-ii-pad-sunset.webp"
+      width="1200"
+      height="795"
+      alt="The SLS rocket on Launch Pad 39B, silhouetted against an orange sunset."
+    />
+    <h2 class="rs-card__title">
+      <a class="rs-card__link" href="https://www.nasa.gov/mission/artemis-ii/">Artemis II</a>
+    </h2>
+    <p class="rs-card__description">
+      On the pad ahead of the first crewed flight around the Moon since 1972.
+    </p>
+    <time slot="meta" datetime="2026-03-30">30 March 2026</time>
+  </Card>
+  <Card as="li">
+    <img
+      slot="media"
+      class="rs-card__media"
+      src="/story-assets/apollo-11-tower.webp"
+      width="801"
+      height="1200"
+      alt="Looking down the Saturn V from the launch tower as it clears the pad."
+    />
+    <h2 class="rs-card__title">
+      <a class="rs-card__link" href="https://www.nasa.gov/mission/apollo-11/">Apollo 11</a>
+    </h2>
+    <p class="rs-card__description">Clearing the tower on the way to the first Moon landing.</p>
+    <time slot="meta" datetime="1969-07-16">16 July 1969</time>
+  </Card>
+</Grid>

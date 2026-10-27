@@ -69,5 +69,8 @@
     "build": "node scripts/build-tokens.mjs && tsc -p tsconfig.json",
     "test": "node --test",
     "tokens": "node scripts/build-tokens.mjs"
+  },
+  "peerDependencies": {
+    "sass": "^1.98.0"
   }
 }

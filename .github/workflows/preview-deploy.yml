@@ -9,12 +9,12 @@
 #     the last gated preview, which is acceptable because it was published for
 #     an earlier reviewed head
 #
-# The workflow mirrors the production Cloudflare Pages path filters:
+# The workflow picks the Storybook previews from the changed files:
 #   - Astro Storybook  -> rocketship3000 (apps/astro, packages/base)
-#   - Svelte Storybook -> rocketship3030 (apps/svelte, packages/svelte)
-# packages/base, pnpm-lock.yaml and the root package.json affect both hosts, so
-# a PR that touches them publishes both previews. A PR that touches neither
-# Storybook gets no preview.
+#   - Svelte Storybook -> rocketship3030 (apps/svelte, packages/svelte, and the
+#     base styles and tokens it imports)
+# pnpm-lock.yaml and the root package.json affect both hosts. A PR that touches
+# neither Storybook gets no preview.
 #
 # Why `workflow_run` and not only `pull_request: [labeled]`: when the review
 # workflow adds the label with the Actions `GITHUB_TOKEN`, GitHub does not fire
@@ -82,11 +82,10 @@ jobs:
             if (pr.head.repo?.full_name !== `${owner}/${repo}`) return;
             const ready = pr.labels.some((l) => l.name === 'preview-ready');
 
-            // Keep these prefixes in sync with each Cloudflare Pages project's
-            // production path_includes. A shared change (packages/base, the
-            // lockfile or the root package.json) rebuilds both Storybooks.
+            // Svelte uses only the base styles and tokens, not the Astro components.
+            // The lockfile and root package.json rebuild both Storybooks.
             const astroPaths = ['packages/base/', 'apps/astro/'];
-            const sveltePaths = ['packages/base/', 'packages/svelte/', 'apps/svelte/'];
+            const sveltePaths = ['packages/base/src/styles/', 'packages/base/src/tokens/', 'packages/svelte/', 'apps/svelte/'];
             const sharedPaths = ['pnpm-lock.yaml', 'package.json'];
 
             const files = await github.paginate(github.rest.pulls.listFiles, {

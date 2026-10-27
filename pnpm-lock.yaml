@@ -98,7 +98,11 @@ importers:
         specifier: ^8.2.1
         version: 8.2.1(@types/node@25.4.0)(esbuild@0.28.2)(sass@1.105.1)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/base: {}
+  packages/base:
+    dependencies:
+      sass:
+        specifier: ^1.98.0
+        version: 1.105.1
 
   packages/svelte:
     dependencies:

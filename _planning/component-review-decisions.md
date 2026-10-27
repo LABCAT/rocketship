@@ -835,10 +835,75 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 **Agreed 2026-10-27 (RCL-08, RCL-21).**
 
 - The three column stories are a good set and stay separate aspects (decision 29). Two columns is the default, so a separate docs page would repeat `TwoColumns`; instead `TwoColumns` becomes `Default`, the docs page (`Grid.stories.tsx`, `GridDefault.astro`, example `GridDefaultExample.astro`), as with Disclosure → `Default` and `Accordion`. `ThreeColumns` and `FourColumns` are unchanged. Sort order: `Default`, `ThreeColumns`, `FourColumns`.
-- The page follows decision 80 (amended): description, a two-column Grid of four Cards with real `<h2>` titles, the usage code, and tables for props and attributes (`columns`, `as`, `class`), slots and CSS hooks (`--rs-grid-gap`).
+- The page follows decision 80 (amended): description, a two-column Grid of four Cards with real `<h2>` titles, the usage code, and tables for props and attributes (`columns`, `as`, `class`) and CSS hooks (`--rs-grid-gap`). The slots table was dropped in decision 125.
 - Shane: teach people to use the CSS variables and to use Grid for their own layouts. After the tables, a `Customising` section with code snippets: changing the gap with `--rs-grid-gap` on their own class (with a spacing token), making any box a container with `container-type: inline-size` so the grid fits a sidebar, giving one item the whole row with `grid-column: 1 / -1` (safe at every step, unlike `span 2`, which adds a column in the one-column layout), and rendering a list. It states why the column steps are fixed: container queries cannot read CSS variables.
 - Snippets are code only: stories have no CSS, so the techniques are not rendered live. Whether every docs page gets a Customising section is part of the RCL-21 proposal (`_planning/rcl-08-audit.md`).
+- **Amended 2026-10-27:** Shane: the page was overcooked ("we like our steak medium rare"), the same as Container's first draft (decision 125). Cut to what a user asks: a two-sentence description, and two how-tos as plain `<h2>` sections with no "Customising" wrapper: "Use it in a sidebar" (make the box a container; no container means one column) and "Span the whole row" (`1 / -1`, not `span 2`). "Change the gap" and "Render a list" went, because the hooks table and the `as` row already say them, and so did the paragraph on why the column steps are fixed.
+- **Amended again 2026-10-27:** Shane saw no value in those two how-tos either ("as a user what would I want to know?"). Spanning a row is generic CSS grid. The one real gotcha, that a grid with no container around it stays one column, moves into the description: "It measures its container, not the screen, so place it inside a Container". The page is now description, example, usage, props and hooks, the same shape as Container.
 - The Svelte `Base/Grid` → `TwoColumns` story keeps its old name until it is ported (a Daruma task).
+- No 6-column grid. Proposed as `columns={6}` (1, then 2, 3 and 6 at 500/700/900px); Shane declined it on 2026-10-27. `columns` stays `2 | 3 | 4`.
+
+### 120. Container reads its tokens and uses logical sizes (applies decisions 6 and 9)
+
+**Agreed 2026-10-27 (RCL-08).** No visual change.
+
+- The five values that have tokens read them through `rs-token()`: `container-gutter` (both gutters), `container-width-content-sm`, `container-width-content-lg`, `container-width-wide` and `container-padding-block`. The hand-written `var(--rs-x, literal)` fallbacks go.
+- `width` and `max-width` become `inline-size` and `max-inline-size`.
+- `container-name: rs-component` goes. Nothing has queried it since `container-query-up` stopped needing the name (decision 9); `container-type: inline-size` stays, because Container is a layout box.
+- The block's variables come first, then `container-type`, as the style rule orders them.
+
+### 121. New token `container-width-default` (1000px)
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- The default width was the only Container width without a token: `var(--rs-container-width-default, 1000px)` read a variable nothing defined. `container.width.default` joins `wide`, `content.sm` and `content.lg` in `foundation.tokens.json`, and the map is regenerated.
+- Container reads `#{rs-token(container-width-default)}`. Same value and the same variable name, so consumers who already set `--rs-container-width-default` see no change; the variable is now on `:root`, in Figma exports and themeable.
+
+### 122. `padded` keeps the safe area and the one-side overrides
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `rs-container--padded` replaced `padding-block` outright, so a padded container ignored the safe-area insets and `--rs-container-padding-block-start` / `-end`. The layout rule's "they resolve with the safe area" held only for unpadded containers.
+- The block sets an internal local, `--rs-container-inset-block: 0px`, and the gutters read `max(env(safe-area-inset-*), var(--rs-container-padding-block-start|end, var(--rs-container-inset-block)))`. `padded` only reassigns the local to `container-padding-block`. A modifier changes a variable, not the property (decision 3).
+- No change on screens without insets (20/30/40px at base/`md`/`lg`). With `viewport-fit=cover`, a padded container gets the larger of the inset and its padding, and the one-side overrides now work when padded.
+- The local is set by the modifier, not a documented hook (like decision 47).
+
+### 123. `flush` replaces `--no-gutters`: a container with no side padding
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: there is a real use for a container with no padding (a full-bleed banner or image, a Container inside something already padded). The Astro `rs-container--no-gutters` rule had no prop, so it was reachable only by hand-adding the class, and its `padding-inline: 0` also dropped the side safe-area insets.
+- New prop `flush?: boolean`, off by default with no class (decision 42), emitting `rs-container--flush`. Named for the result (edges flush with the parent), not a negative `noGutters`.
+- The block sets an internal local, `--rs-container-inset-inline: #{rs-token(container-gutter)}`, and the side gutters read `max(env(safe-area-inset-*), var(--rs-container-inset-inline))`. `flush` reassigns the local to `0px`, so content reaches the edges on ordinary screens and still clears a landscape notch.
+- A local, not `--rs-container-gutter: 0px` on the modifier: custom properties inherit, so setting the public hook would also strip the gutters of any Container nested inside. Every Container redeclares the local, so nothing leaks. The `--rs-container-gutter` hook still works on any ancestor. Shane doubts Containers should nest; the local stays as a guard anyway, because the full-bleed band (`size="full" flush` around a `content` Container) is the likeliest way consumers will nest them.
+- No block padding comes with it: a Container has none unless `padded`, so `flush` alone is padding-free.
+- `Container.svelte` and its tests still use `--no-gutters` until the Svelte port (a Daruma task).
+
+### 124. Container's size classes are `rs-container--<size>`
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `size="full"` emitted `rs-container--full-width`, the only class that did not match its prop value. It is now `rs-container--full`, so every size follows the reviewed pattern (Alert `--error`, Stack `--large`), and the frontmatter is one line: ``size !== 'default' && `rs-container--${size}` ``. `padded` and `flush` use the same `&&` form.
+- The prop is unchanged; only hand-written `rs-container--full-width` classes break. `Container.svelte` and its tests keep the old name until the Svelte port.
+
+### 125. Container's docs page is three sibling Containers, kept short
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).**
+
+- A live Container inside the page's own `<Container size="content" padded>` would teach nesting. The page is three siblings instead: a content Container with the `<h1>` and description, the example (`ContainerDefaultExample.astro`: a default-width Container holding one Card, whose edges show the container's 1000px width against the narrower text; a Grid of Cards was dropped because it brought in a second component a reader could take for part of Container), and a content Container with the usage code, tables and Customising. The only docs page that is not one Container; the usage code is still the example's `?raw` source.
+- The example Container is not `padded`: padded, the space between the three siblings doubled.
+- Shane: the first draft had too much information. Cut to: a two-sentence description; props and attributes (`size` with its widths, `padded` with its steps, `flush`, `as`, `class`); four CSS hooks (`--rs-container-gutter`, `--rs-container-padding-block`, `-start`, `-end`), leaving the width tokens to the `size` row; and no Customising section. A second pass also dropped the two how-tos: a background behind a Container is ordinary CSS with nothing Container-specific, and the `flush` row already says what `flush` does.
+- Shane: "lets not write content just for sake of writing content … lets write what a user will actually want to know." A docs page section earns its place only by answering a question the example and the tables do not. Grid keeps its Customising section because its container behaviour and full-row items are not in the tables.
+- No slots table when the only slot is the default one: a "(default): the content" row says nothing. Applied to Grid too (its one useful note, that list children are `<li>`, moved to the `as` row).
+- `Base/Container` → `Default` is `Container.stories.tsx`.
+
+### 126. Container's sizes are one comparison story
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `Content`, `Wide` and `FullWidth` each rendered the same legal-notice document (`ContainerDocument.astro`) at one width through a Storybook control, with instruction copy in the canvas (decision 80). No canvas showed one width against another.
+- One `Sizes` story replaces them (`Container.sizes.stories.tsx`, `ContainerSizes.astro`), like Button → `Sizes` and Stack → `Gaps`: four sibling padded Containers, narrowest to widest, each holding one Card with the size's name and width. `ContainerDocument.astro` and the control are removed. Sort order: `Default`, `Sizes`.
+- Kept rather than dropped (the props table already lists the widths) because a width is easier to judge by eye than from a number.
 
 ## Parked for later
 

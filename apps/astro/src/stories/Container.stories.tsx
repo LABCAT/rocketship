@@ -1,38 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import ContainerDocument from './components/ContainerDocument.astro'
+import ContainerDefault from './components/ContainerDefault.astro'
+import '@labcat2020/rocketship/components/Card'
 import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Stack'
+import '@labcat2020/rocketship/components/Table'
 import '@labcat2020/rocketship/components/Typography'
 
-const meta = {
+const meta: Meta<typeof ContainerDefault> = {
   title: 'Base/Container',
-  component: ContainerDocument,
+  component: ContainerDefault,
   parameters: {
     a11y: { disable: false },
-    layout: 'fullscreen',
   },
-  argTypes: {
-    containerSize: {
-      control: 'select',
-      options: ['default', 'content', 'wide', 'full'],
-    },
-  },
-} satisfies Meta<typeof ContainerDocument>
+}
 
 export default meta
-type Story = StoryObj<typeof ContainerDocument>
+type Story = StoryObj<typeof ContainerDefault>
 
-export const Default: Story = {
-  args: { containerSize: 'default' },
-}
-
-export const Content: Story = {
-  args: { containerSize: 'content' },
-}
-
-export const Wide: Story = {
-  args: { containerSize: 'wide' },
-}
-
-export const FullWidth: Story = {
-  args: { containerSize: 'full' },
-}
+export const Default: Story = {}

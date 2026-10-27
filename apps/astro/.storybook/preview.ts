@@ -18,7 +18,7 @@ export default {
           'Base',
           [
             'Container',
-            ['Default', 'Content', 'Wide', 'FullWidth'],
+            ['Default', 'Sizes'],
             'Grid',
             ['Default', 'ThreeColumns', 'FourColumns'],
             'Stack',

@@ -896,6 +896,7 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Shane: "lets not write content just for sake of writing content … lets write what a user will actually want to know." A docs page section earns its place only by answering a question the example and the tables do not. Grid keeps its Customising section because its container behaviour and full-row items are not in the tables.
 - No slots table when the only slot is the default one: a "(default): the content" row says nothing. Applied to Grid too (its one useful note, that list children are `<li>`, moved to the `as` row).
 - `Base/Container` → `Default` is `Container.stories.tsx`.
+- **Amended 2026-10-27:** once `Sizes` (decision 126) showed the widths side by side, the live example repeated it. Shane agreed to drop it: the page is one content Container like every other docs page (the three-sibling exception above is gone), and Usage is a short static snippet (`<Container size="content" padded>…</Container>` with its import) instead of an example file's `?raw` source. `ContainerDefaultExample.astro` is removed.
 
 ### 126. Container's sizes are one comparison story
 

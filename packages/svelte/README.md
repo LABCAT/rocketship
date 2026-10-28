@@ -64,7 +64,7 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                               |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
-| `Select`     | `size` (`sm`, `md`, `lg`), `invalid`, `placeholder`, `value` (`bind:value`), `children` snippet, `class`                                      |
+| `Select`     | `value` (`bind:value`), `children` snippet, `class`                                                                                           |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
 | `Fieldset`   | `legend` snippet, `children` snippet, `class`                                                                                                 |
 
@@ -131,24 +131,36 @@ Both controls also work standalone. `invalid` raises `aria-invalid` and applies 
 
 ### `Select`
 
-`Select` wraps a native `<select>` and takes its options through the `children` snippet, plain `<option>` and `<optgroup>` included. There is no custom listbox, so keyboard, screen-reader and mobile behaviour are the platform's.
+`Select` is one native `<select>` with the `.rs-select` block, so `class`, `id` and every `aria-*` attribute land on the control itself. It takes its options through the `children` snippet, plain `<option>` and `<optgroup>` included. There is no custom listbox, so keyboard, screen-reader and mobile behaviour are the platform's.
 
 ```svelte
 <script lang="ts">
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
   import Select from '@labcat2020/rocketship-svelte/components/Select'
 
   let team = $state('')
 </script>
 
-<Select bind:value={team} placeholder="Choose a team" name="team">
-  <optgroup label="Engineering">
-    <option value="frontend">Frontend</option>
-    <option value="backend">Backend</option>
-  </optgroup>
-</Select>
+<Field label="Team" hint="Controls which runbooks appear in your sidebar.">
+  {#snippet children(control)}
+    <Select {...control} name="team" bind:value={team}>
+      <option value="" disabled selected>Choose a team</option>
+      <optgroup label="Engineering">
+        <option value="frontend">Frontend</option>
+        <option value="backend">Backend</option>
+      </optgroup>
+    </Select>
+  {/snippet}
+</Field>
 ```
 
-`placeholder` renders a disabled option with an empty value, so it reads as an unset field. Once a real option is chosen the placeholder cannot be selected again; a parent can still reset the field by writing `''`. `size` accepts `sm`, `md` or `lg`; a number is passed through to the native `size` attribute, which renders a listbox instead of a dropdown, in which case no chevron is drawn.
+The chevron is painted with two `linear-gradient` background layers coloured by `--rs-select-icon-color`, so no icon element exists to hide from assistive tech and the chevron dims with the control's own `opacity` when disabled. Forced-colours mode drops background images, so the component falls back to the native arrow there.
+
+`multiple`, or a native `size` above one, renders a list box. The component derives `rs-select--list` from it, which removes the chevron and its reserved space.
+
+The error state comes only from `aria-invalid`. Spread a `Field`'s `control` object onto the component and a `Field` error paints `rs-select--invalid`. There is no `invalid` prop and no `:invalid` styling, because a required select with an empty placeholder matches `:invalid` on load.
+
+`value` is `bind:value`-able: a string for a single select, an array of strings when `multiple` is set. The component renders no option of its own, so a placeholder is an `<option value="" disabled>` you write yourself.
 
 ### `Fieldset`
 

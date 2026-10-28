@@ -150,6 +150,190 @@ test('the Astro host is left unchanged', () => {
   assert.match(astroMain, /@storybook-astro\/framework/, 'the Astro host keeps its framework')
 })
 
+test('the Checkbox and Radio stories mirror the Astro States and Set stories', () => {
+  const expected = {
+    Checkbox: ['Checkbox.set.stories.ts', 'Checkbox.stories.ts'],
+    Radio: ['Radio.stories.ts'],
+  }
+
+  for (const [component, expectedFiles] of Object.entries(expected)) {
+    const files = readdirSync(storiesDir)
+      .filter((name) => new RegExp(`^${component}[.a-z]*\\.stories\\.ts$`).test(name))
+      .sort()
+    assert.deepEqual(
+      files,
+      expectedFiles,
+      `${component} has the same stories as the Astro original`,
+    )
+
+    for (const file of files) {
+      const story = read(join(storiesDir, file))
+      assert.match(
+        story,
+        new RegExp(`title:\\s*'Components/${component}'`),
+        `${file} uses the Astro title`,
+      )
+      assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+    }
+  }
+
+  assert.match(
+    read(join(storiesDir, 'Checkbox.stories.ts')),
+    /export const States: Story =/,
+    'Checkbox exports States, as the Astro story does',
+  )
+  assert.match(
+    read(join(storiesDir, 'Checkbox.set.stories.ts')),
+    /export const Set: Story =/,
+    'Checkbox exports Set, the one place indeterminate is demonstrated',
+  )
+  assert.match(
+    read(join(storiesDir, 'Radio.stories.ts')),
+    /export const States: Story =/,
+    'Radio exports States, as the Astro story does',
+  )
+})
+
+test('the Checkbox States story shows rows in an inline Field, with an error, a hint and a disabled pair', () => {
+  const states = read(join(storiesDir, 'components', 'CheckboxStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'rows are spaced by Stack, never by Container')
+  assert.match(states, /<Field inline>/, 'a choice row is an inline Field')
+  assert.ok(
+    !/<Field[^>]*label=/.test(states),
+    'the Label is written by the consumer, so an inline row passes no label prop',
+  )
+  assert.match(states, /<Checkbox\b/, 'the story renders the reviewed Checkbox component')
+  assert.match(states, /<Label for="/, 'every control has a Label pointing at it')
+  assert.match(
+    states,
+    /Fields marked \* are required\./,
+    'a story with a required asterisk explains it once',
+  )
+  assert.match(states, /\brequired\b/, 'the story shows a required state')
+  assert.match(states, /checked/, 'the story shows a checked state')
+  assert.match(states, /disabled/, 'the story shows a disabled state')
+  assert.match(states, /aria-invalid="true"/, 'errors are announced from aria-invalid')
+  assert.match(
+    states,
+    /class="rs-field__error"/,
+    'an error row writes the Field error element itself',
+  )
+  assert.match(
+    states,
+    /class="rs-field__hint"/,
+    'a row with a hint writes the Field hint element itself',
+  )
+  assert.doesNotMatch(
+    states,
+    /indeterminate/,
+    'indeterminate belongs to the Set story, where the DOM property is set after mount',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'CheckboxStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Checkbox Set story sets indeterminate through the DOM property, never a prop', () => {
+  const set = read(join(storiesDir, 'components', 'CheckboxSet.svelte'))
+
+  assert.match(set, /<Container size="content" padded>/, 'the story sits in one content Container')
+  assert.match(set, /<Fieldset>/, 'a set of related checkboxes is a fieldset')
+  assert.match(set, /\{#snippet legend\(\)\}/, 'the legend comes from the legend snippet')
+  assert.match(set, /<Stack gap="small">/, 'options sit closer together than the groups')
+  assert.ok(
+    (set.match(/<Field inline>/g) ?? []).length === 5,
+    'every option is an inline Field row',
+  )
+  assert.match(set, /<Checkbox\b/, 'the story renders the reviewed Checkbox component')
+  assert.match(set, /<Label for="/, 'every checkbox has a Label pointing at it')
+  assert.match(set, /class="rs-field__hint"/, 'a row with a hint writes the Field hint element')
+
+  assert.match(
+    set,
+    /document\.getElementById\('notify-all'\)/,
+    'indeterminate is set on the element, the only way a native checkbox can express it',
+  )
+  assert.match(set, /\.indeterminate = true/, 'the story sets the DOM property')
+  assert.match(
+    set,
+    /instanceof HTMLInputElement/,
+    'the story narrows the element before setting the property',
+  )
+  assert.doesNotMatch(
+    set,
+    /indeterminate=|bind:this|\$state|indeterminate\?:/,
+    'indeterminate is never a prop, an attribute or a component binding',
+  )
+  assert.match(
+    set,
+    /onMount\(/,
+    'the story sets the property after mount, when the control is in the DOM',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(set) && !/class="(?!rs-)/.test(set),
+    'CheckboxSet must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Radio States story groups fieldsets with one checked, one disabled and one in error', () => {
+  const states = read(join(storiesDir, 'components', 'RadioStates.svelte'))
+
+  assert.match(states, /<Container size="content" padded>/)
+  assert.match(
+    states,
+    /<Stack gap="xlarge">/,
+    'consecutive fieldsets go in an xlarge Stack, so groups sit further apart than their parts',
+  )
+  assert.ok(
+    (states.match(/<Fieldset\b/g) ?? []).length === 3,
+    'the story shows three groups: enabled, disabled and in error',
+  )
+  assert.match(states, /\{#snippet legend\(\)\}/, 'the legend comes from the legend snippet')
+  assert.match(states, /<Fieldset disabled>/, 'the disabled group carries the native attribute')
+  assert.match(
+    states,
+    /class="rs-fieldset__error"/,
+    "a group's error belongs to the fieldset, never to a Field",
+  )
+  assert.match(
+    states,
+    /<Fieldset aria-describedby="contact-error">/,
+    'the fieldset points at its own error text',
+  )
+  assert.match(states, /<Stack gap="small">/, 'options sit closer together than the groups')
+  assert.match(states, /<Field inline>/, 'each option is an inline Field row')
+  assert.match(states, /<Radio\b/, 'the story renders the reviewed Radio component')
+  assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
+  assert.match(states, /checked/, 'one option in the first group is checked')
+  assert.ok(
+    (states.match(/aria-invalid="true"/g) ?? []).length === 3,
+    'every radio in the invalid group announces the error',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RadioStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Checkbox and Radio stories document the indeterminate rule and the choice row', () => {
+  const readme = read(join(repoRoot, 'packages', 'svelte', 'README.md'))
+
+  assert.match(readme, /### `Checkbox` and `Radio`/, 'the README documents the choice controls')
+  assert.match(
+    readme,
+    /indeterminate/,
+    'the README explains that indeterminate is script-only, never a prop',
+  )
+  assert.match(readme, /<Field inline>/, 'the README documents the choice row composition')
+})
+
 test('the Field title lives in exactly one story file', () => {
   const storiesDir = join(appRoot, 'src', 'stories')
   const files = readdirSync(storiesDir).filter((name) => /\.stories\.ts$/.test(name))

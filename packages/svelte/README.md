@@ -25,6 +25,8 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Accordion`  | `@labcat2020/rocketship-svelte/components/Accordion`  | — (Svelte-first)   |
 | `Figure`     | `@labcat2020/rocketship-svelte/components/Figure`     | `Figure.astro`     |
 | `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | `Fieldset.astro`   |
+| `Checkbox`   | `@labcat2020/rocketship-svelte/components/Checkbox`   | `Checkbox.astro`   |
+| `Radio`      | `@labcat2020/rocketship-svelte/components/Radio`      | `Radio.astro`      |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 
@@ -67,6 +69,9 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Select`     | `value` (`bind:value`), `children` snippet, `class`                                                                                           |
 | `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
 | `Fieldset`   | `legend` snippet, `children` snippet, `class`                                                                                                 |
+| `Field`      | `as` (`div`, `section`), `inline`, `id`, `label`, `hint`, `error`, `hintId`, `errorId`, `required`, `optional`, `disabled`, `class`           |
+| `Checkbox`   | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-checkbox--invalid`), `class`                                                   |
+| `Radio`      | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-radio--invalid`), `class`                                                      |
 
 ### `Typography` `html` prop
 
@@ -188,6 +193,39 @@ The error state comes only from `aria-invalid`. Spread a `Field`'s `control` obj
 `disabled` is the native attribute, spread through `...attrs` rather than declared as a prop. It disables every control inside the group and leaves them out of the submitted form data, with no wiring of its own. The browser exempts controls inside the legend from that state, so an action there stays operable, and the legend itself stays readable.
 
 A group's hint or error belongs to the fieldset: write `<p class="rs-fieldset__hint">` or `<p class="rs-fieldset__error">` after the legend and point at it with `aria-describedby` on the fieldset. Consecutive fieldsets go in `<Stack gap="xlarge">`, because the space between groups has to exceed the space within them.
+
+### `Checkbox` and `Radio`
+
+Each is one native `<input>` with the `.rs-checkbox` or `.rs-radio` block, so `class`, `id`, `name` and every `aria-*` attribute land on the control itself. There is no wrapper label, hidden input or sibling selector, so the tick, dash and dot are the input's own `::before`, shaped with `clip-path` and painted from `--rs-checkbox-mark-color` / `--rs-radio-mark-color`. The mark follows the theme instead of being baked into an SVG.
+
+```svelte
+<script lang="ts">
+  import Checkbox from '@labcat2020/rocketship-svelte/components/Checkbox'
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
+  import Label from '@labcat2020/rocketship-svelte/components/Label'
+
+  let summary = $state(true)
+</script>
+
+<Field inline>
+  {#snippet children()}
+    <Checkbox id="checkbox-summary" name="summary" bind:checked={summary} />
+    <Label for="checkbox-summary">Email me a monthly summary</Label>
+  {/snippet}
+</Field>
+```
+
+A choice row is `<Field inline>`: the control goes first, then the `Label`, hint and error. Field's inline modifier turns the block into a two-column grid so the text sits beside the box, and shifts the Label's first line down by `--rs-label-offset` so it centres on the 24px control.
+
+The box is 24px through `--rs-checkbox-size` / `--rs-radio-size`, which meets WCAG 2.2 target size on its own. `--rs-checkbox-border-width`, `--rs-checkbox-border-radius`, `--rs-radio-border-width` and `--rs-radio-border-radius` keep the edge and corners tunable, and the background and edge colours read from `--rs-checkbox-bg` / `--rs-radio-bg` and `--rs-checkbox-border-color` / `--rs-radio-border-color`.
+
+`indeterminate` is never a prop. There is no HTML attribute for it and `aria-checked` is not allowed on a native checkbox, so a prop could only paint a dash while assistive tech still announced "not checked". Set the DOM property instead, and `.rs-checkbox:indeterminate` paints the dash:
+
+```js
+document.getElementById('notify-all').indeterminate = true
+```
+
+The error state comes only from `aria-invalid`, like every other reviewed control. Spread a `Field`'s `control` object onto the component and a `Field` error paints `--invalid`. Forced colours restore `appearance: auto` and drop the painted mark, so high-contrast users get the native control back.
 
 ## Install
 

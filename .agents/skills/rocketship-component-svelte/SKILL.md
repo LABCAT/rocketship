@@ -23,8 +23,8 @@ All of `.agents/rules/` applies: `rocketship-svelte.mdc`, `rocketship-component-
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `Alert.svelte`                                                                           | Current, except its `Props` type: a fixed `div` root uses `HTMLAttributes<HTMLDivElement>`. |
 | `Stack.svelte`                                                                           | Current.                                                                                    |
+| `Fieldset.svelte`                                                                        | Current. Ported from `Fieldset.astro`.                                                      |
 | `Field`, `Label`, `Input`, `Textarea`, `Select`, `Table`                                 | Pre-review. Port again from Astro.                                                          |
-| `Fieldset` (PR #62)                                                                      | Copies an unreviewed design. Port again from Astro.                                         |
 | `Checkbox`, `Radio`, `Scroll`                                                            | Not ported yet.                                                                             |
 | `Accordion`, `Button`, `Card`, `Container`, `Disclosure`, `Figure`, `Grid`, `Typography` | Pre-review. Never copy.                                                                     |
 

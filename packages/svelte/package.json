@@ -27,6 +27,7 @@
     "./components/Disclosure": "./src/components/Disclosure.svelte",
     "./components/Field": "./src/components/Field.svelte",
     "./components/Figure": "./src/components/Figure.svelte",
+    "./components/Fieldset": "./src/components/Fieldset.svelte",
     "./components/Grid": "./src/components/Grid.svelte",
     "./components/Input": "./src/components/Input.svelte",
     "./components/Label": "./src/components/Label.svelte",

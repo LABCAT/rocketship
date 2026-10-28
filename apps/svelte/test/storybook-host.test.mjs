@@ -285,6 +285,30 @@ test('the Select stories compose Field, exercise bind:value, and cover sizes, pl
   }
 })
 
+test('the Fieldset story mirrors the Astro story: one Default example per decision 29', () => {
+  const fieldsetStories = readdirSync(storiesDir).filter((name) =>
+    /^Fieldset.*\.stories\.ts$/.test(name),
+  )
+  assert.deepEqual(
+    fieldsetStories,
+    ['Fieldset.stories.ts'],
+    'all Fieldset examples belong in Fieldset.stories.ts',
+  )
+
+  const story = read(join(storiesDir, 'Fieldset.stories.ts'))
+  assert.match(story, /title:\s*'Components\/Fieldset'/)
+  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Fieldset story must enable a11y')
+  // Decision 29: disabled is a state, not an aspect, so it sits inside Default rather than in a
+  // Disabled file. Asserting the absence keeps a second file from coming back.
+  for (const name of ['Disabled', 'Legend']) {
+    assert.doesNotMatch(
+      story,
+      new RegExp(`export const ${name}: Story`),
+      `Fieldset has no ${name} story: the state sits inside Default`,
+    )
+  }
+})
+
 test('the Alert and Stack stories mirror the Astro story structure', () => {
   const alert = read(join(storiesDir, 'components', 'AlertVariants.svelte'))
   const stackDefault = read(join(storiesDir, 'components', 'StackDefault.svelte'))
@@ -329,6 +353,41 @@ test('the Alert and Stack stories mirror the Astro story structure', () => {
     assert.ok(
       !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
       `${name} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+})
+
+test('the Fieldset story groups real controls, pairs a locked group with an enabled one, and uses the legend snippet', () => {
+  const story = read(join(storiesDir, 'components', 'FieldsetDefault.svelte'))
+
+  assert.match(
+    story,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(
+    story,
+    /<Stack gap="xlarge">/,
+    'consecutive fieldsets go in an xlarge Stack, so groups sit further apart than their parts',
+  )
+  assert.match(story, /<Fieldset>/, 'the enabled group renders a plain Fieldset')
+  assert.match(
+    story,
+    /\{#snippet legend\(\)\}/,
+    'the legend comes from the legend snippet, mirroring the Astro named slot',
+  )
+  assert.match(story, /<Field\b/, 'the story groups Field controls')
+  assert.match(story, /bind:value=/, 'the story exercises bind:value')
+
+  assert.match(
+    story,
+    /<Fieldset disabled>/,
+    'the disabled group carries the native attribute, with no per-control prop',
+  )
+  for (const country of ['billing', 'shipping']) {
+    assert.ok(
+      story.includes(`name="${country}-name"`),
+      `the story must submit a ${country} name, so the disabled group can be seen to drop out`,
     )
   }
 })

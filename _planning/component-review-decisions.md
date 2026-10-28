@@ -981,6 +981,71 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - Tables: props and attributes (`as`, `class`), slots (`media`, default, `meta`), element classes (`__media`, `__title`, `__link`, `__description`: the anatomy is consumer-written, so the classes are the API), and CSS hooks. The variant-owned local `--rs-card-media-bg` is not listed.
 - Checked in Chromium: the keyboard focus ring outlines the whole card.
 
+### 135. Button keeps three fixed sizes; text never shrinks
+
+**Agreed 2026-10-27 (RCL-08).** An exception to the component-API rule "No `size` … prop" (decision 21).
+
+- Shane: most libraries ship button sizes, the same argument as Card's anatomy (decision 127): a component carries the opinion people expect. Button keeps `size?: 'small' | 'medium' | 'large'`.
+- No container-query growth (decision 9): a button is the same size wherever it sits. The 18 `--rs-button-*` values on `:root` in `variables.scss` (and its now unused `functions` import) are gone; sizes are locals on the block, reassigned by the modifier.
+- `medium` is the default and emits no class (decision 4). It lines up with Input: `min-block-size: calc(line-height-base × 1em + 2 × space-2 + 2 × border-width-sm)`, about 41px at 16px text, padding-inline `space-4`.
+- `small`: 32px, padding-inline `space-3`, page-size text. Smaller through height and padding, never text (decision 17).
+- `large`: 48px, padding-inline `space-6`, `font-size-lg` (18px). Text may step up, never down.
+- Label text inherits the page size (`--rs-button-font-size: 100%`, which `large` reassigns). A percentage, not `inherit`, because a custom property set to `inherit` would inherit the property itself.
+
+### 136. Button conformance applied without a question (decision 128)
+
+**Applied 2026-10-27 (RCL-08).**
+
+- Every fallback through `rs-token()`; the `#ffffff` accent-contrast fallback from decision 104's note is gone. `padding-block: 8px` and the `36px` base height go: the size's `min-block-size` and `align-items: center` set the height.
+- No `font-family` (decision 8). Variables first, then `all: unset` (style rule order).
+- `primary` is the base and emits no class (decision 4); `rs-button--primary` had no rule.
+- The disabled link's `[aria-disabled='true']` attribute selector becomes a derived modifier, `rs-button--disabled`, added in the frontmatter when a link is disabled (decision 3, as `--invalid` from `aria-invalid`).
+- The motion rule (decision 114): `--rs-button-duration` reads the opt-in `--rs-button-transition-duration` (fallback `transition-fast`); `prefers-reduced-motion: reduce` sets it to `0s`.
+- The standard focus ring, `2px` `color-focus-ring` at `2px` offset; the `--rs-button-focus-ring-color` local goes.
+- Button leaves stylelint's `ignoreFiles`.
+- Still open: hover and active (`filter: brightness()`), the secondary hover's `color-link-hover`, and the `disabled` prop and `href="#"` link handling.
+
+### 137. New token `color-accent-text`: accent-coloured text on page surfaces
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 18, as `color-danger-text` did.
+
+- Secondary and ghost Buttons wrote their labels in `color-accent`, a stroke-and-fill role that only promises 3:1. It passes 4.5:1 as text today, but retuning the accent for softer borders would silently break the labels.
+- `color.accent.text: {color.accent.$root}` in `light.tokens.json` and `dark.tokens.json` (`color-accent-text: (alias: color-accent)` in the map). Same value today, so nothing changes visually; the contract is now "text, 4.5:1", and it can take its own value later without touching components.
+- Secondary and ghost labels read it; the secondary border stays `color-accent` (a stroke). `Foundations/Colors` shows it after Accent contrast.
+
+### 138. Button hover is mixed from tokens with `color-mix()`
+
+**Agreed 2026-10-28 (RCL-08).** Shane: "maybe acceptable but still a bit subtle". If it is revisited, the step lives in one place, the `color-accent-hover` values in the token files.
+
+- Shane noticed no difference from the first attempt (secondary fill-only `color-surface-elevated`, about 1.06:1 on white) and found primary's `filter: brightness(1.08)` hover lame. Secondary's old hover also borrowed `color-link-hover`, a link-text role (decision 18).
+- Each variant owns two locals, `--rs-button-hover-bg` and `--rs-button-hover-border-color`; one `&:hover` rule assigns them. No new tokens: every theme gets a hover derived from its own accent.
+- Primary: `color-mix(in srgb, color-accent, color-fg 15%)`, border the same. `color-fg` is navy in light and near-white in dark, so the fill darkens in light and lightens in dark, always away from its label.
+- Secondary: `color-mix(in srgb, color-accent 10%, color-surface)`, border stays `color-accent`. Ghost: `color-mix(in srgb, color-accent 10%, transparent)`. 12% was tried first: the dark secondary label measured 4.48:1, under 4.5.
+- Measured on hover (label against fill): primary 6.9 light, 7.2 dark; secondary 5.0 light, 4.65 dark; ghost about 4.7 light, 4.6 dark on a surface.
+- Press keeps `filter: brightness(0.94)`.
+- Shane still found the primary hover boring. Primary now lifts: hover adds `box-shadow: var(--rs-button-hover-shadow)` (`shadow-md`, a soft glow in dark mode), transitioned with the other properties and instant under reduced motion. Secondary and ghost set the local to `none`. The primary mix rises from 15% to 20%, which only raises its label contrast. No movement; a `translate: 0 -1px` nudge is the follow-up if it still feels flat.
+- Shane: good in light mode, not in dark. Mixing toward `color-fg` (near-white in dark) washed the hovered fill out to a pale periwinkle. A `light-dark()` in Button was proposed and rejected: it would put mode logic in a component, and `light-dark()` cannot hold a shadow. New `color-accent-hover` and `shadow-accent` tokens were proposed next; Shane asked whether existing tokens already cover it. They do: `shadow-md`'s dark glow is the system's designed dark elevation (decision 7, `Foundations/Shadows`).
+- Primary's hover fill stayed `color-accent` with `shadow-md` alone. Shadow-only proved invisible at normal size: `shadow-md`'s dark glow (8px, white at 40%) disappears beside a bright blue button, and light mode lost its darkening. Earlier checks used zoomed captures; hovers are now checked at normal size.
+- Primary hover then tried `color-mix(in srgb, color-accent, color-fg 10%)` with `shadow-lg`. Dark was fine; Shane found light mode horrendous (the heavy shadow).
+- Shane asked what other libraries do and wanted live buttons to try, not code. Primer and Carbon put a per-mode hover colour in the token layer (Primer's `button.primary.bgColor.hover` is darker than rest in light and lighter in dark); Bootstrap 5.3 darkens 15% (`shade-color($primary, 15%)`). None adds a hover shadow. Shane tried them live and chose Bootstrap's look.
+- **Settled:** new token `color-accent-hover`, Bootstrap's 15% step computed into the token files. Light `#284dba` (15% darker than `#2f5bdb`, white label 7.4:1). Dark `#699bff` (15% lighter than `#4f89ff`, Bootstrap's `tint-color`): darkening in dark would drop our navy label (decision 104) to about 4.4:1. Primary hover changes only its fill and border to the token. No `color-mix()`, no shadow, no mode logic in Button. Secondary and ghost keep the 10% accent wash. `Foundations/Colors` shows Accent hover.
+
+### 139. `href` decides Button's element; `disabled` works on both
+
+**Agreed 2026-10-28 (RCL-08).** Decided without a question as obvious (Shane, relayed by the coordinating session, and confirmed).
+
+- The `as` prop goes. With `href` Button renders an `<a>`, without it a `<button>`: one way to make a link, and no `<a href="#">` link to nowhere (the old `as="a"` with no `href`). Nothing in the repo used `as` on Button.
+- `disabled` stays a prop, because links have no native `disabled` (decision 24's exception: one prop across two elements, not a re-declared attribute). On a `<button>` it is the native attribute. On a link it drops the `href` and adds `role="link"`, `aria-disabled="true"`, `tabindex="-1"` and the derived `rs-button--disabled` (decision 136), so it is announced as an unavailable link and does nothing when clicked.
+- Disabled keeps `opacity: 0.55` and `pointer-events: none`; the `cursor: not-allowed` beside it is removed, since no pointer events means the cursor never shows.
+
+### 140. Button stories: `Default` is the docs page, `Sizes` stays an aspect
+
+**Applied 2026-10-28 (RCL-08, RCL-21)** without a question, following decisions 119 and 125.
+
+- `Base/Button` → `Variants` becomes `Default` (`Button.stories.tsx`, `ButtonDefault.astro`, example `ButtonDefaultExample.astro`): a short description (one primary per view), the example (Deploy, Preview and Cancel in the three variants; a link to Astro's deploy guide through `href`; a disabled "Deploying"), the usage code, props and attributes (`variant`, `size`, `href`, `disabled`, `type`, `class`) and the opt-in CSS hooks. No slots table (decision 125). Variant-owned locals (fill, colour, padding, height, hover) are not listed.
+- `Sizes` stays its own aspect (decision 135), rebuilt to the stories rule: one content Container and a small Stack of three rows, small, medium and large, each in the three variants. The old rows used Containers as spacers, `<h3>` headings with no outline above them, and `aria-label`s that did not match the visible text (WCAG 2.5.3).
+- Buttons in a row are separated with `{' '}`, because Astro drops the whitespace between components on separate lines (decision 62); without it the Variants buttons touched.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

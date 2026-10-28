@@ -52,6 +52,8 @@ $rs-tokens: (
   color-border-control: (light: #7e89a8, dark: #5d6f9f),
   color-accent: (light: #2f5bdb, dark: #4f89ff),
   color-accent-contrast: (light: #ffffff, dark: #060b18),
+  color-accent-text: (alias: color-accent),
+  color-accent-hover: (light: #284dba, dark: #699bff),
   color-link: (light: #1f49c6, dark: #87b5ff),
   color-link-hover: (light: #173ea8, dark: #accdff),
   color-link-visited: (light: #6a3fc2, dark: #c1a4ff),

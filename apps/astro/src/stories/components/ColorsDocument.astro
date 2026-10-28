@@ -132,6 +132,18 @@ const consumeExample = `.rs-card {
       <p class="rs-card__description">Text and marks on accent</p>
       <Typography slot="meta"><code>--rs-color-accent-contrast</code></Typography>
     </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent-text);">
+      <div slot="media" class="rs-card__media"></div>
+      <p class="rs-card__title">Accent text</p>
+      <p class="rs-card__description">Accent-coloured text on page surfaces</p>
+      <Typography slot="meta"><code>--rs-color-accent-text</code></Typography>
+    </Card>
+    <Card as="li" style="--rs-card-media-bg: var(--rs-color-accent-hover);">
+      <div slot="media" class="rs-card__media"></div>
+      <p class="rs-card__title">Accent hover</p>
+      <p class="rs-card__description">Accent fills under the pointer</p>
+      <Typography slot="meta"><code>--rs-color-accent-hover</code></Typography>
+    </Card>
     <Card as="li" style="--rs-card-media-bg: var(--rs-color-link);">
       <div slot="media" class="rs-card__media"></div>
       <p class="rs-card__title">Link</p>

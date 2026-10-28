@@ -28,7 +28,7 @@ export default {
             'Typography',
             ['TermsStyleDocument'],
             'Button',
-            ['Variants', 'Sizes'],
+            ['Default', 'Sizes'],
           ],
           'Components',
           [

@@ -1047,326 +1047,340 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
   )
 })
 
-const tableModifiers = ['rs-table--striped', 'rs-table--compact', 'rs-table--hover']
+/** Reads a reviewed Astro component's style block, with the barrel import the Svelte port uses. */
+const astroStyleBlockOf = (name) => {
+  const source = readFileSync(
+    join(repoRoot, 'packages', 'base', 'src', 'components', `${name}.astro`),
+    'utf8',
+  )
+  return (source.match(/<style[^>]*>([\s\S]*?)<\/style>/)?.[1] ?? '').replace(
+    "@use '../styles/mixins' as *;",
+    "@use '@labcat2020/rocketship/styles/mixins' as *;",
+  )
+}
+
+/** Normalises a style block to its significant lines, so indentation cannot hide a difference. */
+const significantLines = (block) =>
+  block
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+/**
+ * Asserts a Svelte style block is the Astro block plus the `:global` wrapper and nothing else.
+ * Selectors, declarations and their order must match the reviewed original exactly.
+ */
+const assertPortsAstroStyle = (name) => {
+  const [astroImport, ...astroBody] = significantLines(astroStyleBlockOf(name))
+  const svelte = significantLines(styleBlockOf(name))
+
+  assert.equal(
+    svelte[0],
+    astroImport,
+    `${name} must import the shared barrel exactly as the Astro original does`,
+  )
+  assert.deepEqual(
+    svelte,
+    [astroImport, ':global {', ...astroBody, '}'],
+    `${name} must keep the Astro rule block identical inside :global`,
+  )
+}
 
 const tableRows = (rows) =>
-  `<thead><tr><th scope="col">Name</th><th scope="col">Role</th></tr></thead><tbody>${rows
-    .map(([name, role]) => `<tr><td>${name}</td><td>${role}</td></tr>`)
+  `<thead><tr><th class="rs-table__column-header" scope="col">Name</th></tr></thead><tbody>${rows
+    .map(
+      ([name, role]) =>
+        `<tr class="rs-table__body-row"><th class="rs-table__row-header" scope="row">${name}</th>` +
+        `<td class="rs-table__cell">${role}</td></tr>`,
+    )
     .join('')}</tbody>`
 
-test('Table renders .rs-table-holder around .rs-table with only the modifiers that were set', async () => {
+test('Table renders one table carrying .rs-table, with no wrapper element', async () => {
   const Table = await loadComponent('Table')
 
-  const cases = [
-    { label: 'no modifiers', props: {}, expected: [] },
-    { label: 'striped', props: { striped: true }, expected: ['rs-table--striped'] },
-    { label: 'compact', props: { compact: true }, expected: ['rs-table--compact'] },
-    { label: 'hover', props: { hover: true }, expected: ['rs-table--hover'] },
-    {
-      label: 'striped + compact + hover',
-      props: { striped: true, compact: true, hover: true },
-      expected: tableModifiers,
-    },
-    {
-      label: 'explicit false',
-      props: { striped: false, compact: false, hover: false },
-      expected: [],
-    },
-  ]
+  const markup = visible(renderMarkup(Table, { children: snippet(tableRows([])) }))
 
-  for (const { label, props, expected } of cases) {
+  assert.match(markup, /^<table\b/, 'the component is the semantic table, never a wrapper')
+  assert.equal((markup.match(/<table\b/g) ?? []).length, 1, 'Table renders exactly one <table>')
+  assert.ok(
+    !markup.includes('rs-table-holder'),
+    'the reviewed original has no holder: sideways scrolling belongs to Scroll',
+  )
+  assert.deepEqual(classList(markup, 'table'), ['rs-table'])
+})
+
+test('Table renders .rs-table--striped only when striped is set', async () => {
+  const Table = await loadComponent('Table')
+
+  for (const [label, props, expected] of [
+    ['default', {}, ['rs-table']],
+    ['striped', { striped: true }, ['rs-table', 'rs-table--striped']],
+    ['explicit false', { striped: false }, ['rs-table']],
+  ]) {
     const markup = renderMarkup(Table, { ...props, children: snippet(tableRows([])) })
-
-    assert.ok(
-      openingTag(markup, 'div').includes('rs-table-holder'),
-      `Table ${label} must wrap the table in .rs-table-holder`,
-    )
-    assert.ok(
-      markup.indexOf('<div') < markup.indexOf('<table'),
-      `Table ${label} must render the holder before the table`,
-    )
-
-    const classes = classList(markup, 'table')
-    assert.ok(classes.includes('rs-table'), `Table ${label} must render .rs-table`)
-    for (const modifier of tableModifiers) {
-      assert.equal(
-        classes.includes(modifier),
-        expected.includes(modifier),
-        `Table ${label} must ${expected.includes(modifier) ? '' : 'not '}render ${modifier}`,
-      )
-    }
+    assert.deepEqual(classList(markup, 'table'), expected, `Table ${label}: wrong classes`)
   }
 })
 
-test('Table puts consumer classes on the holder and never on the table, per the Svelte rules', async () => {
+test('Table puts consumer classes and native attributes on the table itself', async () => {
   const Table = await loadComponent('Table')
 
   const markup = renderMarkup(Table, {
     striped: true,
     class: 'consumer-class',
-    children: snippet(tableRows([])),
-  })
-
-  assert.deepEqual(classList(markup, 'div'), ['rs-table-holder', 'consumer-class'])
-  assert.deepEqual(classList(markup, 'table'), ['rs-table', 'rs-table--striped'])
-})
-
-test('Table renders the caption inside the table so it is exposed as the table name', async () => {
-  const Table = await loadComponent('Table')
-
-  const withCaption = renderMarkup(Table, {
-    caption: 'Quarterly revenue by region',
-    children: snippet(tableRows([])),
-  })
-  const captionIndex = withCaption.indexOf('<caption>')
-  const closeTableIndex = withCaption.indexOf('</table>')
-
-  assert.ok(captionIndex > -1, 'a caption prop must render a <caption>')
-  assert.ok(
-    captionIndex < closeTableIndex,
-    'the caption must sit inside the table so assistive tech reads it as the table name',
-  )
-  assert.match(withCaption, /<caption>Quarterly revenue by region<\/caption>/)
-  assert.equal((withCaption.match(/<caption>/g) ?? []).length, 1)
-
-  const withoutCaption = renderMarkup(Table, { children: snippet(tableRows([])) })
-  assert.ok(!withoutCaption.includes('<caption>'), 'no caption prop must render no <caption>')
-  assert.ok(
-    !openingTag(withCaption, 'table').includes('<caption>'),
-    'the caption must not leak into the table tag itself',
-  )
-})
-
-test('Table treats a blank caption as absent so no empty name reaches the table', async () => {
-  const Table = await loadComponent('Table')
-
-  for (const caption of ['', '   ', '\n\t']) {
-    const markup = renderMarkup(Table, { caption, children: snippet(tableRows([])) })
-    assert.ok(
-      !markup.includes('<caption>'),
-      `caption ${JSON.stringify(caption)} must not render an empty <caption>`,
-    )
-  }
-})
-
-test('Table spreads native attributes onto the holder while children render inside the table', async () => {
-  const Table = await loadComponent('Table')
-
-  const markup = renderMarkup(Table, {
     id: 'revenue',
-    'data-region': 'finance',
+    'aria-describedby': 'revenue-note',
     children: snippet(tableRows([['Ada Lovelace', 'Engineer']])),
   })
 
-  const holder = openingTag(markup, 'div')
-  assert.match(holder, /id="revenue"/)
-  assert.match(holder, /data-region="finance"/)
-  assert.ok(
-    markup.includes('<td>Ada Lovelace</td>'),
-    'children must render inside the table, standing in for thead/tbody',
-  )
-  assert.ok(
-    !openingTag(markup, 'table').includes('id="revenue"'),
-    'the table must not take the attributes the holder owns',
+  assert.deepEqual(classList(markup, 'table'), ['rs-table', 'rs-table--striped', 'consumer-class'])
+  const table = openingTag(markup, 'table')
+  assert.match(table, /id="revenue"/)
+  assert.match(table, /aria-describedby="revenue-note"/)
+  assert.match(
+    markup,
+    /<td class="rs-table__cell">Engineer<\/td>/,
+    'children render inside the table',
   )
 })
 
-test('Table as renders the requested holder tag while keeping the block class', async () => {
+test('Table keeps a fixed table root with no as prop, compact or hover', async () => {
+  const source = loadComponentSource('Table')
+
+  assert.doesNotMatch(source, /TableTag|as\?:/, 'a table has one valid root tag, so there is no as')
+  for (const removed of ['compact', 'hover']) {
+    assert.doesNotMatch(
+      source,
+      new RegExp(`^\\s*${removed}\\??:`, 'm'),
+      `${removed} is not part of the reviewed API`,
+    )
+  }
+  assert.doesNotMatch(
+    source,
+    /^\s*caption\??:\s*string/m,
+    'the caption is a snippet, because the consumer slots the element that carries the id',
+  )
+})
+
+test('Table renders the caption snippet as the table first child on the caption class', async () => {
   const Table = await loadComponent('Table')
 
-  assert.ok(openingTag(renderMarkup(Table, { children: snippet('') }), 'div').startsWith('<div'))
+  const markup = visible(
+    renderMarkup(Table, {
+      caption: snippet('<span id="usage-caption">Quarterly revenue</span>'),
+      children: snippet(tableRows([])),
+    }),
+  )
 
-  const section = renderMarkup(Table, { as: 'section', children: snippet('') })
-  assert.ok(openingTag(section, 'section').length > 0, 'as="section" must render a <section>')
-  assert.ok(!openingTag(section, 'div'), 'as="section" must not also render a <div>')
-  assert.ok(classList(section, 'section').includes('rs-table-holder'))
+  assert.match(
+    markup,
+    /^<table class="rs-table"><caption class="rs-table__caption"><span id="usage-caption">Quarterly revenue<\/span><\/caption>/,
+    'the caption must be the first child of the table, which is the only position the browser accepts',
+  )
+  assert.equal((markup.match(/<caption\b/g) ?? []).length, 1, 'one caption snippet, one caption')
 })
 
-test('Table server-renders no scroll-region semantics, because nothing has been measured yet', async () => {
+test('Table renders no caption element when the snippet is absent', async () => {
   const Table = await loadComponent('Table')
 
-  const markup = renderMarkup(Table, {
-    caption: 'Quarterly revenue by region',
-    children: snippet(tableRows([])),
-  })
-
-  const holder = openingTag(markup, 'div')
-  assert.ok(!/role="/.test(holder), 'SSR must not claim a region before measuring an overflow')
-  assert.ok(!/tabindex/.test(holder), 'SSR must not add a tab stop before measuring an overflow')
+  const markup = renderMarkup(Table, { children: snippet(tableRows([])) })
+  assert.ok(!markup.includes('<caption'), 'no caption snippet must render no <caption>')
 })
 
-test('Table makes the holder keyboard-scrollable only while it overflows, and clears it again', async () => {
-  const Table = await loadClientComponent('Table')
+test('Table renders no header or body cells of its own, so the consumer owns the markup', async () => {
+  const Table = await loadComponent('Table')
 
-  const { target, unmount: teardown } = await mountComponent(Table, {
-    caption: 'Quarterly revenue by region',
-    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
-  })
-
-  try {
-    const holder = target.querySelector('.rs-table-holder')
-    assert.ok(holder, 'the holder must be rendered')
-
-    assert.equal(holder.getAttribute('role'), null, 'a table that fits is not a scroll region')
-    assert.equal(holder.getAttribute('tabindex'), null, 'a table that fits stays out of tab order')
-    assert.equal(holder.getAttribute('aria-label'), null, 'a table that fits needs no region name')
-
-    setOverflow(holder, 900, 300)
-    resize()
-    await tick()
-
-    assert.equal(holder.getAttribute('tabindex'), '0', 'an overflowing holder must be tabbable')
-    assert.equal(holder.getAttribute('role'), 'region', 'an overflowing holder must be a region')
-    assert.equal(
-      holder.getAttribute('aria-label'),
-      'Quarterly revenue by region',
-      'the region must be named from the caption',
+  const markup = visible(renderMarkup(Table))
+  for (const tag of ['thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption']) {
+    assert.ok(
+      !new RegExp(`<${tag}\\b`).test(markup),
+      `Table must not render <${tag}>: the consumer writes every content element`,
     )
-
-    setOverflow(holder, 300, 300)
-    resize()
-    await tick()
-
-    assert.equal(holder.getAttribute('role'), null, 'the region role must be removed when it fits')
-    assert.equal(holder.getAttribute('tabindex'), null, 'the tab stop must be removed when it fits')
-  } finally {
-    teardown()
   }
-})
-
-test('Table names the scroll region from label first, then caption, then a generic name', async () => {
-  const Table = await loadClientComponent('Table')
-
-  const cases = [
-    {
-      label: 'label wins',
-      props: { label: 'Revenue', caption: 'Caption text' },
-      expected: 'Revenue',
-    },
-    { label: 'caption fallback', props: { caption: 'Caption text' }, expected: 'Caption text' },
-    { label: 'generic fallback', props: {}, expected: 'Table' },
-    {
-      label: 'blank label falls through',
-      props: { label: '  ', caption: 'Caption text' },
-      expected: 'Caption text',
-    },
-  ]
-
-  for (const { label, props, expected } of cases) {
-    const { target, unmount: teardown } = await mountComponent(Table, {
-      ...props,
-      children: clientSnippet(tableRows([])),
-    })
-    try {
-      const holder = target.querySelector('.rs-table-holder')
-      setOverflow(holder, 900, 300)
-      resize()
-      await tick()
-      assert.equal(holder.getAttribute('aria-label'), expected, `${label}: wrong region name`)
-    } finally {
-      teardown()
-    }
-  }
-})
-
-test('Table keeps a consumer-supplied role, tabindex and label instead of overwriting them', async () => {
-  const Table = await loadClientComponent('Table')
-
-  const { target, unmount: teardown } = await mountComponent(Table, {
-    role: 'group',
-    tabindex: -1,
-    'aria-label': 'Custom name',
-    caption: 'Quarterly revenue by region',
-    children: clientSnippet(tableRows([])),
-  })
-
-  try {
-    const holder = target.querySelector('.rs-table-holder')
-    setOverflow(holder, 900, 300)
-    resize()
-    await tick()
-
-    assert.equal(holder.getAttribute('role'), 'group', 'an explicit role must survive')
-    assert.equal(holder.getAttribute('tabindex'), '-1', 'an explicit tabindex must survive')
-    assert.equal(holder.getAttribute('aria-label'), 'Custom name', 'an explicit label must survive')
-  } finally {
-    teardown()
-  }
-})
-
-test('Table re-measures on resize, so a holder that shrinks later becomes scrollable', async () => {
-  const Table = await loadClientComponent('Table')
-
-  const { target, unmount: teardown } = await mountComponent(Table, {
-    children: clientSnippet(tableRows([['Ada Lovelace', 'Engineer']])),
-  })
-
-  try {
-    const holder = target.querySelector('.rs-table-holder')
-    setOverflow(holder, 400, 400)
-    resize()
-    await tick()
-    assert.equal(holder.getAttribute('tabindex'), null, 'no tab stop while the table fits')
-
-    setOverflow(holder, 1200, 400)
-    resize()
-    await tick()
-    assert.equal(holder.getAttribute('tabindex'), '0', 'the tab stop appears once it overflows')
-    assert.equal(
-      holder.getAttribute('aria-label'),
-      'Table',
-      'an unnamed region falls back to Table',
-    )
-
-    setOverflow(holder, 400, 1200)
-    resize()
-    await tick()
-    assert.equal(
-      holder.getAttribute('tabindex'),
-      null,
-      'growing past the content clears the tab stop',
-    )
-  } finally {
-    teardown()
-  }
-})
-
-test('Table stops observing once unmounted, so a late resize cannot touch a detached holder', async () => {
-  const Table = await loadClientComponent('Table')
-
-  const { target, unmount: teardown } = await mountComponent(Table, {
-    children: clientSnippet(tableRows([])),
-  })
-  const holder = target.querySelector('.rs-table-holder')
-  setOverflow(holder, 900, 300)
-  resize()
-  await tick()
-  assert.equal(holder.getAttribute('tabindex'), '0', 'precondition: the holder overflows')
-
-  teardown()
-
-  assert.equal(observerCallbacks.size, 0, 'unmounting must disconnect the ResizeObserver')
-  assert.doesNotThrow(() => resize(), 'firing a resize after teardown must be a no-op')
 })
 
 test('Table styles compile through the shared barrel and keep every Astro selector', async () => {
   const css = await compileStyleBlock(styleBlockOf('Table'))
 
   for (const selector of [
-    '.rs-table-holder',
     '.rs-table',
     '.rs-table--striped',
-    '.rs-table--compact',
-    '.rs-table--hover',
-    '.rs-table caption',
+    '.rs-table__caption',
+    '.rs-table__body-row:nth-child(even)',
+    '.rs-table__body-row:last-child',
+    '.rs-table__foot-row:last-child',
+    '.rs-table__foot-row:first-child',
+    '.rs-table__column-header',
+    '.rs-table__row-header',
+    '.rs-table__cell',
+    '.rs-table__column-header--numeric',
+    '.rs-table__cell--numeric',
   ]) {
     assert.ok(css.includes(selector), `compiled Table CSS must contain ${selector}`)
   }
 
-  assert.ok(
-    !/@media/.test(css),
-    'Table has no size variants, so it must not reach for viewport media queries',
+  assert.match(
+    css,
+    /border-collapse:\s*separate/,
+    'separate honours border-radius, collapse does not',
   )
+  assert.match(
+    css,
+    /clip-path:\s*inset\(0 round var\(--rs-table-border-radius/,
+    'corners are clipped',
+  )
+  assert.match(css, /font-variant-numeric:\s*tabular-nums/, 'numeric classes align digits')
+  assert.match(css, /text-align:\s*end/, 'numeric classes align to the inline end')
+  assert.ok(
+    !/@media|@container/.test(css),
+    'Table has one size, so it takes no viewport or container query',
+  )
+  assert.ok(!/:hover/.test(css), 'striping is the only row aid, so there is no hover state')
+  assert.deepEqual(
+    [...styleBlockOf('Table').matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Table paints only through rs-token(), with no hex values of its own',
+  )
+})
+
+test('Table style block is identical to Table.astro inside :global', () => {
+  assertPortsAstroStyle('Table')
+})
+
+test('Scroll is exported from the barrel and as a subpath, like the Astro package', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Scroll'],
+    './src/components/Scroll.svelte',
+    'packages/svelte must export ./components/Scroll',
+  )
+  assert.equal(
+    basePkg.exports['./components/Scroll'],
+    './src/components/Scroll.astro',
+    'Scroll is a port, so the import path matches the Astro entry',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Scroll \} from '\.\/components\/Scroll\.svelte'/,
+    'the barrel must export the Scroll value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Scroll\.svelte'/,
+    'the barrel must re-export the Scroll props type',
+  )
+  assert.match(
+    loadComponentSource('Scroll'),
+    /export type ScrollProps = \{/,
+    'Scroll must export its prop type so a consumer can wrap it',
+  )
+})
+
+test('Scroll renders one .rs-scroll div with no modifier by default', async () => {
+  const Scroll = await loadComponent('Scroll')
+
+  const markup = visible(renderMarkup(Scroll, { children: snippet('<p>Wide content</p>') }))
+
+  assert.match(markup, /^<div class="rs-scroll"><p>Wide content<\/p><\/div>$/)
+  assert.equal(
+    (markup.match(/<div\b/g) ?? []).length,
+    1,
+    'Scroll is the block, not a wrapper chain',
+  )
+})
+
+test('Scroll adds rs-scroll--vertical only when vertical is set', async () => {
+  const Scroll = await loadComponent('Scroll')
+
+  for (const [props, expected] of [
+    [{}, ['rs-scroll']],
+    [{ vertical: true }, ['rs-scroll', 'rs-scroll--vertical']],
+    [{ vertical: false }, ['rs-scroll']],
+  ]) {
+    const markup = renderMarkup(Scroll, props)
+    assert.deepEqual(classList(markup, 'div'), expected, `Scroll ${JSON.stringify(props)}`)
+  }
+})
+
+test('Scroll leaves the region semantics to the consumer, who names and focuses it', async () => {
+  const Scroll = await loadComponent('Scroll')
+
+  const bare = openingTag(renderMarkup(Scroll), 'div')
+  for (const attribute of ['role=', 'tabindex', 'aria-labelledby', 'aria-label']) {
+    assert.ok(
+      !bare.includes(attribute),
+      `Scroll must not write ${attribute}: the consumer makes and names the region`,
+    )
+  }
+
+  const markup = renderMarkup(Scroll, {
+    vertical: true,
+    tabindex: '0',
+    role: 'region',
+    'aria-labelledby': 'notes-heading',
+    class: 'consumer-class',
+  })
+  assert.deepEqual(classList(markup, 'div'), ['rs-scroll', 'rs-scroll--vertical', 'consumer-class'])
+  const region = openingTag(markup, 'div')
+  assert.match(region, /tabindex="0"/, 'the consumer-supplied tab stop lands on the block')
+  assert.match(region, /role="region"/, 'the consumer opts into the region role')
+  assert.match(region, /aria-labelledby="notes-heading"/, 'the consumer supplies the region name')
+})
+
+test('Scroll keeps a fixed div root with no as prop, mirroring the Astro original', async () => {
+  const source = loadComponentSource('Scroll')
+
+  assert.doesNotMatch(source, /ScrollTag|as\?:/, 'a scroll container has one valid root tag')
+  assert.match(
+    source,
+    /^<div \{\.\.\.attrs\} class=\{classes\}>/m,
+    'the root takes the consumer attributes, including tabindex and role',
+  )
+})
+
+test('Scroll styles compile through the shared barrel and keep every Astro selector', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Scroll'))
+
+  for (const selector of ['.rs-scroll', '.rs-scroll:focus-visible', '.rs-scroll--vertical']) {
+    assert.ok(css.includes(selector), `compiled Scroll CSS must contain ${selector}`)
+  }
+
+  assert.match(
+    css,
+    /overflow-x:\s*auto/,
+    'sideways scrolling only appears when content is too wide',
+  )
+  assert.match(css, /overflow-y:\s*auto/, 'the vertical modifier scrolls up and down')
+  assert.match(
+    css,
+    /max-block-size:\s*var\(--rs-scroll-max-block-size,\s*70dvh\)/,
+    'the height cap is a hook with a screen-sized fallback',
+  )
+  assert.match(
+    css,
+    /outline:\s*2px solid var\(--rs-color-focus-ring,/,
+    'the focus ring is Scroll paint and uses the focus-ring token',
+  )
+  assert.match(css, /outline-offset:\s*2px/, 'the ring clears the content it surrounds')
+  assert.ok(
+    !/background|border|padding/.test(css),
+    'Scroll paints nothing but the focus ring: no border, padding or background',
+  )
+  assert.ok(!/@media|@container/.test(css), 'Scroll has no size steps, so it has no query')
+  assert.deepEqual(
+    [...styleBlockOf('Scroll').matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Scroll names tokens only, never a hex literal',
+  )
+})
+
+test('Scroll style block is identical to Scroll.astro inside :global', () => {
+  assertPortsAstroStyle('Scroll')
 })
 
 /** Builds a `children` snippet that renders the wiring Field hands to the control. */

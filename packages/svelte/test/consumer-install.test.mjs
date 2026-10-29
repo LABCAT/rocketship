@@ -33,6 +33,7 @@ const componentSubpaths = [
   'Grid',
   'Input',
   'Label',
+  'Scroll',
   'Select',
   'Stack',
   'Table',
@@ -166,8 +167,10 @@ test('each published component compiles and server-renders its BEM block class',
     Container: 'rs-container',
     Fieldset: 'rs-fieldset',
     Grid: 'rs-grid',
+    Scroll: 'rs-scroll',
     Select: 'rs-select',
     Stack: 'rs-stack',
+    Table: 'rs-table',
     Typography: 'rs-typography',
   }
 

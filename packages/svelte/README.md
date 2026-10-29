@@ -16,6 +16,7 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Alert`      | `@labcat2020/rocketship-svelte/components/Alert`      | `Alert.astro`      |
 | `Stack`      | `@labcat2020/rocketship-svelte/components/Stack`      | `Stack.astro`      |
 | `Table`      | `@labcat2020/rocketship-svelte/components/Table`      | `Table.astro`      |
+| `Scroll`     | `@labcat2020/rocketship-svelte/components/Scroll`     | `Scroll.astro`     |
 | `Field`      | `@labcat2020/rocketship-svelte/components/Field`      | `Field.astro`      |
 | `Label`      | `@labcat2020/rocketship-svelte/components/Label`      | `Label.astro`      |
 | `Input`      | `@labcat2020/rocketship-svelte/components/Input`      | `Input.astro`      |
@@ -62,6 +63,8 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
 | `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                |
 | `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                               |
+| `Table`      | `striped`, `caption` snippet, `children` snippet, `class`                                                                                     |
+| `Scroll`     | `vertical`, `children` snippet, `class`                                                                                                       |
 | `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
 | `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
 | `Select`     | `value` (`bind:value`), `children` snippet, `class`                                                                                           |
@@ -188,6 +191,60 @@ The error state comes only from `aria-invalid`. Spread a `Field`'s `control` obj
 `disabled` is the native attribute, spread through `...attrs` rather than declared as a prop. It disables every control inside the group and leaves them out of the submitted form data, with no wiring of its own. The browser exempts controls inside the legend from that state, so an action there stays operable, and the legend itself stays readable.
 
 A group's hint or error belongs to the fieldset: write `<p class="rs-fieldset__hint">` or `<p class="rs-fieldset__error">` after the legend and point at it with `aria-describedby` on the fieldset. Consecutive fieldsets go in `<Stack gap="xlarge">`, because the space between groups has to exceed the space within them.
+
+### `Table`
+
+`Table` is one `<table>` carrying the `.rs-table` block, so `class`, `id` and every `aria-*` attribute land on the table itself. It renders no wrapper: a table that can outgrow its column belongs in `Scroll`, which owns the sideways scrolling. `striped` is the only variant, and striping carries no meaning. There is no `compact` or `hover` prop, because density hooks (`--rs-table-cell-padding-block`) and row highlights are not part of the reviewed API.
+
+The consumer writes the rows and their element classes: `rs-table__column-header` and `rs-table__column-header--numeric` on `<th scope="col">`, `rs-table__row-header` on `<th scope="row">`, `rs-table__cell` and `rs-table__cell--numeric` on `<td>`, and `rs-table__body-row` / `rs-table__foot-row` on the rows. A row styles its cells only by setting variables the cells inherit, so a foot row sets `--rs-table-cell-font-weight` and the last row drops its divider that way. Numeric classes set `text-align: end` and `tabular-nums`, so write them on both the cells and their header.
+
+The `caption` snippet renders a `<caption class="rs-table__caption">` as the table's first child. The caption names the table; when a heading already names it, omit the caption and point `aria-labelledby` at the heading instead.
+
+```svelte
+<script lang="ts">
+  import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Scroll from '@labcat2020/rocketship-svelte/components/Scroll'
+  import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+  import Table from '@labcat2020/rocketship-svelte/components/Table'
+</script>
+
+<Container size="content" padded>
+  <Stack>
+    <Scroll tabindex="0" role="region" aria-labelledby="usage-caption">
+      <Table striped>
+        {#snippet caption()}<span id="usage-caption">Build usage this month</span>{/snippet}
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Project</th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Builds
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="rs-table__body-row">
+            <th class="rs-table__row-header" scope="row">Docs site</th>
+            <td class="rs-table__cell rs-table__cell--numeric">142</td>
+          </tr>
+        </tbody>
+      </Table>
+    </Scroll>
+  </Stack>
+</Container>
+```
+
+### `Scroll`
+
+`Scroll` scrolls sideways when its content is too wide, and up and down as well when `vertical` is set, capped by `--rs-scroll-max-block-size` (default `70dvh`). It paints nothing but the focus ring: no border, padding or background, so it can wrap anything. Scrolling belongs to whoever places the content, so components never scroll themselves — a table that overflows goes inside `Scroll` rather than being made `display: block`.
+
+The consumer makes the region focusable and names it: write `tabindex="0"`, `role="region"` and `aria-labelledby` yourself, pointing at a caption or heading. `vertical` is the only prop.
+
+```svelte
+<h2 id="notes-heading">Release notes</h2>
+<Scroll vertical tabindex="0" role="region" aria-labelledby="notes-heading">
+  <Stack>…</Stack>
+</Scroll>
+```
 
 ## Install
 

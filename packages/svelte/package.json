@@ -31,6 +31,7 @@
     "./components/Grid": "./src/components/Grid.svelte",
     "./components/Input": "./src/components/Input.svelte",
     "./components/Label": "./src/components/Label.svelte",
+    "./components/Scroll": "./src/components/Scroll.svelte",
     "./components/Select": "./src/components/Select.svelte",
     "./components/Stack": "./src/components/Stack.svelte",
     "./components/Table": "./src/components/Table.svelte",

@@ -1,0 +1,90 @@
+<script lang="ts">
+  import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Scroll from '@labcat2020/rocketship-svelte/components/Scroll'
+  import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+  import Table from '@labcat2020/rocketship-svelte/components/Table'
+</script>
+
+<Container size="content" padded>
+  <Stack>
+    <Scroll tabindex="0" role="region" aria-labelledby="scroll-horizontal-caption">
+      <Table>
+        {#snippet caption()}<span id="scroll-horizontal-caption">Deployments by region</span>{/snippet}
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Project</th>
+            <th class="rs-table__column-header" scope="col">Owner</th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Sydney
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Frankfurt
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              São Paulo
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Virginia
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Singapore
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Tokyo
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              London
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Mumbai
+            </th>
+            <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+              Toronto
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="rs-table__body-row">
+            <th class="rs-table__row-header" scope="row">Docs site</th>
+            <td class="rs-table__cell">Platform</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,204</td>
+            <td class="rs-table__cell rs-table__cell--numeric">2,318</td>
+            <td class="rs-table__cell rs-table__cell--numeric">846</td>
+            <td class="rs-table__cell rs-table__cell--numeric">3,071</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,529</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,112</td>
+            <td class="rs-table__cell rs-table__cell--numeric">2,046</td>
+            <td class="rs-table__cell rs-table__cell--numeric">934</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,387</td>
+          </tr>
+          <tr class="rs-table__body-row">
+            <th class="rs-table__row-header" scope="row">Dashboard</th>
+            <td class="rs-table__cell">Product</td>
+            <td class="rs-table__cell rs-table__cell--numeric">3,880</td>
+            <td class="rs-table__cell rs-table__cell--numeric">4,215</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,907</td>
+            <td class="rs-table__cell rs-table__cell--numeric">6,342</td>
+            <td class="rs-table__cell rs-table__cell--numeric">2,764</td>
+            <td class="rs-table__cell rs-table__cell--numeric">2,388</td>
+            <td class="rs-table__cell rs-table__cell--numeric">4,502</td>
+            <td class="rs-table__cell rs-table__cell--numeric">2,119</td>
+            <td class="rs-table__cell rs-table__cell--numeric">3,016</td>
+          </tr>
+          <tr class="rs-table__body-row">
+            <th class="rs-table__row-header" scope="row">Marketing</th>
+            <td class="rs-table__cell">Growth</td>
+            <td class="rs-table__cell rs-table__cell--numeric">642</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,093</td>
+            <td class="rs-table__cell rs-table__cell--numeric">418</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,575</td>
+            <td class="rs-table__cell rs-table__cell--numeric">733</td>
+            <td class="rs-table__cell rs-table__cell--numeric">590</td>
+            <td class="rs-table__cell rs-table__cell--numeric">1,248</td>
+            <td class="rs-table__cell rs-table__cell--numeric">507</td>
+            <td class="rs-table__cell rs-table__cell--numeric">811</td>
+          </tr>
+        </tbody>
+      </Table>
+    </Scroll>
+  </Stack>
+</Container>

@@ -1,43 +1,53 @@
 <script lang="ts">
-  import Table from '@labcat2020/rocketship-svelte/components/Table'
   import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+  import Table from '@labcat2020/rocketship-svelte/components/Table'
 </script>
 
-<Container as="main" size="content" padded>
-  <Table>
-    <thead>
-      <tr>
-        <th scope="col">Service</th>
-        <th scope="col">Environment</th>
-        <th scope="col">Status</th>
-        <th scope="col">Duration</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>checkout-api</td>
-        <td>Production</td>
-        <td>Succeeded</td>
-        <td>1m 42s</td>
-      </tr>
-      <tr>
-        <td>pricing-worker</td>
-        <td>Production</td>
-        <td>Succeeded</td>
-        <td>2m 08s</td>
-      </tr>
-      <tr>
-        <td>search-indexer</td>
-        <td>Staging</td>
-        <td>Rolled back</td>
-        <td>4m 55s</td>
-      </tr>
-      <tr>
-        <td>notifications</td>
-        <td>Staging</td>
-        <td>Succeeded</td>
-        <td>58s</td>
-      </tr>
-    </tbody>
-  </Table>
+<Container size="content" padded>
+  <Stack>
+    <Table>
+      {#snippet caption()}Build usage this month{/snippet}
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Project</th>
+          <th class="rs-table__column-header" scope="col">Owner</th>
+          <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+            Builds
+          </th>
+          <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+            Minutes
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Docs site</th>
+          <td class="rs-table__cell">Platform</td>
+          <td class="rs-table__cell rs-table__cell--numeric">142</td>
+          <td class="rs-table__cell rs-table__cell--numeric">1,284</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Marketing</th>
+          <td class="rs-table__cell">Growth</td>
+          <td class="rs-table__cell rs-table__cell--numeric">87</td>
+          <td class="rs-table__cell rs-table__cell--numeric">642</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Dashboard</th>
+          <td class="rs-table__cell">Product</td>
+          <td class="rs-table__cell rs-table__cell--numeric">213</td>
+          <td class="rs-table__cell rs-table__cell--numeric">2,907</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="rs-table__foot-row">
+          <th class="rs-table__row-header" scope="row">Total</th>
+          <td class="rs-table__cell"></td>
+          <td class="rs-table__cell rs-table__cell--numeric">442</td>
+          <td class="rs-table__cell rs-table__cell--numeric">4,833</td>
+        </tr>
+      </tfoot>
+    </Table>
+  </Stack>
 </Container>

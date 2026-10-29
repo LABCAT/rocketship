@@ -91,6 +91,10 @@ const storyFixtures = [
   { label: 'AlertVariants', file: 'AlertVariants.svelte' },
   { label: 'StackDefault', file: 'StackDefault.svelte' },
   { label: 'StackGaps', file: 'StackGaps.svelte' },
+  { label: 'TableDefault', file: 'TableDefault.svelte' },
+  { label: 'TableStriped', file: 'TableStriped.svelte' },
+  { label: 'ScrollHorizontal', file: 'ScrollHorizontal.svelte' },
+  { label: 'ScrollVertical', file: 'ScrollVertical.svelte' },
 ]
 
 const runAxe = (target) =>
@@ -128,8 +132,10 @@ test('the story examples render without axe violations', async () => {
     'Figure',
     'Input',
     'Label',
+    'Scroll',
     'Select',
     'Stack',
+    'Table',
     'Textarea',
   ]) {
     await compileToCache(name, readFileSync(join(componentsDir, `${name}.svelte`), 'utf8'))

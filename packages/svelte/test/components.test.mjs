@@ -289,17 +289,28 @@ const mountControlFixture = async (markup, script = '') => {
   ).href
   const { mount, flushSync } = await import(clientEntry)
 
-  for (const name of ['Field', 'Fieldset', 'Input', 'Label', 'Select', 'Textarea']) {
+  for (const name of [
+    'Checkbox',
+    'Field',
+    'Fieldset',
+    'Input',
+    'Label',
+    'Radio',
+    'Select',
+    'Textarea',
+  ]) {
     await writeClientComponent(name, loadComponentSource(name), { stable: true })
   }
 
   const Fixture = await loadFixtureComponent(
     `ControlFixture-${randomUUID()}`,
     `<script lang="ts">
+  import Checkbox from './Checkbox.svelte'
   import Field from './Field.svelte'
   import Fieldset from './Fieldset.svelte'
   import Input from './Input.svelte'
   import Label from './Label.svelte'
+  import Radio from './Radio.svelte'
   import Select from './Select.svelte'
   import Textarea from './Textarea.svelte'
   ${script}
@@ -3536,4 +3547,423 @@ test('Fieldset styles compile through the shared barrel and match the Astro rule
     [],
     'Fieldset names tokens only, never a hex literal',
   )
+})
+
+test('Checkbox and Radio are exported from the barrel, as subpaths, like the Astro package', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['Checkbox', 'Radio']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.equal(
+      basePkg.exports[`./components/${name}`],
+      `./src/components/${name}.astro`,
+      `${name} is a port, so the Svelte subpath mirrors the Astro entry`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export \\{ default as ${name} \\} from '\\./components/${name}\\.svelte'`),
+      `the barrel must export the ${name} value`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export type \\* from '\\./components/${name}\\.svelte'`),
+      `the barrel must re-export the ${name} props type`,
+    )
+  }
+})
+
+test('Checkbox is one native checkbox carrying .rs-checkbox, with no wrapper or mark element', async () => {
+  const Checkbox = await loadComponent('Checkbox')
+
+  const markup = visible(renderMarkup(Checkbox))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="checkbox"/, 'the native type is the behaviour')
+  assert.deepEqual(classList(markup, 'input'), ['rs-checkbox'])
+  assert.doesNotMatch(markup, /<span/, 'the block is the control itself, not a wrapper')
+  assert.doesNotMatch(markup, /<svg/, 'the tick is a clipped ::before, never an element')
+})
+
+test('Radio is one native radio carrying .rs-radio, with no wrapper or mark element', async () => {
+  const Radio = await loadComponent('Radio')
+
+  const markup = visible(renderMarkup(Radio))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="radio"/, 'the native type is the behaviour')
+  assert.deepEqual(classList(markup, 'input'), ['rs-radio'])
+  assert.doesNotMatch(markup, /<span/, 'the block is the control itself, not a wrapper')
+  assert.doesNotMatch(markup, /<svg/, 'the dot is a clipped ::before, never an element')
+})
+
+test('a consumer cannot override the control type, because type is omitted from the props', () => {
+  for (const [name, type] of [
+    ['Checkbox', 'checkbox'],
+    ['Radio', 'radio'],
+  ]) {
+    const source = loadComponentSource(name)
+    assert.match(
+      source,
+      /Omit<HTMLInputAttributes, 'type'>/,
+      `${name} must omit type so a consumer cannot turn the control into another input`,
+    )
+    assert.match(
+      source,
+      new RegExp(`<input \{\\.\\.\\.attrs\\} type="${type}" class=\\{classes\\} \\/>`),
+      `${name} spreads attrs first and fixes the native type last`,
+    )
+  }
+})
+
+test('Checkbox and Radio compose a consumer class and spread native attributes onto the control', async () => {
+  for (const [name, type, block] of [
+    ['Checkbox', 'checkbox', 'rs-checkbox'],
+    ['Radio', 'radio', 'rs-radio'],
+  ]) {
+    const Component = await loadComponent(name)
+    const markup = renderMarkup(Component, {
+      id: `${type}-notify`,
+      name: 'notify',
+      value: 'builds',
+      checked: true,
+      required: true,
+      class: 'consumer-class',
+      'aria-describedby': 'notify-hint',
+    })
+    const tag = openingTag(markup, 'input')
+
+    assert.deepEqual(classList(markup, 'input'), [block, 'consumer-class'])
+    assert.match(tag, new RegExp(`id="${type}-notify"`), 'the id lands on the control itself')
+    assert.match(tag, /name="notify"/)
+    assert.match(tag, /value="builds"/)
+    assert.match(tag, /checked/, 'checked is a native attribute, not a prop')
+    assert.match(tag, /required/)
+    assert.match(tag, /aria-describedby="notify-hint"/)
+  }
+})
+
+test('Checkbox and Radio derive their error modifier from aria-invalid alone, with no invalid prop', async () => {
+  for (const [name, block] of [
+    ['Checkbox', 'rs-checkbox--invalid'],
+    ['Radio', 'rs-radio--invalid'],
+  ]) {
+    const Component = await loadComponent(name)
+
+    for (const value of ['true', true]) {
+      assert.ok(
+        classList(renderMarkup(Component, { 'aria-invalid': value }), 'input').includes(block),
+        `${name} with aria-invalid=${JSON.stringify(value)} must style the control as an error`,
+      )
+    }
+
+    for (const props of [
+      {},
+      { 'aria-invalid': 'false' },
+      { 'aria-invalid': 'spelling' },
+      { invalid: true },
+    ]) {
+      assert.ok(
+        !classList(renderMarkup(Component, props), 'input').includes(block),
+        `${name} with ${JSON.stringify(props)} must not paint an error, because the control does not announce one`,
+      )
+    }
+
+    assert.doesNotMatch(
+      loadComponentSource(name),
+      /invalid\??:/,
+      `${name} takes no invalid prop; the control's own aria-invalid is the one source of truth`,
+    )
+  }
+})
+
+test('Checkbox and Radio expose no indeterminate, size or transition, mirroring the Astro original', () => {
+  for (const name of ['Checkbox', 'Radio']) {
+    const source = loadComponentSource(name)
+    const script = source.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1] ?? ''
+
+    // Decision 33: indeterminate is a DOM property only script can set, and no HTML attribute
+    // exists. A prop could only paint a dash while assistive tech announced "not checked".
+    assert.doesNotMatch(
+      script,
+      /indeterminate\??:/,
+      `${name} must not declare an indeterminate prop`,
+    )
+    assert.doesNotMatch(
+      script,
+      /size\??:/,
+      `${name} has one reviewed size, so it takes no size prop`,
+    )
+    assert.doesNotMatch(
+      source,
+      /transition/,
+      'a choice control changes state instantly, so it declares no transition',
+    )
+  }
+})
+
+test('the Checkbox and Radio style blocks compile to the Astro rule block', async () => {
+  for (const [name, block, radius] of [
+    ['Checkbox', 'rs-checkbox', 'radius-sm'],
+    ['Radio', 'rs-radio', 'radius-pill'],
+  ]) {
+    const source = styleBlockOf(name)
+    const css = await compileStyleBlock(source)
+
+    for (const selector of [`.${block}`, `.${block}--invalid`]) {
+      assert.ok(css.includes(selector), `compiled ${name} CSS must contain ${selector}`)
+    }
+
+    assert.match(css, /appearance:\s*none/, 'the native box is replaced, not restyled')
+    assert.match(
+      css,
+      new RegExp(`block-size:\\s*var\\(--${block}-size,\\s*24px\\)`),
+      'the control meets WCAG 2.2 target size through its own 24px hook',
+    )
+    assert.match(
+      css,
+      new RegExp(`inline-size:\\s*var\\(--${block}-size,\\s*24px\\)`),
+      'the box is square through the same hook',
+    )
+    assert.match(
+      css,
+      new RegExp(`border:\\s*var\\(--${block}-border-width,\\s*var\\(--rs-border-width-sm,`),
+      'the edge is one border-width-sm line',
+    )
+    assert.match(
+      css,
+      new RegExp(`--${block}-border-color:\\s*var\\(--rs-color-border-control,`),
+      'the control edge comes from the control-border token, not a decorative line',
+    )
+    assert.match(
+      css,
+      new RegExp(`border-radius:\\s*var\\(--${block}-border-radius,\\s*var\\(--rs-${radius},`),
+      `the corners read the ${radius} token through a hook`,
+    )
+    assert.match(css, /clip-path:/, 'the mark is shaped with clip-path, never an SVG data URI')
+    assert.ok(!/data:image/.test(css), 'the mark is painted from a variable, not a data URI')
+    assert.match(css, /content:\s*(""|'')/, "the mark is the input's own ::before")
+
+    // Decision 34: states reassign the block's own locals instead of repainting declarations.
+    assert.match(
+      css,
+      new RegExp(`\\.${block}:checked[^{]*\\{[^}]*--${block}-bg:\\s*var\\(--rs-color-accent,`, 'm'),
+      'checked sets the fill to the accent colour through the block local',
+    )
+    assert.match(
+      css,
+      new RegExp(
+        `\\.${block}:checked[^{]*\\{[^}]*--${block}-mark-color:\\s*var\\(--rs-color-accent-contrast,`,
+        'm',
+      ),
+      'checked sets the mark to accent-contrast, so it passes contrast on the fill',
+    )
+    assert.match(
+      css,
+      new RegExp(
+        `\\.${block}--invalid\\s*\\{[^}]*--${block}-border-color:\\s*var\\(--rs-color-danger-accent,`,
+        'm',
+      ),
+      'the error modifier reassigns the local the block already reads',
+    )
+    assert.match(
+      css,
+      /@media\s*\(forced-colors:\s*active\)\s*\{[^}]*appearance:\s*auto/,
+      'forced colours restore the native control, because author backgrounds can drop',
+    )
+    assert.match(
+      css,
+      /@media\s*\(forced-colors:\s*active\)\s*\{[\s\S]*content:\s*none/,
+      'forced colours also drop the painted ::before mark',
+    )
+  }
+})
+
+test('the choice controls keep the shared focus, disabled and no-motion rules', async () => {
+  for (const name of ['Checkbox', 'Radio']) {
+    const css = await compileStyleBlock(styleBlockOf(name))
+
+    assert.match(css, /:focus-visible/, 'the control shows the shared focus ring')
+    assert.match(
+      css,
+      /outline:\s*2px solid var\(--rs-color-focus-ring,/,
+      'focus is 2px, per the rule',
+    )
+    assert.match(css, /outline-offset:\s*2px/)
+    assert.match(css, /cursor:\s*pointer/, 'at rest a choice control reads as clickable')
+    assert.match(css, /:disabled/, 'a disabled control keeps its native state painted')
+    assert.match(css, /cursor:\s*not-allowed/, 'a disabled control tells the pointer it cannot act')
+    assert.match(css, /opacity:\s*0\.55/, 'disabled matches Input, so the dimming is one value')
+
+    assert.ok(!/:hover/.test(css), 'a choice control has no hover state')
+    assert.ok(!/transition/.test(css), 'decision 38: a choice control changes state instantly')
+    assert.ok(
+      !/@media\s*\(min-width/.test(css) && !/@container/.test(css),
+      `${name} has one size, so it takes no container or viewport size query`,
+    )
+    assert.ok(!/:invalid/.test(css), 'errors come from aria-invalid, never :invalid')
+    assert.ok(!/font-family/.test(css), 'a choice control inherits the page typeface')
+
+    assert.deepEqual(
+      [...styleBlockOf(name).matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+      [],
+      `${name} must paint only through rs-token(), with no hex values of its own`,
+    )
+  }
+})
+
+test('Checkbox paints the tick, and its indeterminate dash is a :indeterminate rule only', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Checkbox'))
+
+  assert.match(css, /clip-path:\s*polygon\(/, 'the tick is a polygon clip')
+  assert.match(
+    css,
+    /:indeterminate[^{]*\{[^}]*--rs-checkbox-bg:/,
+    'indeterminate shares the checked fill, so the box reads as selected',
+  )
+  assert.match(
+    css,
+    /:indeterminate::before\s*\{[^}]*clip-path:\s*inset\(/,
+    'indeterminate overrides the tick with an inset dash on the same pseudo-element',
+  )
+})
+
+test('Radio paints a dot, and never styles an indeterminate state', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Radio'))
+
+  assert.match(css, /clip-path:\s*circle\(50%\)/, 'the dot is a circular clip')
+  assert.ok(!/:indeterminate/.test(css), 'a radio has no indeterminate state to paint')
+  assert.match(css, /block-size:\s*10px/, 'the dot is 10px, so the ring stays visible around it')
+})
+
+test('a Field inline row puts the control and Label side by side and links them', async () => {
+  const { target } = await mountControlFixture(
+    `<Field inline>
+    {#snippet children()}
+      <Checkbox id="row-summary" name="summary" aria-describedby="row-summary-hint" />
+      <Label for="row-summary">Email me a monthly summary</Label>
+      <p class="rs-field__hint" id="row-summary-hint">We send one email a month.</p>
+    {/snippet}
+  </Field>`,
+  )
+
+  const field = target.querySelector('.rs-field')
+  assert.ok(field.classList.contains('rs-field--inline'), 'inline adds the row modifier')
+
+  const control = target.querySelector('input.rs-checkbox')
+  const label = target.querySelector('label.rs-label')
+  assert.equal(label.getAttribute('for'), control.id, 'the Label points at the control')
+  assert.equal(control.getAttribute('aria-describedby'), 'row-summary-hint')
+  assert.equal(
+    control.parentElement,
+    field,
+    'the control is a direct child of the row, so the grid has two columns',
+  )
+  assert.ok(
+    !target.querySelector('.rs-field__control'),
+    'an inline Field renders no control wrapper, or the row would have a single cell',
+  )
+})
+
+test('the invalid state Field derives from its error reaches the Checkbox and Radio controls', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Terms" error="Accept the terms to continue.">
+    {#snippet children(control)}
+      <Checkbox {...control} name="terms" />
+    {/snippet}
+  </Field>
+  <Field label="Delivery" error="Choose a delivery option.">
+    {#snippet children(control)}
+      <Radio {...control} name="delivery" value="standard" />
+    {/snippet}
+  </Field>`,
+  )
+
+  const [checkbox, radio] = target.querySelectorAll('input')
+  for (const [element, block] of [
+    [checkbox, 'rs-checkbox--invalid'],
+    [radio, 'rs-radio--invalid'],
+  ]) {
+    assert.equal(element.getAttribute('aria-invalid'), 'true')
+    assert.ok(
+      element.classList.contains(block),
+      `the error state lands on the control, which is the .${block.split('--')[0]} block`,
+    )
+  }
+})
+
+test('a disabled Fieldset disables the choice controls while an enabled one stays operable', async () => {
+  const { target, window } = await mountControlFixture(
+    `<Fieldset disabled>
+    {#snippet legend()}Gift wrapping{/snippet}
+    <Field inline>
+      {#snippet children()}
+        <Radio id="wrap-none" name="wrap" value="none" />
+        <Label for="wrap-none">No wrapping</Label>
+      {/snippet}
+    </Field>
+  </Fieldset>
+  <Fieldset>
+    {#snippet legend()}Delivery{/snippet}
+    <Field inline>
+      {#snippet children()}
+        <Radio id="delivery-standard" name="delivery" value="standard" />
+        <Label for="delivery-standard">Standard, 3 to 5 days</Label>
+      {/snippet}
+    </Field>
+  </Fieldset>`,
+  )
+
+  const [locked, enabled] = target.querySelectorAll('input[type="radio"]')
+  assert.equal(locked.matches(':disabled'), true, 'the fieldset disables its radios')
+  assert.equal(locked.hasAttribute('disabled'), false, 'no component hard-codes the attribute')
+  assert.equal(
+    target.querySelector('label[for="wrap-none"]').textContent.trim(),
+    'No wrapping',
+    'the Label beside a disabled control stays readable',
+  )
+
+  // Release any focus a previous fixture left behind: a disabled control cannot be blurred, so a
+  // stale active element would make the check below prove nothing.
+  if (window.document.activeElement instanceof window.HTMLElement) {
+    window.document.activeElement.blur()
+  }
+  locked.focus()
+  assert.equal(window.document.activeElement.tagName, 'BODY')
+
+  enabled.focus()
+  assert.equal(window.document.activeElement, enabled, 'an enabled radio still takes focus')
+})
+
+test('indeterminate is set only from the consumer script, never rendered by the component', async () => {
+  const Checkbox = await loadComponent('Checkbox')
+  const markup = visible(renderMarkup(Checkbox, { id: 'notify-all', name: 'notify' }))
+
+  assert.doesNotMatch(
+    markup,
+    /indeterminate/,
+    'the rendered markup carries no indeterminate attribute, because HTML has none',
+  )
+
+  const { target, flushSync } = await mountControlFixture(
+    `<Field inline>
+    {#snippet children()}
+      <Checkbox id="notify-all" name="notify" value="all" />
+      <Label for="notify-all">All topics</Label>
+    {/snippet}
+  </Field>`,
+  )
+
+  const control = target.querySelector('input.rs-checkbox')
+  assert.equal(control.indeterminate, false, 'precondition: a fresh checkbox is not indeterminate')
+
+  control.indeterminate = true
+  flushSync()
+  assert.equal(control.indeterminate, true, 'script alone sets the state')
+  assert.ok(control.matches(':indeterminate'), 'the native pseudo-class follows the property')
 })

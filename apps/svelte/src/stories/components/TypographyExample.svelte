@@ -34,7 +34,7 @@
         <a href="https://example.com/terms">terms</a> or send a note to
         <a href="mailto:legal@example.com">legal@example.com</a>.
       </p>
-      <p class="intro-text">
+      <p>
         Intro text leads a page with a larger, more open measure before the body copy begins.
       </p>
       <hr />

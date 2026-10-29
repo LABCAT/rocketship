@@ -26,7 +26,7 @@ export default {
             'Scroll',
             ['Horizontal', 'Vertical'],
             'Typography',
-            ['TermsStyleDocument'],
+            ['Default', 'Prose'],
             'Button',
             ['Default', 'Sizes'],
           ],

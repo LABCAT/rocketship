@@ -1,18 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/html'
-import TypographyDocument from './components/TypographyDocument.astro'
-import '@labcat2020/rocketship/components/Typography'
+import TypographyDefault from './components/TypographyDefault.astro'
 import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Stack'
+import '@labcat2020/rocketship/components/Table'
+import '@labcat2020/rocketship/components/Typography'
 
-const meta: Meta<typeof TypographyDocument> = {
+const meta: Meta<typeof TypographyDefault> = {
   title: 'Base/Typography',
-  component: TypographyDocument,
+  component: TypographyDefault,
   parameters: {
     a11y: { disable: false },
-    layout: 'fullscreen',
   },
 }
 
 export default meta
-type Story = StoryObj<typeof TypographyDocument>
+type Story = StoryObj<typeof TypographyDefault>
 
 export const Default: Story = {}

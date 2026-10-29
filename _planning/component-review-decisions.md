@@ -1046,6 +1046,47 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `Sizes` stays its own aspect (decision 135), rebuilt to the stories rule: one content Container and a small Stack of three rows, small, medium and large, each in the three variants. The old rows used Containers as spacers, `<h3>` headings with no outline above them, and `aria-label`s that did not match the visible text (WCAG 2.5.3).
 - Buttons in a row are separated with `{' '}`, because Astro drops the whitespace between components on separate lines (decision 62); without it the Variants buttons touched.
 
+### 141. Typography conformance applied without a question (decision 128)
+
+**Applied 2026-10-28 (RCL-08).**
+
+- The prose mixins in `styles/mixins/typography/` read every token through `rs-token()` (colours, spacing, weights, line heights, radii, border width, transition, the heading and text spacing tokens, `font-size-sm`, `font-family-mono`), so standalone dark mode works (decision 6). Typography's own size hooks (`--rs-typography-h1-size` and so on) are not tokens and keep their literal fallbacks.
+- No sans `font-family` on headings, paragraphs or the intro (decision 8). Code, `kbd`, `samp` and `var` keep `font-family-mono`: that is the code face, not the page's.
+- Logical properties: `margin-top`/`-bottom` → `margin-block-start`/`-end`, the list counters' `left` → `inset-inline-start`, `text-align: left` → `start`, `border-top` → `border-block-start`.
+- `.intro-text` was first renamed `rs-typography__intro` here; Shane pointed out that was not obvious, and it is removed instead (decision 143).
+
+### 142. Prose is the one exception to decision 3, at tag weight through `:where()`
+
+**Agreed 2026-10-28 (RCL-08).** Resolves the parked "Typography mixins" question.
+
+- Typography styles bare tags (`h2`, `p`, `a`, lists, tables) because Markdown and CMS output has no classes. It is the one component allowed descendant tag selectors, and it stays in stylelint's `ignoreFiles` as that documented exception.
+- Its scope is `:where(.rs-typography)`, which matches the same elements but adds no specificity: `:where(.rs-typography) p` is (0,0,1). Before, `.rs-typography p` and `.rs-typography a` (0,1,1) beat every single library class (0,1,0), so a `<Button href>` inside prose rendered as blue underlined link text on a blue pill, and a Card description took paragraph margins. Now any class inside the prose wins. Checked in Chromium: a Button inside prose is white with no underline, and a plain link keeps its link colour and underline.
+- The link mixin's states are `&:where(:hover)`, `&:where(:visited)`, `&:where(:focus-visible)`, so a visited or hovered state cannot add the weight back. Same order, so a visited link's colour still wins over hover, as before.
+- `:where()` is in every current browser (Chrome 88, Firefox 78, Safari 14). The Svelte Typography uses the same mixins, so it picks up the link change on its next build; its own selectors are ported later.
+
+### 143. No intro class in Typography
+
+**Agreed 2026-10-28 (RCL-08).**
+
+- `.intro-text` (`.rs-typography .intro-text`) was an author-facing class: an editor working in a CMS, who cannot use components, could mark the opening paragraph as a lead (bigger, medium weight), like Bootstrap's `.lead`. Unprefixed so it was easy to type in content.
+- Removed from the Astro library: nothing used it but the Typography specimen story, it was the library's only author-facing and only unprefixed class, and plain Markdown cannot add a class anyway. If a lead paragraph is wanted later, it comes back deliberately, with its name decided then.
+- Shane: a decision that affects Svelte must not leave a mess there. Removed in the same change: the `.intro-text` rule in `Typography.svelte`, its two assertions in `packages/svelte/test/components.test.mjs` (the raw-HTML test now uses a plain `<p>`), `class="intro-text"` in the Svelte `TypographyExample` and `ContainerExample` stories, and the `typography-intro` mixin itself.
+
+### 144. Prose headings grow with their container (an exception to decision 9)
+
+**Agreed 2026-10-28 (RCL-08).**
+
+- Typography's headings step up as their container widens (h1 32 → 36 → 44px at 500 and 900px; h2 to h4 likewise) and prose paragraphs go from 16 to 17px at 700px. The review proposed fixing them at one size under decision 9; Shane: an h1 is expected to be smaller on mobile than on desktop.
+- Decision 9 is about components changing density (Alert, Button, controls). Page typography with a heading scale that grows with space is standard (Bootstrap's responsive headings, GOV.UK's larger headings from tablet, Tailwind's prose sizes), so the steps stay.
+- They keep measuring the nearest container, not the viewport, so an article in a narrow sidebar gets the small sizes. Text still never shrinks below its base size.
+
+### 145. Typography stories: `Default` is the docs page, `Prose` is the specimen
+
+**Applied 2026-10-29 (RCL-08, RCL-21)** without a question, following decisions 119, 125 and 140.
+
+- `Base/Typography` → `Default` (`Typography.stories.tsx`, `TypographyDefault.astro`, example `TypographyDefaultExample.astro`): what Typography is for (prose you don't write classes for), that headings grow with their container, and that components and classes inside it keep their own styles (decision 142). The example is a short release note with a heading, paragraphs, inline code, a list and a link. Tables: props and attributes (`as`, `html` with a "trusted HTML only" note, `class`) and the size hooks, one row per step, because each step has its own hook (`--rs-typography-h1-size`, `-sm`, `-lg`).
+- The 250-line terms document stays as its own aspect, `Base/Typography` → `Prose` (`Typography.prose.stories.tsx`, `TypographyProse.astro`), the full specimen of every element. Sort order `Default`, `Prose`; the stale `TermsStyleDocument` entry in `preview.ts` is gone.
+
 ## Parked for later
 
 - **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.

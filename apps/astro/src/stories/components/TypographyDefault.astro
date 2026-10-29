@@ -1,0 +1,117 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import TypographyDefaultExample from './TypographyDefaultExample.astro'
+import exampleSource from './TypographyDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'as',
+    type: "'div' | 'section' | 'article'",
+    default: "'div'",
+    description: 'The root element.',
+  },
+  {
+    name: 'html',
+    type: 'string',
+    default: '—',
+    description:
+      'Rendered as raw HTML in place of the slot, for Markdown or CMS output. Pass trusted HTML only.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const hooks = [
+  { name: '--rs-typography-h1-size', default: '32px' },
+  { name: '--rs-typography-h1-size-sm', default: '36px, from a 500px container' },
+  { name: '--rs-typography-h1-size-lg', default: '44px, from 900px' },
+  { name: '--rs-typography-h2-size', default: '28px' },
+  { name: '--rs-typography-h2-size-sm', default: '32px, from 500px' },
+  { name: '--rs-typography-h2-size-lg', default: '38px, from 900px' },
+  { name: '--rs-typography-h3-size', default: '24px' },
+  { name: '--rs-typography-h3-size-sm', default: '28px, from 500px' },
+  { name: '--rs-typography-h3-size-lg', default: '32px, from 900px' },
+  { name: '--rs-typography-h4-size', default: '21px' },
+  { name: '--rs-typography-h4-size-md', default: '24px, from 700px' },
+  { name: '--rs-typography-h5-size', default: '18px' },
+  { name: '--rs-typography-h6-size', default: '16px' },
+  { name: '--rs-typography-p-size', default: '16px' },
+  { name: '--rs-typography-p-size-md', default: '17px, from 700px' },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Typography</h1>
+      <p>
+        Typography styles prose you don't write classes for: Markdown, CMS output, long-form pages.
+        Put the content inside it and headings, paragraphs, lists, links and code take the library's
+        look. Headings grow as their container widens. Components and your own classes inside it
+        keep their own styles.
+      </p>
+    </Typography>
+
+    <TypographyDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Table>
+      <Fragment slot="caption">Props and attributes</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Name</th>
+          <th class="rs-table__column-header" scope="col">Type</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+          <th class="rs-table__column-header" scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          attributes.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">
+                <code>{row.type}</code>
+              </td>
+              <td class="rs-table__cell">{row.default}</td>
+              <td class="rs-table__cell">{row.description}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+
+    <Table>
+      <Fragment slot="caption">Size hooks</Fragment>
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Property</th>
+          <th class="rs-table__column-header" scope="col">Default</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          hooks.map((row) => (
+            <tr class="rs-table__body-row">
+              <th class="rs-table__row-header" scope="row">
+                <code>{row.name}</code>
+              </th>
+              <td class="rs-table__cell">{row.default}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </Table>
+  </Stack>
+</Container>

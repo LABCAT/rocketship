@@ -61,10 +61,6 @@
         @include typography-a;
       }
 
-      .intro-text {
-        @include typography-intro;
-      }
-
       i,
       em {
         @include typography-em;

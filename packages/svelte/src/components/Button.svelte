@@ -74,6 +74,25 @@
       --rs-button-min-height: 36px;
       --rs-button-gap: var(--rs-space-2, 8px);
       --rs-button-focus-ring-color: var(--rs-color-focus-ring, #296dff);
+      // Size values that lived on :root until the Astro Button review (decision 135) moved them out.
+      --rs-button-font-size-sm: #{to-rem(14)};
+      --rs-button-font-size-md: #{to-rem(16)};
+      --rs-button-font-size-lg: #{to-rem(20)};
+      --rs-button-min-height-sm: 34px;
+      --rs-button-min-height-md: 40px;
+      --rs-button-min-height-lg: 48px;
+      --rs-button-padding-inline-sm: var(--rs-space-3);
+      --rs-button-padding-inline-md: var(--rs-space-4);
+      --rs-button-padding-inline-lg: var(--rs-space-6);
+      --rs-button-font-size-sm-cq: #{to-rem(16)};
+      --rs-button-font-size-md-cq: #{to-rem(18)};
+      --rs-button-font-size-lg-cq: #{to-rem(24)};
+      --rs-button-min-height-sm-cq: 40px;
+      --rs-button-min-height-md-cq: 44px;
+      --rs-button-min-height-lg-cq: 52px;
+      --rs-button-padding-inline-sm-cq: var(--rs-space-4);
+      --rs-button-padding-inline-md-cq: var(--rs-space-5);
+      --rs-button-padding-inline-lg-cq: var(--rs-space-7);
       box-sizing: border-box;
       align-items: center;
       background: var(--rs-button-bg);

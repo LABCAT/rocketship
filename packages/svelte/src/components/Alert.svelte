@@ -9,7 +9,7 @@
     role?: 'alert' | 'status' | 'note'
     class?: string
     children?: Snippet
-  } & HTMLAttributes<HTMLElement>
+  } & HTMLAttributes<HTMLDivElement>
 
   let { variant = 'info', class: className = '', children, ...attrs }: Props = $props()
 

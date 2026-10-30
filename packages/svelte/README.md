@@ -27,6 +27,8 @@ Components are either copy-style ports of their Astro originals, or Svelte-first
 | `Fieldset`   | `@labcat2020/rocketship-svelte/components/Fieldset`   | `Fieldset.astro`   |
 | `Checkbox`   | `@labcat2020/rocketship-svelte/components/Checkbox`   | `Checkbox.astro`   |
 | `Radio`      | `@labcat2020/rocketship-svelte/components/Radio`      | `Radio.astro`      |
+| `FileInput`  | `@labcat2020/rocketship-svelte/components/FileInput`  | `FileInput.astro`  |
+| `RangeInput` | `@labcat2020/rocketship-svelte/components/RangeInput` | `RangeInput.astro` |
 
 Import components from their `./components/*` subpaths. Those subpaths are the package's public surface; deep imports such as `@labcat2020/rocketship-svelte/src/components/Container.svelte` are not exported and will not resolve.
 
@@ -72,6 +74,8 @@ Each component spreads unknown attributes onto its rendered element and composes
 | `Field`      | `as` (`div`, `section`), `inline`, `id`, `label`, `hint`, `error`, `hintId`, `errorId`, `required`, `optional`, `disabled`, `class`           |
 | `Checkbox`   | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-checkbox--invalid`), `class`                                                   |
 | `Radio`      | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-radio--invalid`), `class`                                                      |
+| `FileInput`  | `files` (`bind:files`), `aria-invalid` (derives `rs-file-input--invalid`), `class`                                                            |
+| `RangeInput` | `value` (`bind:value`), `aria-invalid` (derives `rs-range-input--invalid`), `class`                                                           |
 
 ### `Typography` `html` prop
 
@@ -226,6 +230,60 @@ document.getElementById('notify-all').indeterminate = true
 ```
 
 The error state comes only from `aria-invalid`, like every other reviewed control. Spread a `Field`'s `control` object onto the component and a `Field` error paints `--invalid`. Forced colours restore `appearance: auto` and drop the painted mark, so high-contrast users get the native control back.
+
+### `FileInput`
+
+`FileInput` is one native `<input type="file">` with the `.rs-file-input` block: no wrapper, no hidden input, so `class`, `id`, `name`, `accept`, `multiple` and every `aria-*` attribute land on the control itself. The box takes the surface colour and the control border, and the browse button is the input's own `::file-selector-button`, styled as the library's pill.
+
+```svelte
+<script lang="ts">
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
+  import FileInput from '@labcat2020/rocketship-svelte/components/FileInput'
+
+  let notes = $state<FileList | null>(null)
+  const chosen = $derived(notes ? [...notes].map((file) => file.name) : [])
+</script>
+
+<Field
+  label="Release notes"
+  hint={chosen.length ? `Attached: ${chosen.join(', ')}` : 'PDF only. You can attach several files.'}
+>
+  {#snippet children(control)}
+    <FileInput {...control} name="notes" accept="application/pdf" multiple bind:files={notes} />
+  {/snippet}
+</Field>
+```
+
+`files` is the platform's `FileList`, bound with `bind:files`. The component never invents a file: the picker fills the list, and the consumer reads the names back from it. The browser prints one name itself, or a file count when `multiple` is set, so list the names when the exact selection matters.
+
+Set `files` back to `null` to clear the selection. A file input does not accept a `files` assignment, so the component clears its value instead, which removes both the list and the printed text in one write. For the same reason the control always starts empty: only the picker can fill the list.
+
+The error state comes only from `aria-invalid`, like every other reviewed control: it reassigns the box's border colour to `color-danger-accent` and leaves the browse button alone, so the error never reads as a destructive action. Disabled dims the whole control to `opacity: 0.55` and the platform blocks the picker; the component never uses `pointer-events`.
+
+### `RangeInput`
+
+`RangeInput` is one native `<input type="range">` with the `.rs-range-input` block. `min`, `max` and `step` are native attributes, so the platform clamps and snaps the value: the component re-implements none of those rules. The track is a 4px guide through `--rs-range-input-track-height`, and the thumb is a 24px ringed handle through `--rs-range-input-thumb-size`, which meets WCAG 2.2 target size on its own.
+
+```svelte
+<script lang="ts">
+  import Field from '@labcat2020/rocketship-svelte/components/Field'
+  import RangeInput from '@labcat2020/rocketship-svelte/components/RangeInput'
+
+  let workers = $state(4)
+</script>
+
+<Field label="Build workers" hint="Each worker runs one build at a time.">
+  {#snippet children(control)}
+    <RangeInput {...control} name="workers" min={1} max={8} bind:value={workers} />
+  {/snippet}
+</Field>
+```
+
+`value` is a number and is `bind:value`-able. The thumb's position is the value, so write the number out beside the slider when the exact figure matters — a hint or an `<output>` you own. The component paints no progress fill, because WebKit and Chromium have no part for it. There are no tick marks either: a browser draws a `datalist`'s ticks only on the native slider, so `step` does the snapping and a visible scale would be a separate feature.
+
+A write outside `min`/`max`, or between two steps, is clamped or snapped by the platform, and the bound value adopts the number the thumb actually shows, so an output written from the state never disagrees with the slider. With no value given, the state adopts the platform default the slider displays.
+
+The error state comes only from `aria-invalid`, and it turns both edges of the control: the track and the thumb's ring read `color-danger-accent`, since a slider with one red edge out of two reads as two states. Forced colours fall back to the native slider, because repainting the track in the page colour would leave the thumb floating.
 
 ## Install
 

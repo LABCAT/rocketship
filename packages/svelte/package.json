@@ -33,6 +33,7 @@
     "./components/Input": "./src/components/Input.svelte",
     "./components/Label": "./src/components/Label.svelte",
     "./components/Radio": "./src/components/Radio.svelte",
+    "./components/RadioGroup": "./src/components/RadioGroup.svelte",
     "./components/Select": "./src/components/Select.svelte",
     "./components/Stack": "./src/components/Stack.svelte",
     "./components/Table": "./src/components/Table.svelte",

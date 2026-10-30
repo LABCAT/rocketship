@@ -1,21 +1,62 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements'
 
-  type Props = {
-    class?: string
-  } & Omit<HTMLInputAttributes, 'type'>
+  /** The value a checkbox stands for inside a bound set. */
+  export type CheckboxValue = string | number
 
-  let { class: className = '', ...attrs }: Props = $props()
+  /**
+   * One native checkbox. Bind `checked` for a single box. Give several boxes a `value` and bind the
+   * same array to `group` — `bind:group` — to collect the ticked values: checking a box adds its
+   * value, unchecking removes it.
+   *
+   * `indeterminate` is never a prop. It has no HTML attribute, and `aria-checked` is not allowed on
+   * a native checkbox, so a prop could only paint a dash while assistive tech announced a plain
+   * unchecked box. Set the DOM property instead: `el.indeterminate = true`.
+   */
+  export type CheckboxProps = {
+    checked?: boolean
+    value?: CheckboxValue
+    group?: CheckboxValue[]
+    class?: string
+  } & Omit<HTMLInputAttributes, 'type' | 'checked' | 'value'>
+
+  let {
+    checked = $bindable(),
+    value,
+    group = $bindable<CheckboxValue[]>(),
+    class: className = '',
+    onchange,
+    ...attrs
+  }: CheckboxProps = $props()
+
+  // A bound set holds the ticked values, so membership is the checked state and there is no second
+  // copy of it to fall out of step. A box with no value cannot be a member, so it stays native.
+  const isChecked = $derived(
+    group !== undefined && value !== undefined ? group.includes(value) : checked,
+  )
 
   // The control's own attribute is the one source of truth, so the painted error state and the
   // state assistive tech announces can never disagree.
   const invalid = $derived(attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true')
   const classes = $derived(
-    ['rs-checkbox', invalid ? 'rs-checkbox--invalid' : undefined, className].filter(Boolean).join(' '),
+    ['rs-checkbox', invalid ? 'rs-checkbox--invalid' : undefined, className]
+      .filter(Boolean)
+      .join(' '),
   )
+
+  const handleChange = (event: Event & { currentTarget: HTMLInputElement }) => {
+    const { checked: isTicked } = event.currentTarget
+    if (group !== undefined && value !== undefined) {
+      const without = group.filter((entry: CheckboxValue) => entry !== value)
+      group = isTicked ? [...without, value] : without
+    } else {
+      checked = isTicked
+    }
+    onchange?.(event)
+  }
 </script>
 
-<input {...attrs} type="checkbox" class={classes} />
+<input {...attrs} type="checkbox" {value} checked={isChecked} class={classes} onchange={handleChange} />
 
 <style lang="scss">
   @use '@labcat2020/rocketship/styles/mixins' as *;

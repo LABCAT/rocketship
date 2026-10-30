@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { compile, preprocess } from 'svelte/compiler'
@@ -35,6 +35,7 @@ const componentSubpaths = [
   'Input',
   'Label',
   'Radio',
+  'RadioGroup',
   'Select',
   'Stack',
   'Table',
@@ -95,9 +96,27 @@ const loadInstalledComponent = async (sourcePath) => {
   const source = readFileSync(sourcePath, 'utf8')
   const { code } = await preprocess(source, vitePreprocess(), { filename: sourcePath })
   const { js } = compile(code, { generate: 'server', filename: sourcePath })
+
+  // A composed component (RadioGroup renders Fieldset) must have its sibling compiled too, because
+  // the rewritten specifier points at the cache directory rather than at the installed package.
+  const siblings = [
+    ...new Set(
+      [...js.code.matchAll(/from\s+['"]\.\/([A-Za-z0-9_]+)\.svelte['"]/g)].map((m) => m[1]),
+    ),
+  ]
+  for (const sibling of siblings) {
+    await loadInstalledComponent(join(dirname(sourcePath), `${sibling}.svelte`))
+  }
+
   mkdirSync(renderCache, { recursive: true })
-  const file = join(renderCache, `installed-${randomUUID()}.mjs`)
-  writeFileSync(file, js.code)
+  const file = join(renderCache, `${basename(sourcePath, '.svelte')}.compiled.mjs`)
+  writeFileSync(
+    file,
+    js.code.replace(
+      /from\s+(['"])\.\/([A-Za-z0-9_]+)\.svelte\1/g,
+      (_, quote, sibling) => `from ${quote}./${sibling}.compiled.mjs${quote}`,
+    ),
+  )
   const module = await import(pathToFileURL(file).href)
   return module.default
 }
@@ -170,6 +189,7 @@ test('each published component compiles and server-renders its BEM block class',
     Fieldset: 'rs-fieldset',
     Grid: 'rs-grid',
     Radio: 'rs-radio',
+    RadioGroup: 'rs-fieldset',
     Select: 'rs-select',
     Stack: 'rs-stack',
     Typography: 'rs-typography',

@@ -296,6 +296,7 @@ const mountControlFixture = async (markup, script = '') => {
     'Input',
     'Label',
     'Radio',
+    'RadioGroup',
     'Select',
     'Textarea',
   ]) {
@@ -311,6 +312,7 @@ const mountControlFixture = async (markup, script = '') => {
   import Input from './Input.svelte'
   import Label from './Label.svelte'
   import Radio from './Radio.svelte'
+  import RadioGroup from './RadioGroup.svelte'
   import Select from './Select.svelte'
   import Textarea from './Textarea.svelte'
   ${script}
@@ -3437,7 +3439,7 @@ test('a disabled Fieldset disables every nested control from the control compone
 })
 
 test('an enabled Fieldset leaves its controls operable, and toggling disabled locks and unlocks them', async () => {
-  const { target, instance, flushSync, window } = await mountControlFixture(
+  const { target, instance, flushSync } = await mountControlFixture(
     `<Fieldset disabled={locked}>
     <Field label="Full name">
       {#snippet children(control)}
@@ -3610,14 +3612,20 @@ test('a consumer cannot override the control type, because type is omitted from 
     const source = loadComponentSource(name)
     assert.match(
       source,
-      /Omit<HTMLInputAttributes, 'type'>/,
+      /Omit<HTMLInputAttributes, 'type'/,
       `${name} must omit type so a consumer cannot turn the control into another input`,
     )
-    assert.match(
-      source,
-      new RegExp(`<input \{\\.\\.\\.attrs\\} type="${type}" class=\\{classes\\} \\/>`),
-      `${name} spreads attrs first and fixes the native type last`,
-    )
+
+    // Every branch that renders the input spreads the attributes before the fixed native type, so
+    // neither a consumer attribute nor a controlled checked can override what the control is.
+    const tags = [...source.matchAll(/<input\b[^>]*>/g)].map(([tag]) => tag)
+    assert.ok(tags.length > 0, `${name} must render an input`)
+    for (const tag of tags) {
+      const spread = tag.search(/\{\.\.\.\w+\}/)
+      const typeIndex = tag.indexOf(`type="${type}"`)
+      assert.ok(spread !== -1, `${name} must spread the consumer attributes: ${tag}`)
+      assert.ok(typeIndex > spread, `${name} must fix the native type after the spread: ${tag}`)
+    }
   }
 })
 
@@ -3966,4 +3974,417 @@ test('indeterminate is set only from the consumer script, never rendered by the 
   flushSync()
   assert.equal(control.indeterminate, true, 'script alone sets the state')
   assert.ok(control.matches(':indeterminate'), 'the native pseudo-class follows the property')
+})
+
+test('RadioGroup exports from the barrel and as a subpath, with its prop types', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+  const source = loadComponentSource('RadioGroup')
+
+  assert.equal(
+    pkg.exports['./components/RadioGroup'],
+    './src/components/RadioGroup.svelte',
+    'packages/svelte must export ./components/RadioGroup',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as RadioGroup \} from '\.\/components\/RadioGroup\.svelte'/,
+    'the barrel must export the RadioGroup value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/RadioGroup\.svelte'/,
+    'the barrel must re-export the RadioGroup props type',
+  )
+  assert.match(source, /export type RadioGroupProps =/, 'the props union is exported')
+  assert.match(
+    source,
+    /export type \{ RadioValue \}/,
+    'the bound value type is re-exported, so a consumer can type the binding',
+  )
+})
+
+test('RadioGroup is a fieldset: it names the group with a legend and owns no div of its own', async () => {
+  const RadioGroup = await loadComponent('RadioGroup')
+  const markup = renderMarkup(RadioGroup, { id: 'delivery-group', class: 'consumer' })
+  const tag = openingTag(markup, 'fieldset')
+
+  assert.ok(markup.includes('<fieldset'), 'a group is a fieldset, so its legend names it')
+  assert.deepEqual(classList(markup, 'fieldset'), ['rs-fieldset', 'consumer'])
+  assert.match(tag, /id="delivery-group"/, 'consumer attributes land on the fieldset')
+  assert.doesNotMatch(markup, /<div/, 'the group adds no wrapper of its own')
+})
+
+test('RadioGroup marks every radio invalid from its own aria-invalid, and a radio may opt out', async () => {
+  const { target } = await mountControlFixture(
+    `<RadioGroup aria-invalid="true" aria-describedby="contact-error">
+    {#snippet legend()}Contact method{/snippet}
+    <Radio value="email" aria-label="Email" />
+    <Radio value="phone" aria-label="Phone" aria-invalid="false" />
+  </RadioGroup>`,
+  )
+
+  const [email, phone] = target.querySelectorAll('input')
+  assert.equal(email.getAttribute('aria-invalid'), 'true', 'the group error reaches the radio')
+  assert.ok(email.classList.contains('rs-radio--invalid'), 'and paints it as an error')
+  assert.equal(
+    phone.getAttribute('aria-invalid'),
+    'false',
+    'a radio that says it is valid keeps its own attribute',
+  )
+  assert.ok(!phone.classList.contains('rs-radio--invalid'), 'so it paints no error')
+  assert.equal(
+    target.querySelector('fieldset').getAttribute('aria-describedby'),
+    'contact-error',
+    'the fieldset is what the group message describes',
+  )
+})
+
+test('RadioGroup derives its error from aria-invalid alone, like every reviewed control', async () => {
+  const source = loadComponentSource('RadioGroup')
+
+  assert.doesNotMatch(
+    source,
+    /invalid\??:\s*boolean/,
+    'RadioGroup takes no invalid prop; the fieldset attribute is the one source of truth',
+  )
+
+  const { target } = await mountControlFixture(
+    `<RadioGroup invalid>
+    {#snippet legend()}Not an error{/snippet}
+    <Radio value="email" aria-label="Email" />
+  </RadioGroup>
+  <RadioGroup aria-invalid="false">
+    {#snippet legend()}Explicitly valid{/snippet}
+    <Radio value="email" aria-label="Email" />
+  </RadioGroup>`,
+  )
+
+  const [ignoredProp, explicitFalse] = target.querySelectorAll('input')
+  assert.equal(
+    ignoredProp.getAttribute('aria-invalid'),
+    null,
+    'a bespoke invalid prop is not a prop, so it cannot announce or paint an error',
+  )
+  assert.ok(!ignoredProp.classList.contains('rs-radio--invalid'))
+  assert.equal(
+    explicitFalse.getAttribute('aria-invalid'),
+    null,
+    "aria-invalid='false' is not an error, so the radio is left without one",
+  )
+  assert.ok(!explicitFalse.classList.contains('rs-radio--invalid'))
+})
+
+test('RadioGroup generates one shared name so arrows move between the radios', async () => {
+  const { target } = await mountControlFixture(
+    `<RadioGroup>
+    {#snippet legend()}Delivery{/snippet}
+    <Radio value="standard" aria-label="Standard" />
+    <Radio value="express" aria-label="Express" />
+  </RadioGroup>
+  <RadioGroup>
+    {#snippet legend()}Wrapping{/snippet}
+    <Radio value="none" aria-label="None" />
+    <Radio value="paper" aria-label="Paper" />
+  </RadioGroup>`,
+  )
+
+  const names = [...target.querySelectorAll('input')].map((input) => input.name)
+  assert.ok(names.every(Boolean), 'every radio in a group is named')
+  assert.equal(names[0], names[1], 'radios in the same group share one name')
+  assert.equal(names[2], names[3], 'the second group shares its own name')
+  assert.notEqual(names[0], names[2], 'two groups never share a name, or they would merge')
+})
+
+test('RadioGroup respects an explicit name, and a radio may override it', async () => {
+  const { target } = await mountControlFixture(
+    `<RadioGroup name="delivery">
+    {#snippet legend()}Delivery{/snippet}
+    <Radio value="standard" aria-label="Standard" />
+    <Radio value="express" name="delivery-override" aria-label="Express" />
+  </RadioGroup>`,
+  )
+
+  const [standard, express] = target.querySelectorAll('input')
+  assert.equal(standard.name, 'delivery', 'the consumer name wins over the generated one')
+  assert.equal(express.name, 'delivery-override', "a radio's own name wins over the group's")
+})
+
+test('bind:group selects one value and writes it back, so siblings uncheck', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Radio value="standard" bind:group={selected} aria-label="Standard" />
+    <Radio value="express" bind:group={selected} aria-label="Express" />
+    <Radio value="collect" bind:group={selected} aria-label="Collect" />`,
+    `let selected = $state('standard')
+    export const read = () => selected`,
+  )
+
+  const radios = [...target.querySelectorAll('input')]
+  assert.deepEqual(
+    radios.map((radio) => radio.checked),
+    [true, false, false],
+    'the bound value decides which radio is checked',
+  )
+
+  radios[1].click()
+  flushSync()
+  assert.equal(instance.read(), 'express', 'checking a radio writes its value to the binding')
+  assert.deepEqual(
+    radios.map((radio) => radio.checked),
+    [false, true, false],
+    'and the previous radio unchecks, because the set holds one value',
+  )
+
+  radios[2].click()
+  flushSync()
+  assert.equal(instance.read(), 'collect')
+  assert.deepEqual(
+    radios.map((radio) => radio.checked),
+    [false, false, true],
+  )
+})
+
+test('a bound group that starts unset still selects, and the binding drives it both ways', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Radio value="email" bind:group={choice} aria-label="Email" />
+    <Radio value="phone" bind:group={choice} aria-label="Phone" />`,
+    `let choice = $state(undefined)
+    export const read = () => choice
+    export const write = (next) => { choice = next }`,
+  )
+
+  const radios = [...target.querySelectorAll('input')]
+  assert.deepEqual(
+    radios.map((radio) => radio.checked),
+    [false, false],
+    'an empty group selects nothing, rather than treating undefined as a value',
+  )
+
+  radios[0].click()
+  flushSync()
+  assert.equal(instance.read(), 'email', 'the first choice is written to the binding')
+
+  instance.write('phone')
+  flushSync()
+  assert.deepEqual(
+    radios.map((radio) => radio.checked),
+    [false, true],
+    'changing the bound value moves the selection, without a DOM event',
+  )
+})
+
+test('RadioGroup keeps one selection across its radios and reports it through bind:group', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RadioGroup bind:group={delivery}>
+    {#snippet legend()}Delivery{/snippet}
+    <Radio value="standard" aria-label="Standard" />
+    <Radio value="express" aria-label="Express" />
+  </RadioGroup>`,
+    `let delivery = $state('standard')
+    export const read = () => delivery
+    export const write = (next) => { delivery = next }`,
+  )
+
+  const [standard, express] = target.querySelectorAll('input')
+  assert.deepEqual([standard.checked, express.checked], [true, false])
+
+  express.click()
+  flushSync()
+  assert.equal(instance.read(), 'express', 'the group owns the value, so a radio writes to it')
+
+  standard.click()
+  flushSync()
+  assert.equal(instance.read(), 'standard', 'checking the other radio replaces the selection')
+  assert.deepEqual([standard.checked, express.checked], [true, false])
+})
+
+test('a disabled RadioGroup disables every radio it contains, so none of them can be chosen', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RadioGroup bind:group={wrapping} disabled>
+    {#snippet legend()}Gift wrapping{/snippet}
+    <Radio value="none" aria-label="No wrapping" />
+    <Radio value="paper" aria-label="Recycled paper" />
+  </RadioGroup>`,
+    `let wrapping = $state('none')
+    export const read = () => wrapping`,
+  )
+
+  const fieldset = target.querySelector('fieldset')
+  assert.ok(fieldset.hasAttribute('disabled'), 'the group carries the native attribute')
+  const [none, paper] = target.querySelectorAll('input')
+  assert.equal(none.checked, true, 'the bound value still paints the current choice')
+  // jsdom does not reflect an inherited `disabled` onto `.disabled`, so `:disabled` is the check
+  // that matches what a browser reports.
+  assert.ok(
+    none.matches(':disabled') && paper.matches(':disabled'),
+    'the fieldset disables the radios inside it',
+  )
+
+  paper.click()
+  flushSync()
+  assert.equal(paper.checked, false, 'a disabled radio cannot be ticked')
+  assert.equal(instance.read(), 'none', 'and nothing is written to the binding')
+})
+
+test('two RadioGroups on one page keep their selections apart', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RadioGroup bind:group={delivery}>
+    {#snippet legend()}Delivery{/snippet}
+    <Radio value="standard" aria-label="Standard" />
+    <Radio value="express" aria-label="Express" />
+  </RadioGroup>
+  <RadioGroup bind:group={wrapping}>
+    {#snippet legend()}Wrapping{/snippet}
+    <Radio value="none" aria-label="None" />
+    <Radio value="paper" aria-label="Paper" />
+  </RadioGroup>`,
+    `let delivery = $state('standard')
+    let wrapping = $state('none')
+    export const read = () => [delivery, wrapping]`,
+  )
+
+  const [standard, express, none, paper] = target.querySelectorAll('input')
+  assert.deepEqual(
+    [standard.checked, express.checked, none.checked, paper.checked],
+    [true, false, true, false],
+  )
+
+  express.click()
+  flushSync()
+  paper.click()
+  flushSync()
+  assert.deepEqual(instance.read(), ['express', 'paper'], 'each group writes only its own binding')
+  assert.deepEqual(
+    [standard.checked, express.checked, none.checked, paper.checked],
+    [false, true, false, true],
+  )
+})
+
+test('a disabled radio cannot be chosen, and the selection it does not have stays put', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Radio value="standard" bind:group={delivery} aria-label="Standard" />
+    <Radio value="express" bind:group={delivery} aria-label="Express" disabled />`,
+    `let delivery = $state('standard')
+    export const read = () => delivery`,
+  )
+
+  const [standard, express] = target.querySelectorAll('input')
+  assert.equal(express.disabled, true, 'the component passes disabled to the native control')
+
+  express.click()
+  flushSync()
+  assert.equal(instance.read(), 'standard', 'a disabled radio writes nothing to the binding')
+  assert.equal(express.checked, false, 'and it never paints itself as checked')
+  assert.equal(standard.checked, true, 'the current selection is untouched')
+})
+
+test('Checkbox bind:checked round-trips, including a checkbox controlled after mount', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Checkbox bind:checked={agreed} aria-label="Agree" />`,
+    `let agreed = $state(false)
+    export const read = () => agreed
+    export const write = (next) => { agreed = next }`,
+  )
+
+  const checkbox = target.querySelector('input.rs-checkbox')
+  assert.equal(checkbox.checked, false, 'precondition: an unchecked box')
+
+  checkbox.click()
+  flushSync()
+  assert.equal(instance.read(), true, 'clicking writes the DOM state back to the binding')
+
+  instance.write(false)
+  flushSync()
+  assert.equal(checkbox.checked, false, 'the prop drives the DOM state too')
+
+  instance.write(true)
+  flushSync()
+  assert.equal(checkbox.checked, true)
+})
+
+test('a lone Radio with no value keeps the native checked state and binds it', async () => {
+  const { target } = await mountControlFixture(
+    `<Radio name="standalone" checked aria-label="Standalone" />
+    <Radio name="standalone" aria-label="Other" />`,
+  )
+
+  const [checked, unchecked] = target.querySelectorAll('input')
+  assert.equal(checked.checked, true, 'a static checked radio is checked, as the Astro original is')
+  assert.equal(unchecked.checked, false)
+  assert.equal(checked.getAttribute('value'), null, 'no value attribute is invented for it')
+})
+
+test('bind:group collects the ticked checkbox values and unchecking removes one', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Checkbox value="builds" bind:group={topics} aria-label="Failed builds" />
+    <Checkbox value="deployments" bind:group={topics} aria-label="Deployments" />
+    <Checkbox value="security" bind:group={topics} aria-label="Security alerts" />`,
+    `let topics = $state(['builds'])
+    export const read = () => topics`,
+  )
+
+  const [builds, deployments, security] = target.querySelectorAll('input')
+  assert.deepEqual(
+    [builds.checked, deployments.checked, security.checked],
+    [true, false, false],
+    'the bound values decide which boxes are ticked',
+  )
+
+  deployments.click()
+  flushSync()
+  assert.deepEqual(
+    instance.read(),
+    ['builds', 'deployments'],
+    'ticking adds the value to the array',
+  )
+  assert.equal(deployments.checked, true)
+
+  builds.click()
+  flushSync()
+  assert.deepEqual(
+    instance.read(),
+    ['deployments'],
+    'unticking removes only that value, leaving the rest in the array',
+  )
+  assert.equal(builds.checked, false)
+  assert.equal(security.checked, false, 'a box that was never ticked is untouched')
+})
+
+test('a bound checkbox group ignores the disabled boxes it cannot change', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<Checkbox value="builds" bind:group={topics} aria-label="Failed builds" />
+    <Checkbox value="security" bind:group={topics} aria-label="Security" checked disabled />`,
+    `let topics = $state(['security'])
+    export const read = () => topics`,
+  )
+
+  const [builds, security] = target.querySelectorAll('input')
+  security.click()
+  flushSync()
+  assert.deepEqual(
+    instance.read(),
+    ['security'],
+    'a disabled box cannot remove its own value, because the browser suppresses the event',
+  )
+  assert.equal(security.checked, true)
+
+  builds.click()
+  flushSync()
+  assert.deepEqual(instance.read(), ['security', 'builds'], 'the enabled box still joins the set')
+})
+
+test('an indeterminate checkbox is a DOM property the consumer sets, and it survives a re-render', async () => {
+  const { target, flushSync } = await mountControlFixture(
+    `<Checkbox id="notify-all" aria-label="All topics" />`,
+  )
+
+  const checkbox = target.querySelector('input.rs-checkbox')
+  checkbox.indeterminate = true
+  flushSync()
+  assert.equal(checkbox.indeterminate, true, 'the DOM property is the state')
+  assert.ok(
+    checkbox.matches(':indeterminate'),
+    'so the pseudo-class the style block paints follows',
+  )
+  assert.equal(checkbox.getAttribute('indeterminate'), null, 'no attribute is invented for it')
 })

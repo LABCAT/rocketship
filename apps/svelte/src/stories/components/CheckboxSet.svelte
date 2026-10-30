@@ -7,6 +7,9 @@
   import Label from '@labcat2020/rocketship-svelte/components/Label'
   import Stack from '@labcat2020/rocketship-svelte/components/Stack'
 
+  // One bound array holds the ticked topics, so the group behaves as a set of choices.
+  let topics = $state(['builds', 'security'])
+
   // The DOM property is the only way to express "some of these are checked": there is no
   // attribute and no prop, so the story sets it the way a consumer would.
   onMount(() => {
@@ -27,13 +30,13 @@
       </Field>
       <Field inline>
         {#snippet children()}
-          <Checkbox id="notify-builds" name="notify" value="builds" checked />
+          <Checkbox id="notify-builds" name="notify" value="builds" bind:group={topics} />
           <Label for="notify-builds">Failed builds</Label>
         {/snippet}
       </Field>
       <Field inline>
         {#snippet children()}
-          <Checkbox id="notify-deployments" name="notify" value="deployments" />
+          <Checkbox id="notify-deployments" name="notify" value="deployments" bind:group={topics} />
           <Label for="notify-deployments">Finished deployments</Label>
         {/snippet}
       </Field>
@@ -43,7 +46,7 @@
             id="notify-security"
             name="notify"
             value="security"
-            checked
+            bind:group={topics}
             disabled
             aria-describedby="notify-security-hint"
           />

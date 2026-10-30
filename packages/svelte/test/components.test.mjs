@@ -293,9 +293,11 @@ const mountControlFixture = async (markup, script = '') => {
     'Checkbox',
     'Field',
     'Fieldset',
+    'FileInput',
     'Input',
     'Label',
     'Radio',
+    'RangeInput',
     'Select',
     'Textarea',
   ]) {
@@ -308,9 +310,11 @@ const mountControlFixture = async (markup, script = '') => {
   import Checkbox from './Checkbox.svelte'
   import Field from './Field.svelte'
   import Fieldset from './Fieldset.svelte'
+  import FileInput from './FileInput.svelte'
   import Input from './Input.svelte'
   import Label from './Label.svelte'
   import Radio from './Radio.svelte'
+  import RangeInput from './RangeInput.svelte'
   import Select from './Select.svelte'
   import Textarea from './Textarea.svelte'
   ${script}
@@ -3966,4 +3970,368 @@ test('indeterminate is set only from the consumer script, never rendered by the 
   flushSync()
   assert.equal(control.indeterminate, true, 'script alone sets the state')
   assert.ok(control.matches(':indeterminate'), 'the native pseudo-class follows the property')
+})
+
+/**
+ * Builds a genuine FileList for a file input. jsdom exposes the interface but has no constructor
+ * and no `DataTransfer`, so the wrapper the platform would hand to `change` is built from jsdom's
+ * own implementation, the same way the browser produces it from a picker.
+ */
+const jsdomFileList = (window, names) => {
+  const jsdomRoot = dirname(require.resolve('jsdom/package.json'))
+  const fileListInterface = require(join(jsdomRoot, 'lib', 'generated', 'idl', 'FileList.js'))
+  const idlUtils = require(join(jsdomRoot, 'lib', 'generated', 'idl', 'utils.js'))
+
+  const impl = fileListInterface.createImpl(window, [], {})
+  for (const name of names) impl.push(new window.File([`contents of ${name}`], name))
+
+  return impl[idlUtils.wrapperSymbol]
+}
+
+test('FileInput and RangeInput are exported from the barrel, as subpaths, like the Astro package', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['FileInput', 'RangeInput']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.equal(
+      basePkg.exports?.[`./components/${name}`],
+      `./src/components/${name}.astro`,
+      `${name} is a port, so the Svelte subpath mirrors the Astro entry`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export \\{ default as ${name} \\} from '\\./components/${name}\\.svelte'`),
+      `the barrel must export the ${name} value`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export type \\* from '\\./components/${name}\\.svelte'`),
+      `the barrel must re-export the ${name} props type`,
+    )
+  }
+})
+
+test('FileInput is one native file input carrying .rs-file-input, never a wrapper', async () => {
+  const FileInput = await loadComponent('FileInput')
+
+  const markup = visible(renderMarkup(FileInput, { id: 'notes', name: 'notes', multiple: true }))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="file"/, 'the native type is the behaviour')
+  assert.match(openingTag(markup, 'input'), /multiple/, 'multiple is a native attribute')
+  assert.deepEqual(classList(markup, 'input'), ['rs-file-input'])
+  assert.doesNotMatch(markup, /<label|<span|<div/, 'no wrapper: the input is the whole block')
+})
+
+test('FileInput spreads accept, multiple and class, and derives --invalid from aria-invalid', async () => {
+  const FileInput = await loadComponent('FileInput')
+
+  const plain = visible(renderMarkup(FileInput, { accept: 'application/pdf', multiple: true }))
+  assert.match(openingTag(plain, 'input'), /accept="application\/pdf"/, 'accept is a passthrough')
+  assert.doesNotMatch(plain, /--invalid/, 'a valid input carries no modifier')
+
+  const invalid = visible(renderMarkup(FileInput, { 'aria-invalid': 'true', class: 'consumer' }))
+  assert.deepEqual(
+    classList(invalid, 'input'),
+    ['rs-file-input', 'rs-file-input--invalid', 'consumer'],
+    'the error modifier is derived from the control attribute and joins the consumer class',
+  )
+})
+
+test('RangeInput is one native range input carrying .rs-range-input with min, max and step', async () => {
+  const RangeInput = await loadComponent('RangeInput')
+
+  const markup = visible(
+    renderMarkup(RangeInput, { id: 'workers', name: 'workers', min: 1, max: 8, step: 1 }),
+  )
+  assert.ok(markup.startsWith('<input'), 'the control is the root')
+  assert.match(openingTag(markup, 'input'), /type="range"/)
+  assert.match(openingTag(markup, 'input'), /min="1"/)
+  assert.match(openingTag(markup, 'input'), /max="8"/)
+  assert.match(openingTag(markup, 'input'), /step="1"/)
+  assert.deepEqual(classList(markup, 'input'), ['rs-range-input'])
+
+  const invalid = visible(renderMarkup(RangeInput, { 'aria-invalid': 'true', class: 'consumer' }))
+  assert.deepEqual(
+    classList(invalid, 'input'),
+    ['rs-range-input', 'rs-range-input--invalid', 'consumer'],
+    'the error modifier is derived from the control attribute, like every other control',
+  )
+})
+
+test('neither component lets a consumer override the native type through attrs', () => {
+  for (const [name, type] of [
+    ['FileInput', 'file'],
+    ['RangeInput', 'range'],
+  ]) {
+    const source = loadComponentSource(name)
+    assert.match(
+      source,
+      /Omit<HTMLInputAttributes, 'type'/,
+      `${name} must omit type so a consumer cannot turn the control into another input`,
+    )
+    assert.match(source, new RegExp(`type="${type}"`), `${name} fixes the native type itself`)
+  }
+})
+
+test('the FileInput and RangeInput style blocks compile to the Astro rule block', async () => {
+  for (const [name, block] of [
+    ['FileInput', 'rs-file-input'],
+    ['RangeInput', 'rs-range-input'],
+  ]) {
+    const css = await compileStyleBlock(styleBlockOf(name))
+
+    for (const selector of [`.${block}`, `.${block}--invalid`]) {
+      assert.ok(css.includes(selector), `compiled ${name} CSS must contain ${selector}`)
+    }
+
+    assert.match(css, /opacity:\s*0\.55/, 'a disabled control dims as a whole')
+    assert.match(css, /cursor:\s*not-allowed/, 'and says so with the cursor')
+    assert.ok(
+      !/pointer-events/.test(css),
+      'the native disabled attribute blocks the control, not CSS',
+    )
+    assert.ok(!/transition/.test(css), 'a form control changes state instantly')
+    assert.deepEqual(
+      [...styleBlockOf(name).matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+      [],
+      `${name} names tokens only, never a hex literal`,
+    )
+  }
+
+  const fileInput = await compileStyleBlock(styleBlockOf('FileInput'))
+  assert.match(
+    fileInput,
+    /::file-selector-button/,
+    'the browse button is the input part, so it is styled here rather than rendered',
+  )
+  assert.match(
+    fileInput,
+    /border:\s*1px solid ButtonBorder/,
+    'forced colours give the borderless pill a system edge',
+  )
+  assert.match(
+    fileInput,
+    /border-radius:\s*var\(--rs-file-input-button-border-radius,\s*var\(--rs-radius-pill,/,
+    'the browse button reads the pill radius through its own hook',
+  )
+
+  const rangeInput = await compileStyleBlock(styleBlockOf('RangeInput'))
+  for (const part of [
+    '::-webkit-slider-runnable-track',
+    '::-webkit-slider-thumb',
+    '::-moz-range-track',
+    '::-moz-range-thumb',
+  ]) {
+    assert.ok(rangeInput.includes(part), `the slider parts are styled: ${part}`)
+  }
+  assert.match(
+    rangeInput,
+    /block-size:\s*calc\(var\(--rs-range-input-thumb-size,\s*24px\)/,
+    'the box is thumb plus the inside gap, so the focus ring clears the thumb',
+  )
+  assert.ok(
+    !/inline-size:\s*100%/.test(rangeInput),
+    'the range never sets its own width; the placer decides',
+  )
+})
+
+test('FileInput binds files, so the consumer lists the chosen names and clears them', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<FileInput accept="application/pdf" multiple bind:files={files} />`,
+    `let files = $state<FileList | null>(null)
+  export const names = () => (files ? [...files].map((file) => file.name) : [])
+  export const clear = () => {
+    files = null
+  }`,
+  )
+
+  const input = target.querySelector('input[type="file"]')
+  assert.deepEqual(instance.names(), [], 'nothing is chosen on mount')
+
+  input.files = jsdomFileList(window, ['release-notes.pdf', 'checksums.pdf'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+
+  assert.deepEqual(
+    instance.names(),
+    ['release-notes.pdf', 'checksums.pdf'],
+    'each chosen name reaches the bound state, so the consumer can render the list',
+  )
+
+  instance.clear()
+  flushSync()
+
+  assert.deepEqual(instance.names(), [], 'clearing the state empties the selection')
+  assert.equal(input.files.length, 0, 'and the platform FileList is emptied with it')
+  assert.equal(
+    input.value,
+    '',
+    'the displayed filename text is cleared too, which a null files assignment would leave behind',
+  )
+})
+
+test('FileInput keeps the platform text when a selection is replaced without being cleared', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<FileInput multiple bind:files={files} />`,
+    `let files = $state<FileList | null>(null)
+  export const names = () => (files ? [...files].map((file) => file.name) : [])`,
+  )
+
+  const input = target.querySelector('input[type="file"]')
+
+  input.files = jsdomFileList(window, ['build.log'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+  assert.deepEqual(instance.names(), ['build.log'])
+
+  input.files = jsdomFileList(window, ['build.log', 'trace.log'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+  assert.deepEqual(
+    instance.names(),
+    ['build.log', 'trace.log'],
+    'a second pick replaces the selection instead of appending to it',
+  )
+  assert.notEqual(input.value, '', 'the platform still prints the first file name')
+})
+
+test('a FileInput error comes from aria-invalid and a disabled one keeps its text', async () => {
+  const { window, target, flushSync } = await mountControlFixture(
+    `<Field label="Signing certificate" error="Add a .pem certificate to sign the build.">
+    {#snippet children(control)}
+      <FileInput {...control} accept=".pem" />
+    {/snippet}
+  </Field>
+  <FileInput id="artifact" name="artifact" aria-label="Build artifact" disabled />`,
+  )
+
+  const [certificate, artifact] = target.querySelectorAll('input[type="file"]')
+
+  assert.equal(certificate.getAttribute('aria-invalid'), 'true')
+  assert.equal(
+    certificate.getAttribute('aria-describedby'),
+    target.querySelector('.rs-field__error').id,
+    'the error text is linked to the control',
+  )
+  assert.ok(
+    certificate.classList.contains('rs-file-input--invalid'),
+    'the error modifier follows the attribute Field set',
+  )
+
+  assert.equal(artifact.disabled, true, 'disabled is the native attribute')
+  assert.equal(
+    target.querySelector('label[for="artifact"]'),
+    null,
+    'precondition: this example is labelled by aria-label, not a Label element',
+  )
+
+  window.document.body.focus()
+  artifact.focus()
+  assert.notEqual(
+    window.document.activeElement,
+    artifact,
+    'a disabled control takes no focus, so the picker cannot be opened from the keyboard',
+  )
+  assert.equal(flushSync(), undefined, 'the fixture flushed without an error')
+})
+
+test('RangeInput writes its value into the control and reads the platform-accepted value back', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={1} max={8} name="workers" bind:value={workers} />`,
+    `let workers = $state<number | undefined>(undefined)
+  export const read = () => workers
+  export const write = (next: number) => {
+    workers = next
+  }`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.ok(!Number.isNaN(input.valueAsNumber), 'precondition: a fresh slider shows a number')
+
+  instance.write(3)
+  flushSync()
+  assert.equal(input.value, '3', 'a state write reaches the control')
+  assert.equal(instance.read(), 3)
+
+  // The platform clamps out-of-range writes, so the thumb and the state must not disagree.
+  instance.write(20)
+  flushSync()
+  assert.equal(input.value, '8', 'the platform clamps to max')
+  assert.equal(instance.read(), 8, 'the bound state adopts the clamped number, not 20')
+
+  instance.write(-4)
+  flushSync()
+  assert.equal(instance.read(), 1, 'and the minimum clamps the other way')
+})
+
+test('a user drag updates the bound value, and the value an output renders tracks it', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={0} max={100} step={25} bind:value={rollout} />
+  <output data-echo>{rollout}</output>`,
+    `let rollout = $state(25)
+  export const read = () => rollout`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(target.querySelector('[data-echo]').textContent, '25', 'the output starts at 25')
+
+  input.value = '75'
+  input.dispatchEvent(new window.Event('input', { bubbles: true }))
+  flushSync()
+
+  assert.equal(instance.read(), 75, 'dragging updates the bound state')
+  assert.equal(
+    target.querySelector('[data-echo]').textContent,
+    '75',
+    'so an output the consumer writes from it tracks the value',
+  )
+})
+
+test('RangeInput adopts the platform default when no value is given, and snaps a step on write', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={0} max={100} step={25} bind:value={rollout} />`,
+    `let rollout = $state<number | undefined>(undefined)
+  export const read = () => rollout`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(instance.read(), 50, 'an unset value adopts the number the slider shows')
+  assert.equal(input.value, '50')
+
+  input.value = '30'
+  input.dispatchEvent(new window.Event('input', { bubbles: true }))
+  flushSync()
+  assert.equal(
+    instance.read(),
+    Number(input.value),
+    'the state follows whatever the platform accepted for the step',
+  )
+})
+
+test('a disabled RangeInput keeps its value and cannot be moved by the user', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={7} max={90} name="retention" bind:value={retention} disabled
+      aria-label="Log retention in days" />`,
+    `let retention = $state(30)
+  export const read = () => retention`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(input.disabled, true, 'disabled is the native attribute')
+  assert.equal(input.value, '30', 'the value still renders, so the field is readable')
+
+  window.document.body.focus()
+  input.focus()
+  assert.notEqual(window.document.activeElement, input, 'a disabled slider takes no focus')
+
+  flushSync()
+  assert.equal(instance.read(), 30, 'mounting does not disturb the value')
 })

@@ -595,3 +595,130 @@ test('the Stack stories share the Base/Stack title with one story per gap aspect
     'the comparison Stack story exports Gaps',
   )
 })
+
+test('the File Input and Range Input stories mirror the Astro States stories', () => {
+  for (const [component, file, fixture, title] of [
+    ['FileInput', 'FileInput.stories.ts', 'FileInputStates.svelte', 'Components/File Input'],
+    ['RangeInput', 'RangeInput.stories.ts', 'RangeInputStates.svelte', 'Components/Range Input'],
+  ]) {
+    const files = readdirSync(storiesDir).filter((name) =>
+      new RegExp(`^${component}.*\\.stories\\.ts$`).test(name),
+    )
+    assert.deepEqual(files, [file], `${component} has one story file, as the Astro original does`)
+
+    const story = read(join(storiesDir, file))
+    assert.match(story, new RegExp(`title:\\s*'${title}'`), `${file} keeps the Astro title`)
+    assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+    assert.match(story, /export const States: Story =/, `${file} exports States, as Astro does`)
+    assert.match(
+      story,
+      new RegExp(`from '\\./components/${fixture}'`),
+      `${file} renders the fixture in the stories folder`,
+    )
+  }
+})
+
+test('the File Input story shows a hint, an error and a disabled field, and renders the chosen names', () => {
+  const states = read(join(storiesDir, 'components', 'FileInputStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'consecutive Fields go in a large Stack')
+  assert.match(
+    states,
+    /Fields marked \* are required\./,
+    'a story with a required asterisk explains it once',
+  )
+  assert.ok(
+    (states.match(/<Field\b/g) ?? []).length === 3,
+    'the story shows three fields: hint, error and disabled',
+  )
+  assert.match(states, /<FileInput\b/, 'the story renders the reviewed FileInput component')
+  assert.match(
+    states,
+    /accept="application\/pdf" multiple/,
+    'the hint explains the real restriction',
+  )
+  assert.match(states, /bind:files=/, 'the story binds the FileList, so the names can be listed')
+  assert.match(
+    states,
+    /\.map\(\(file\) => file\.name\)/,
+    'the selected file names come from the platform FileList, not a prop',
+  )
+  assert.match(
+    states,
+    /<output for="file-notes">Attached: \{chosen\.join\(', '\)\}<\/output>/,
+    'the chosen names render in an output, so the list follows the selection',
+  )
+  assert.match(
+    states,
+    /PDF only\. You can attach several files\./,
+    'the hint still states what the control allows, whatever is chosen',
+  )
+  assert.match(
+    states,
+    /\{\.\.\.control\}/,
+    'each control takes Field wiring, so label and error stay linked',
+  )
+  assert.match(
+    states,
+    /error="Add a \.pem certificate/,
+    'the error shows a rule accept cannot express',
+  )
+  assert.match(states, /\bdisabled\b/, 'the story shows a disabled field')
+  assert.doesNotMatch(
+    states,
+    /<FileInput[^>]*\bvalue=/,
+    'a file input has no value; the FileList is the value',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'FileInputStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Range Input story shows min/max, a step with a value output, an error and a disabled field', () => {
+  const states = read(join(storiesDir, 'components', 'RangeInputStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'consecutive Fields go in a large Stack')
+  assert.ok(
+    (states.match(/<Field\b/g) ?? []).length === 3,
+    'the story shows three fields: hint, error and disabled',
+  )
+  assert.match(states, /<RangeInput\b/, 'the story renders the reviewed RangeInput component')
+  assert.match(states, /min=\{1\} max=\{8\}/, 'the story binds the slider to a real range')
+  assert.match(
+    states,
+    /step=\{25\}/,
+    'the story shows a step, in place of ticks a styled range cannot draw',
+  )
+  assert.match(
+    states,
+    /bind:value=\{rollout\}/,
+    'the story binds the value, so the output can track it',
+  )
+  assert.match(
+    states,
+    /<output for="range-workers">\{workers\}<\/output>/,
+    'the value output is an <output> bound for the slider, so it tracks the state',
+  )
+  assert.doesNotMatch(states, /<datalist\b/, 'a styled range draws no ticks, so no dead markup')
+  assert.match(
+    states,
+    /error="Rollout cannot go below/,
+    'the error shows a rule min and max cannot encode',
+  )
+  assert.match(states, /\bdisabled\b/, 'the story shows a disabled field')
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RangeInputStates must not carry story-only styles or non-Rocketship classes',
+  )
+})

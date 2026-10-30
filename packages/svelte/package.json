@@ -1,6 +1,6 @@
 {
   "name": "@labcat2020/rocketship-svelte",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "private": false,
   "type": "module",
   "description": "Rocketship Svelte port — Svelte 5 components that reuse the Rocketship design system (tokens, mixins, base resets)",

@@ -221,11 +221,20 @@ test('the RadioGroup story groups fieldsets with one checked, one disabled and o
     'the story shows three groups: enabled, disabled and in error',
   )
   assert.match(states, /<RadioGroup bind:group=\{delivery\}>/, 'the first group is bound')
-  assert.match(states, /<RadioGroup disabled>/, 'the disabled group carries the native attribute')
   assert.match(
     states,
-    /<RadioGroup invalid aria-describedby="group-contact-error">/,
+    /<RadioGroup bind:group=\{wrapping\} disabled>/,
+    'the disabled group carries the binding and the native attribute',
+  )
+  assert.match(
+    states,
+    /<RadioGroup bind:group=\{contact\} aria-invalid="true" aria-describedby="group-contact-error">/,
     'the invalid group keeps its error on the fieldset and points at it',
+  )
+  assert.match(
+    states,
+    /let wrapping = \$state\('none'\)/,
+    'the disabled group is bound too, so its radios read one value instead of stale locals',
   )
   assert.match(states, /class="rs-fieldset__error"/, "a group's error belongs to the fieldset")
   assert.match(states, /<Radio\b/, 'each option is a Radio, so the group supplies the name')
@@ -234,6 +243,15 @@ test('the RadioGroup story groups fieldsets with one checked, one disabled and o
     'the group names its radios, so the story never repeats a name',
   )
   assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
+  const radios = states.match(/<Radio\b[^>]*>/g) ?? []
+  assert.ok(radios.length > 0)
+  for (const radio of radios) {
+    assert.doesNotMatch(
+      radio,
+      /bind:group=/,
+      'a radio inside a group only reports its value; the binding lives on the RadioGroup',
+    )
+  }
   assert.ok(
     !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
     'RadioGroupStates must not carry story-only styles or non-Rocketship classes',

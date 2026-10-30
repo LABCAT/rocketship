@@ -55,23 +55,24 @@ Import components from their `./components/*` subpaths. Those subpaths are the p
 
 Each component spreads unknown attributes onto its rendered element and composes an incoming `class` with its BEM block.
 
-| Component    | Props                                                                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Container`  | `as` (`div`, `section`, `main`, `article`, `header`, `footer`, `nav`), `size` (`default`, `content`, `wide`, `full`), `padded`, `class`       |
-| `Grid`       | `as` (`div`, `ul`, `ol`), `columns` (`2`, `3`, `4`), `class`                                                                                  |
-| `Card`       | `as` (`article`, `section`, `div`, `li`), `media` snippet, `meta` snippet, `class`                                                            |
-| `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                           |
-| `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`   |
-| `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                |
-| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                               |
-| `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class` |
-| `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                         |
-| `Select`     | `value` (`bind:value`), `children` snippet, `class`                                                                                           |
-| `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`      |
-| `Fieldset`   | `legend` snippet, `children` snippet, `class`                                                                                                 |
-| `Field`      | `as` (`div`, `section`), `inline`, `id`, `label`, `hint`, `error`, `hintId`, `errorId`, `required`, `optional`, `disabled`, `class`           |
-| `Checkbox`   | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-checkbox--invalid`), `class`                                                   |
-| `Radio`      | `checked`, `disabled`, `required`, `aria-invalid` (derives `rs-radio--invalid`), `class`                                                      |
+| Component    | Props                                                                                                                                               |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Container`  | `as` (`div`, `section`, `main`, `article`, `header`, `footer`, `nav`), `size` (`default`, `content`, `wide`, `full`), `padded`, `class`             |
+| `Grid`       | `as` (`div`, `ul`, `ol`), `columns` (`2`, `3`, `4`), `class`                                                                                        |
+| `Card`       | `as` (`article`, `section`, `div`, `li`), `media` snippet, `meta` snippet, `class`                                                                  |
+| `Typography` | `as` (`div`, `section`, `article`), `html`, `class`                                                                                                 |
+| `Button`     | `as` (`button`, `a`), `href`, `variant` (`primary`, `secondary`, `ghost`), `size` (`small`, `medium`, `large`), `disabled`, `type`, `class`         |
+| `Alert`      | `variant` (`info`, `success`, `warning`, `error`), `role` (`alert`, `status`, `note`), `class`                                                      |
+| `Stack`      | `as` (`div`, `ul`, `ol`), `gap` (`small`, `medium`, `large`, `xlarge`), `class`                                                                     |
+| `Input`      | `type` (`text`, `email`, `password`, `number`, `search`, `url`, `tel`), `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`       |
+| `Textarea`   | `size` (`sm`, `md`, `lg`), `invalid`, `value` (`bind:value`), `class`                                                                               |
+| `Select`     | `value` (`bind:value`), `children` snippet, `class`                                                                                                 |
+| `Figure`     | `as` (`figure`, `div`), `variant` (`default`, `bordered`), `captionAlign` (`start`, `center`), `caption`, `captionSlot` snippet, `class`            |
+| `Fieldset`   | `legend` snippet, `children` snippet, `class`                                                                                                       |
+| `Field`      | `as` (`div`, `section`), `inline`, `id`, `label`, `hint`, `error`, `hintId`, `errorId`, `required`, `optional`, `disabled`, `class`                 |
+| `Checkbox`   | `checked` (`bind:checked`), `value`, `group` (`bind:group` array), `disabled`, `required`, `aria-invalid` (derives `rs-checkbox--invalid`), `class` |
+| `Radio`      | `checked` (`bind:checked`), `value`, `group` (`bind:group`), `disabled`, `required`, `aria-invalid` (derives `rs-radio--invalid`), `class`          |
+| `RadioGroup` | `group` (`bind:group`), `name`, `legend` snippet, `children` snippet, `aria-invalid` (marks every radio), `class`                                   |
 
 ### `Typography` `html` prop
 
@@ -249,7 +250,9 @@ Bind an array to `group` on several checkboxes and each box adds or removes its 
 </RadioGroup>
 ```
 
-Use `bind:group` alone when the options are already inside a `Fieldset` you control; use `RadioGroup` when you want the group's `legend`, shared `name` and `invalid` in one component. A `Radio` with no `value` is the plain native control and takes `checked` as a normal bindable prop.
+Use `bind:group` alone when the options are already inside a `Fieldset` you control; use `RadioGroup` when you want the group's `legend`, its shared `name` and its `aria-invalid` in one component. Inside a group the radios read and write the group's value, so bind the variable on `RadioGroup` and give the radios only their `value`. A `Radio` with no `value` is the plain native control and takes `checked` as a normal bindable prop.
+
+A group's `name` is generated (`rs-radio-group-…`) so the radios it contains share one name for exclusivity and arrow-key movement, and it never repeats in the DOM; pass `name` to keep your own. A group is in error when the `<fieldset>` itself carries `aria-invalid`, which marks every radio in it — a radio's own `aria-invalid` still wins. There is no `invalid` prop, exactly as for `Radio` and `Fieldset`.
 
 The error state comes only from `aria-invalid`, like every other reviewed control. Spread a `Field`'s `control` object onto the component and a `Field` error paints `--invalid`. Forced colours restore `appearance: auto` and drop the painted mark, so high-contrast users get the native control back.
 

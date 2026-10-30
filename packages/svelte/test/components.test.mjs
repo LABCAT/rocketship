@@ -4015,9 +4015,9 @@ test('RadioGroup is a fieldset: it names the group with a legend and owns no div
   assert.doesNotMatch(markup, /<div/, 'the group adds no wrapper of its own')
 })
 
-test('RadioGroup marks every radio invalid from one prop, and a radio may still opt out', async () => {
+test('RadioGroup marks every radio invalid from its own aria-invalid, and a radio may opt out', async () => {
   const { target } = await mountControlFixture(
-    `<RadioGroup invalid aria-describedby="contact-error">
+    `<RadioGroup aria-invalid="true" aria-describedby="contact-error">
     {#snippet legend()}Contact method{/snippet}
     <Radio value="email" aria-label="Email" />
     <Radio value="phone" aria-label="Phone" aria-invalid="false" />
@@ -4038,6 +4038,41 @@ test('RadioGroup marks every radio invalid from one prop, and a radio may still 
     'contact-error',
     'the fieldset is what the group message describes',
   )
+})
+
+test('RadioGroup derives its error from aria-invalid alone, like every reviewed control', async () => {
+  const source = loadComponentSource('RadioGroup')
+
+  assert.doesNotMatch(
+    source,
+    /invalid\??:\s*boolean/,
+    'RadioGroup takes no invalid prop; the fieldset attribute is the one source of truth',
+  )
+
+  const { target } = await mountControlFixture(
+    `<RadioGroup invalid>
+    {#snippet legend()}Not an error{/snippet}
+    <Radio value="email" aria-label="Email" />
+  </RadioGroup>
+  <RadioGroup aria-invalid="false">
+    {#snippet legend()}Explicitly valid{/snippet}
+    <Radio value="email" aria-label="Email" />
+  </RadioGroup>`,
+  )
+
+  const [ignoredProp, explicitFalse] = target.querySelectorAll('input')
+  assert.equal(
+    ignoredProp.getAttribute('aria-invalid'),
+    null,
+    'a bespoke invalid prop is not a prop, so it cannot announce or paint an error',
+  )
+  assert.ok(!ignoredProp.classList.contains('rs-radio--invalid'))
+  assert.equal(
+    explicitFalse.getAttribute('aria-invalid'),
+    null,
+    "aria-invalid='false' is not an error, so the radio is left without one",
+  )
+  assert.ok(!explicitFalse.classList.contains('rs-radio--invalid'))
 })
 
 test('RadioGroup generates one shared name so arrows move between the radios', async () => {
@@ -4161,6 +4196,34 @@ test('RadioGroup keeps one selection across its radios and reports it through bi
   flushSync()
   assert.equal(instance.read(), 'standard', 'checking the other radio replaces the selection')
   assert.deepEqual([standard.checked, express.checked], [true, false])
+})
+
+test('a disabled RadioGroup disables every radio it contains, so none of them can be chosen', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RadioGroup bind:group={wrapping} disabled>
+    {#snippet legend()}Gift wrapping{/snippet}
+    <Radio value="none" aria-label="No wrapping" />
+    <Radio value="paper" aria-label="Recycled paper" />
+  </RadioGroup>`,
+    `let wrapping = $state('none')
+    export const read = () => wrapping`,
+  )
+
+  const fieldset = target.querySelector('fieldset')
+  assert.ok(fieldset.hasAttribute('disabled'), 'the group carries the native attribute')
+  const [none, paper] = target.querySelectorAll('input')
+  assert.equal(none.checked, true, 'the bound value still paints the current choice')
+  // jsdom does not reflect an inherited `disabled` onto `.disabled`, so `:disabled` is the check
+  // that matches what a browser reports.
+  assert.ok(
+    none.matches(':disabled') && paper.matches(':disabled'),
+    'the fieldset disables the radios inside it',
+  )
+
+  paper.click()
+  flushSync()
+  assert.equal(paper.checked, false, 'a disabled radio cannot be ticked')
+  assert.equal(instance.read(), 'none', 'and nothing is written to the binding')
 })
 
 test('two RadioGroups on one page keep their selections apart', async () => {

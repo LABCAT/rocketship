@@ -39,25 +39,25 @@
       </Stack>
     </RadioGroup>
 
-    <RadioGroup disabled>
+    <RadioGroup bind:group={wrapping} disabled>
       {#snippet legend()}Gift wrapping{/snippet}
       <Stack gap="small">
         <Field inline>
           {#snippet children()}
-            <Radio id="group-wrapping-none" value="none" bind:group={wrapping} />
+            <Radio id="group-wrapping-none" value="none" />
             <Label for="group-wrapping-none">No wrapping</Label>
           {/snippet}
         </Field>
         <Field inline>
           {#snippet children()}
-            <Radio id="group-wrapping-paper" value="paper" bind:group={wrapping} />
+            <Radio id="group-wrapping-paper" value="paper" />
             <Label for="group-wrapping-paper">Recycled paper</Label>
           {/snippet}
         </Field>
       </Stack>
     </RadioGroup>
 
-    <RadioGroup invalid aria-describedby="group-contact-error">
+    <RadioGroup bind:group={contact} aria-invalid="true" aria-describedby="group-contact-error">
       {#snippet legend()}Contact method{/snippet}
       <p class="rs-fieldset__error" id="group-contact-error">
         Choose how we should contact you.
@@ -65,19 +65,19 @@
       <Stack gap="small">
         <Field inline>
           {#snippet children()}
-            <Radio id="group-contact-email" value="email" bind:group={contact} />
+            <Radio id="group-contact-email" value="email" />
             <Label for="group-contact-email">Email</Label>
           {/snippet}
         </Field>
         <Field inline>
           {#snippet children()}
-            <Radio id="group-contact-phone" value="phone" bind:group={contact} />
+            <Radio id="group-contact-phone" value="phone" />
             <Label for="group-contact-phone">Phone</Label>
           {/snippet}
         </Field>
         <Field inline>
           {#snippet children()}
-            <Radio id="group-contact-post" value="post" bind:group={contact} />
+            <Radio id="group-contact-post" value="post" />
             <Label for="group-contact-post">Post</Label>
           {/snippet}
         </Field>

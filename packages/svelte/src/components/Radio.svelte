@@ -1,21 +1,80 @@
 <script lang="ts">
-  import type { HTMLInputAttributes } from 'svelte/elements'
+  import type { ChangeEventHandler, HTMLInputAttributes } from 'svelte/elements'
+  import { getRadioGroup, hasRadioGroup } from './RadioGroup.svelte'
 
-  type Props = {
+  /** The value a radio stands for: what a set of radios selects. */
+  export type RadioValue = string | number
+
+  /**
+   * A radio picks one `value` out of a set. Bind the same variable to `group` on every radio in
+   * the set — `bind:group` — and that variable holds the choice: checking one writes its value and
+   * the rest uncheck. Inside a `<RadioGroup>` the group holds the variable, so a radio only needs
+   * its `value`. A radio with no `value` is the plain native control and binds `checked` instead.
+   */
+  export type RadioProps = {
+    group?: RadioValue
+    value?: RadioValue
+    checked?: boolean
     class?: string
-  } & Omit<HTMLInputAttributes, 'type'>
+  } & Omit<HTMLInputAttributes, 'type' | 'checked' | 'value'>
 
-  let { class: className = '', ...attrs }: Props = $props()
+  let {
+    group = $bindable(),
+    value,
+    checked = $bindable(false),
+    class: className = '',
+    onchange,
+    ...attrs
+  }: RadioProps = $props()
 
-  // The control's own attribute is the one source of truth, so the painted error state and the
-  // state assistive tech announces can never disagree.
-  const invalid = $derived(attrs['aria-invalid'] === true || attrs['aria-invalid'] === 'true')
+  const context = hasRadioGroup() ? getRadioGroup() : undefined
+
+  // The group owns the selection when there is one, otherwise the consumer's binding does.
+  const selection = $derived(context ? context.selected() : group)
+
+  // The set decides only when it holds something to compare against: a group that starts unset
+  // ("nothing chosen yet") and a radio with no value are left with the state they were given, so a
+  // static `checked` radio keeps working before anything is selected.
+  const isChecked = $derived(
+    value !== undefined && selection !== undefined ? selection === value : checked,
+  )
+
+  // `aria-invalid` reaches the control through the attribute spread rather than a prop of its own,
+  // so Svelte does not warn about a role that does not list it, as the reviewed Astro component
+  // already does. A group in error marks every radio in it; a control's own attribute still wins.
+  const ariaInvalid = $derived(attrs['aria-invalid'] ?? (context?.invalid() ? 'true' : undefined))
+  const invalid = $derived(ariaInvalid === true || ariaInvalid === 'true')
+  const controlAttrs = $derived(
+    ariaInvalid === undefined ? attrs : { ...attrs, 'aria-invalid': ariaInvalid },
+  )
+  const name = $derived(attrs.name ?? context?.name())
   const classes = $derived(
     ['rs-radio', invalid ? 'rs-radio--invalid' : undefined, className].filter(Boolean).join(' '),
   )
+
+  // A radio in a set only reports the value it stands for; the set decides exclusivity, so nothing
+  // here needs to uncheck a sibling. A radio with no value has nothing to report, so the browser
+  // keeps handling it as the plain native control.
+  const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    if (value !== undefined) {
+      if (context) context.select(value)
+      else group = value
+    } else {
+      checked = event.currentTarget.checked
+    }
+    onchange?.(event)
+  }
 </script>
 
-<input {...attrs} type="radio" class={classes} />
+<input
+  {...controlAttrs}
+  type="radio"
+  {value}
+  {name}
+  checked={isChecked}
+  class={classes}
+  onchange={handleChange}
+/>
 
 <style lang="scss">
   @use '@labcat2020/rocketship/styles/mixins' as *;

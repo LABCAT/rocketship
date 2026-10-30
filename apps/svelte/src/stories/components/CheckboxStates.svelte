@@ -4,6 +4,9 @@
   import Field from '@labcat2020/rocketship-svelte/components/Field'
   import Label from '@labcat2020/rocketship-svelte/components/Label'
   import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+
+  // A bound checkbox: the story shows the prop and the DOM staying in step.
+  let remember = $state(true)
 </script>
 
 <Container size="content" padded>
@@ -22,7 +25,7 @@
     </Field>
     <Field inline>
       {#snippet children()}
-        <Checkbox id="checkbox-remember" name="remember" checked />
+        <Checkbox id="checkbox-remember" name="remember" bind:checked={remember} />
         <Label for="checkbox-remember">Remember me on this device</Label>
       {/snippet}
     </Field>

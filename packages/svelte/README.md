@@ -225,6 +225,32 @@ The box is 24px through `--rs-checkbox-size` / `--rs-radio-size`, which meets WC
 document.getElementById('notify-all').indeterminate = true
 ```
 
+Bind an array to `group` on several checkboxes and each box adds or removes its `value`:
+
+```svelte
+<Checkbox value="builds" bind:group={topics} />
+<Checkbox value="security" bind:group={topics} />
+```
+
+`bind:group` picks one value out of a set: bind the same variable on every radio and the set holds the choice, so checking one writes its value and the others uncheck. `RadioGroup` is the fieldset form of the same idea — it owns the variable, gives every radio one shared `name` so arrow keys move between them, and can mark them all invalid together:
+
+```svelte
+<script lang="ts">
+  import Radio from '@labcat2020/rocketship-svelte/components/Radio'
+  import RadioGroup from '@labcat2020/rocketship-svelte/components/RadioGroup'
+
+  let delivery = $state('standard')
+</script>
+
+<RadioGroup bind:group={delivery}>
+  {#snippet legend()}Delivery{/snippet}
+  <Radio value="standard" />
+  <Radio value="express" />
+</RadioGroup>
+```
+
+Use `bind:group` alone when the options are already inside a `Fieldset` you control; use `RadioGroup` when you want the group's `legend`, shared `name` and `invalid` in one component. A `Radio` with no `value` is the plain native control and takes `checked` as a normal bindable prop.
+
 The error state comes only from `aria-invalid`, like every other reviewed control. Spread a `Field`'s `control` object onto the component and a `Field` error paints `--invalid`. Forced colours restore `appearance: auto` and drop the painted mark, so high-contrast users get the native control back.
 
 ## Install

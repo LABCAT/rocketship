@@ -154,6 +154,7 @@ test('the Checkbox and Radio stories mirror the Astro States and Set stories', (
   const expected = {
     Checkbox: ['Checkbox.set.stories.ts', 'Checkbox.stories.ts'],
     Radio: ['Radio.stories.ts'],
+    RadioGroup: ['RadioGroup.stories.ts'],
   }
 
   for (const [component, expectedFiles] of Object.entries(expected)) {
@@ -191,6 +192,51 @@ test('the Checkbox and Radio stories mirror the Astro States and Set stories', (
     read(join(storiesDir, 'Radio.stories.ts')),
     /export const States: Story =/,
     'Radio exports States, as the Astro story does',
+  )
+  assert.match(
+    read(join(storiesDir, 'RadioGroup.stories.ts')),
+    /export const States: Story =/,
+    'RadioGroup exports States too, so the fieldset form is browsable',
+  )
+})
+
+test('the Radio and Checkbox stories bind the value rather than hard-coding checked', () => {
+  const radio = read(join(storiesDir, 'components', 'RadioStates.svelte'))
+  assert.match(radio, /bind:group=/, 'a radio set is one bound value, not checked attributes')
+  assert.ok(
+    !/\bchecked\b/.test(radio),
+    'a checked attribute on one radio would let two options look chosen',
+  )
+
+  const checkbox = read(join(storiesDir, 'components', 'CheckboxStates.svelte'))
+  assert.match(checkbox, /bind:checked=/, 'the state story exercises the two-way checkbox binding')
+})
+
+test('the RadioGroup story groups fieldsets with one checked, one disabled and one in error', () => {
+  const states = read(join(storiesDir, 'components', 'RadioGroupStates.svelte'))
+
+  assert.match(states, /<Container size="content" padded>/)
+  assert.ok(
+    (states.match(/<RadioGroup\b/g) ?? []).length === 3,
+    'the story shows three groups: enabled, disabled and in error',
+  )
+  assert.match(states, /<RadioGroup bind:group=\{delivery\}>/, 'the first group is bound')
+  assert.match(states, /<RadioGroup disabled>/, 'the disabled group carries the native attribute')
+  assert.match(
+    states,
+    /<RadioGroup invalid aria-describedby="group-contact-error">/,
+    'the invalid group keeps its error on the fieldset and points at it',
+  )
+  assert.match(states, /class="rs-fieldset__error"/, "a group's error belongs to the fieldset")
+  assert.match(states, /<Radio\b/, 'each option is a Radio, so the group supplies the name')
+  assert.ok(
+    !/\bname="(?:delivery|wrap|contact)"/.test(states),
+    'the group names its radios, so the story never repeats a name',
+  )
+  assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RadioGroupStates must not carry story-only styles or non-Rocketship classes',
   )
 })
 
@@ -268,9 +314,10 @@ test('the Checkbox Set story sets indeterminate through the DOM property, never 
   )
   assert.doesNotMatch(
     set,
-    /indeterminate=|bind:this|\$state|indeterminate\?:/,
+    /indeterminate=|bind:this|indeterminate\?:/,
     'indeterminate is never a prop, an attribute or a component binding',
   )
+  assert.match(set, /bind:group=\{topics\}/, 'the set story binds one array of ticked values')
   assert.match(
     set,
     /onMount\(/,
@@ -311,7 +358,16 @@ test('the Radio States story groups fieldsets with one checked, one disabled and
   assert.match(states, /<Field inline>/, 'each option is an inline Field row')
   assert.match(states, /<Radio\b/, 'the story renders the reviewed Radio component')
   assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
-  assert.match(states, /checked/, 'one option in the first group is checked')
+  assert.match(
+    states,
+    /let delivery = \$state\('standard'\)/,
+    'the first option is the initial value of the bound group',
+  )
+  assert.match(
+    states,
+    /bind:group=\{delivery\}/,
+    'the story binds one variable per group, so checking a radio moves the selection',
+  )
   assert.ok(
     (states.match(/aria-invalid="true"/g) ?? []).length === 3,
     'every radio in the invalid group announces the error',

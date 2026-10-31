@@ -1,7 +1,7 @@
 # Gated preview deployment for the Rocketship Storybooks.
 #
-# A visible preview is published only after the PR agent marks the PR
-# merge-ready by adding the `preview-ready` label (see opencode-review.yml).
+# A visible preview is published only after Kinsho (the shared reviewer, see
+# opencode-review.yml) passes the current head and adds the `pr-ready` label.
 # The label is the single gate:
 #   - label present  -> build the affected Storybook(s) and publish preview(s)
 #   - label absent   -> no preview at all
@@ -48,7 +48,7 @@ concurrency:
 
 jobs:
   resolve:
-    if: github.event_name == 'workflow_run' || github.event.label.name == 'preview-ready'
+    if: github.event_name == 'workflow_run' || github.event.label.name == 'pr-ready'
     runs-on: ubuntu-latest
     outputs:
       ready: ${{ steps.resolve.outputs.ready }}
@@ -73,14 +73,14 @@ jobs:
               number = pr.number;
               sha = run.head_sha;
             } else {
-              if (context.payload.label?.name !== 'preview-ready') return;
+              if (context.payload.label?.name !== 'pr-ready') return;
               number = context.payload.pull_request.number;
               sha = context.payload.pull_request.head.sha;
             }
 
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
             if (pr.head.repo?.full_name !== `${owner}/${repo}`) return;
-            const ready = pr.labels.some((l) => l.name === 'preview-ready');
+            const ready = pr.labels.some((l) => l.name === 'pr-ready');
 
             // Svelte uses only the base styles and tokens, not the Astro components.
             // The lockfile and root package.json rebuild both Storybooks.
@@ -108,7 +108,7 @@ jobs:
             core.setOutput('sha', sha);
             core.setOutput('astro', String(astro));
             core.setOutput('svelte', String(svelte));
-            core.info(`PR #${number} at ${sha}: preview-ready=${ready}, astro=${astro}, svelte=${svelte}`);
+            core.info(`PR #${number} at ${sha}: pr-ready=${ready}, astro=${astro}, svelte=${svelte}`);
 
   preview:
     needs: resolve

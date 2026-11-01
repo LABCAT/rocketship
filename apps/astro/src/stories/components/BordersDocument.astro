@@ -68,7 +68,7 @@ const consumeExample = `.rs-card {
           style={`height: var(--rs-space-5); background: var(--rs-color-surface-elevated); border: var(--rs-border-width${width.name}) solid var(--rs-color-border);`}
           aria-hidden="true"
         />
-        <p class="rs-card__title">{width.title}</p>
+        <h3 class="rs-card__title">{width.title}</h3>
         <p class="rs-card__description">{width.description}</p>
         <Typography slot="meta"><code>{width.token}</code></Typography>
       </Card>
@@ -90,7 +90,7 @@ const consumeExample = `.rs-card {
           style={`width: var(--rs-space-7); height: var(--rs-space-7); background: var(--rs-color-accent); border-radius: var(--rs-radius-${radius.name});`}
           aria-hidden="true"
         />
-        <p class="rs-card__title">Radius {radius.name}</p>
+        <h3 class="rs-card__title">Radius {radius.name}</h3>
         <p class="rs-card__description">{radius.value}</p>
         <Typography slot="meta"><code>--rs-radius-{radius.name}</code></Typography>
       </Card>

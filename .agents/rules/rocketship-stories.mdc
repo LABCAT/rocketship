@@ -41,8 +41,9 @@ Storybook is the docs site, so a component story is a docs page, like the Founda
   1. `<Typography as="article">` with an `<h1>` (the component or aspect) and a short usage description.
   2. The live example: `<<Name><Aspect>Example />`.
   3. `<Typography as="article">` with `<h2 id="usage-heading">Usage</h2>` and the example's source, imported with `?raw`: `<pre tabindex="0" role="region" aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>`. The code block scrolls on narrow screens, so it is a named focusable region.
-  4. On `Default` only: the API as library `<Table>`s, each named by its caption: props and attributes (name, type, default, description), slots, CSS hooks (property, token default).
-- The example file holds only the component markup and its imports, so the usage code is exactly what renders.
+  4. On `Default` only: the API as library `<Table>`s, each in a `<Scroll tabindex="0" role="region" aria-labelledby="…">` named by the table's caption, because long types overflow a phone: props and attributes (name, type, default, description), slots (unless the default slot is the only one), element classes (when the consumer writes the anatomy, as on Card), CSS hooks (property, token default).
+- Write only what a user will want to know. Nothing repeats the example or the tables, and nothing teaches generic CSS. A how-to section earns its place only by answering what they cannot.
+- The example file holds only the component markup and its imports, so the usage code is exactly what renders. A wrapper with nothing to show on its own (Container) has no example: Usage is a short static snippet, and the visual lives in an aspect (`Sizes`).
 - Keep the tables accurate: update them with every prop, slot or hook change.
 
 ## Scope and names
@@ -55,7 +56,7 @@ Storybook is the docs site, so a component story is a docs page, like the Founda
 
 ## Content
 
-- Titles are real `<h2>` elements with the `__title` class.
+- Titles are real headings with the `__title` class, at the level the page outline needs: `<h2>` in a plain example, `<h3>` under a page's `<h2>` section.
 - Body text is in block elements (`<p>`), never bare text.
 - Use realistic data in the library's voice (builds, deployments, releases) that uses every class: Table's story has numbers for `--numeric` and a totals row.
 - Show a live-region `role` only where the example is genuinely dynamic.

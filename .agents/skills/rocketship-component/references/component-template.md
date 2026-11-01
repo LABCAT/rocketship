@@ -168,6 +168,7 @@ Full reference: `DisclosureDefault.astro`. The API tables (props and attributes,
 ```astro
 ---
 import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
 import Stack from '@labcat2020/rocketship/components/Stack'
 import Table from '@labcat2020/rocketship/components/Table'
 import Typography from '@labcat2020/rocketship/components/Typography'
@@ -192,25 +193,27 @@ import exampleSource from './NameDefaultExample.astro?raw'
         aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
     </Typography>
 
-    <Table>
-      <Fragment slot="caption">Props and attributes</Fragment>
-      <thead>
-        <tr>
-          <th class="rs-table__column-header" scope="col">Name</th>
-          <th class="rs-table__column-header" scope="col">Type</th>
-          <th class="rs-table__column-header" scope="col">Default</th>
-          <th class="rs-table__column-header" scope="col">Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="rs-table__body-row">
-          <th class="rs-table__row-header" scope="row"><code>variant</code></th>
-          <td class="rs-table__cell"><code>'default' | 'muted'</code></td>
-          <td class="rs-table__cell"><code>'default'</code></td>
-          <td class="rs-table__cell">The look.</td>
-        </tr>
-      </tbody>
-    </Table>
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption">
+      <Table>
+        <span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="rs-table__body-row">
+            <th class="rs-table__row-header" scope="row"><code>variant</code></th>
+            <td class="rs-table__cell"><code>'default' | 'muted'</code></td>
+            <td class="rs-table__cell"><code>'default'</code></td>
+            <td class="rs-table__cell">The look.</td>
+          </tr>
+        </tbody>
+      </Table>
+    </Scroll>
   </Stack>
 </Container>
 ```

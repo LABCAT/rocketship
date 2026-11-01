@@ -1,6 +1,6 @@
 # RCL-08 audit: Container, Button, Typography, Card, Grid
 
-Audited 2026-10-26 against `main` at 492e4fd. No code was changed for this audit.
+Audited 2026-10-26 against `main` at 492e4fd. No code was changed for this audit. The findings below describe the components as they were then; the outcomes are decisions 118–145 in `component-review-decisions.md`.
 
 Sources of truth: the DTCG files in `packages/base/src/tokens/` (generated into `styles/mixins/token-map.scss`), `_planning/component-review-decisions.md` (decisions 1–117), `.agents/rules/`, and the reviewed components Alert, Stack, Field, Input, Select, Dialog and Disclosure.
 
@@ -108,17 +108,21 @@ There is no `AGENTS.md` in this repo. The checks in the component skill's step 5
 
 When a component is reviewed, it also leaves `ignoreFiles` in `stylelint.config.mjs`.
 
-## Proposal: RCL-21 docs parts for these five (not decided)
+## RCL-21 docs parts for these five: what the review settled
 
-Apply decision 80 (amended) and `rocketship-stories.mdc` → "Docs pages (Astro)" as written, with `DisclosureDefault.astro` as the reference. Each touched component gets a `Default` docs page: an `<h1>` and usage description in `Typography`, the live example from `<Name>DefaultExample.astro`, the usage code shown with `?raw`, and tables for props and attributes, slots and CSS hooks. Points still open:
+All five follow decision 80 (amended) and `rocketship-stories.mdc` → "Docs pages (Astro)". The review settled the points the proposal left open:
 
-1. **Layout primitives.** Container and Grid examples show little on their own. Proposal: the example is a realistic composition (Grid of Cards; a Container around a page), and the page states the widths and column thresholds in the props table.
-2. **Container's four arg stories** become one `Default` docs page whose props table lists the sizes and widths. No Storybook controls, so every page is plain docs.
-3. **Grid's column stories.** Decided (decision 119): `TwoColumns` becomes the `Default` docs page; `ThreeColumns` and `FourColumns` stay.
-4. **Button** gets `Default` (docs page with variants, a disabled button and a link) and keeps `Sizes` as an aspect only if `size` survives the review.
-5. **Typography** gets a `Default` docs page (usage, the `html` prop, `as`), and the terms document moves to its own aspect as the prose specimen.
-6. **Locals in the hooks table.** Variant-owned locals (`--rs-button-bg`) are overridable on an instance. Proposal: list only opt-in hooks, as Disclosure does, and leave locals out.
-7. **A "Customising" section.** Raised by Shane on Grid: teach consumers to use the hooks and the component for their own layouts. Proposal: after the hooks table, a `Customising` `<h2>` with one `<h3>` per technique, a sentence, and a code snippet in a named focusable `<pre>` (labelled by its `<h3>`). Snippets are code only, because stories have no CSS. Grid is the first (decision 119); whether every docs page gets one is open.
+1. **Keep pages lean.** Shane: write what a user will actually want to know. Every page is a short description, the example, the usage code and the tables that say something (decisions 119, 125).
+2. **Grid:** `Default` is the docs page; `ThreeColumns` and `FourColumns` stay (decision 119).
+3. **Container:** one content Container with a static usage snippet; the widths are shown by one `Sizes` story (decisions 125, 126).
+4. **Card:** linked image cards in a list, with an element classes table (decision 134).
+5. **Button:** `Default` and a `Sizes` aspect (decision 140).
+6. **Typography:** `Default` and the terms document as a `Prose` aspect (decision 145).
+7. **Hooks tables** list opt-in hooks only, not variant-owned locals.
+8. **No slots table** when the default slot is the only one (decision 125).
+9. **No "Customising" section.** Tried on Grid and Container and removed: it repeated the tables or taught generic CSS (decisions 119, 125).
+
+Still open for RCL-21: moving the other components (Alert, the form controls, Table, Figure, Stack, Scroll, Popover, Tooltip, Dialog) onto docs pages.
 
 ## Proposed order
 

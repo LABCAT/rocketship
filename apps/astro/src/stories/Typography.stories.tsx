@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html'
 import TypographyDefault from './components/TypographyDefault.astro'
 import '@labcat2020/rocketship/components/Container'
+import '@labcat2020/rocketship/components/Scroll'
 import '@labcat2020/rocketship/components/Stack'
 import '@labcat2020/rocketship/components/Table'
 import '@labcat2020/rocketship/components/Typography'

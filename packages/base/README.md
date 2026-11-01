@@ -1,39 +1,40 @@
 # @labcat2020/rocketship
 
-Astro-focused, CSS-first component library. Design tokens, the default theme, and core components built with SCSS (BEM + `--rs-*` CSS custom properties).
+A CSS-first component library for Astro. For Svelte, use [`@labcat2020/rocketship-svelte`](https://www.npmjs.com/package/@labcat2020/rocketship-svelte).
+
+- Style almost everything with CSS variables, from the global design tokens down to each component
+- Plain BEM classes for anything the variables don't cover
+- Light and dark mode built in
+- Design tokens in the [W3C standard format](https://www.designtokens.org/tr/2025.10/format/), so your Figma designs can use the same colours and spacing as the code
+
+See all the components in [Storybook](https://rocketship3000.pages.dev).
 
 ## Install
 
 ```bash
-npm install @labcat2020/rocketship
+pnpm add @labcat2020/rocketship
 ```
 
 ## Usage
 
-Import a component:
+Import the styles once in your base layout, then import the components you need:
 
 ```astro
 ---
+import '@labcat2020/rocketship/styles'
 import Button from '@labcat2020/rocketship/components/Button'
 ---
 
 <Button variant="primary">Click me</Button>
 ```
 
-Import the base styles (tokens + default theme) once in your app:
-
-```js
-import '@labcat2020/rocketship/styles'
-```
-
-Inside a `<style lang="scss">` block, import the shared mixin barrel:
-
-```scss
-@use '@labcat2020/rocketship/styles/mixins' as *;
-```
-
-`./styles/mixins` is a stable export that resolves to `src/styles/mixins.scss`, the barrel that forwards the functions, breakpoint, container-query, and typography mixins. Import the barrel — never individual partials under `mixins/`, which are not exported. Because the barrel is a real package export, consumers resolve it through the package boundary and do not need bundler `loadPaths` workarounds.
-
 ## Theming
 
-Theming is CSS-variable based. Components reference `--rs-*` tokens (from `src/styles/variables.scss`) and expose `--rs-<component>-*` override hooks. Adopters can override tokens and component variables from `:root` or any ancestor.
+Light and dark mode follow the user's OS setting. To change the theme, set `--rs-*` variables in your own CSS:
+
+```css
+:root {
+  --rs-color-accent: #e4572e; /* change any --rs-* variable */
+  color-scheme: dark; /* always use dark mode */
+}
+```

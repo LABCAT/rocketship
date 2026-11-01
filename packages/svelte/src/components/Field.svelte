@@ -19,6 +19,7 @@
 
   type Props = {
     as?: FieldTag
+    inline?: boolean
     id?: string
     label?: string
     hint?: string
@@ -39,6 +40,7 @@
 
   let {
     as = 'div',
+    inline = false,
     id: idProp,
     label,
     hint,
@@ -81,7 +83,9 @@
   } satisfies FieldControlProps)
 
   const classes = $derived(
-    ['rs-field', disabled ? 'rs-field--disabled' : undefined, className].filter(Boolean).join(' '),
+    ['rs-field', inline ? 'rs-field--inline' : undefined, disabled ? 'rs-field--disabled' : undefined, className]
+      .filter(Boolean)
+      .join(' '),
   )
 
   const wrapperAriaDisabled = $derived(disabled ? 'true' : ariaDisabled)
@@ -93,35 +97,39 @@
   class={classes}
   aria-disabled={wrapperAriaDisabled}
 >
-  {#if hasLabel}
-    <div class="rs-field__label">
-      {#if label}
-        <Label for={id} {required} {optional} {requiredText} {optionalText}>{label}</Label>
-      {:else if labelSlot}
-        {@render labelSlot(id)}
-      {/if}
-    </div>
-  {/if}
-  <div class="rs-field__control">
+  {#if inline}
     {@render children?.(control)}
-  </div>
-  {#if hasHint}
-    <div class="rs-field__hint" id={hintId}>
-      {#if hint}
-        {hint}
-      {:else if hintSlot}
-        {@render hintSlot()}
-      {/if}
+  {:else}
+    {#if hasLabel}
+      <div class="rs-field__label">
+        {#if label}
+          <Label for={id} {required} {optional} {requiredText} {optionalText}>{label}</Label>
+        {:else if labelSlot}
+          {@render labelSlot(id)}
+        {/if}
+      </div>
+    {/if}
+    <div class="rs-field__control">
+      {@render children?.(control)}
     </div>
-  {/if}
-  {#if hasError}
-    <div class="rs-field__error" id={errorId}>
-      {#if error}
-        {error}
-      {:else if errorSlot}
-        {@render errorSlot()}
-      {/if}
-    </div>
+    {#if hasHint}
+      <div class="rs-field__hint" id={hintId}>
+        {#if hint}
+          {hint}
+        {:else if hintSlot}
+          {@render hintSlot()}
+        {/if}
+      </div>
+    {/if}
+    {#if hasError}
+      <div class="rs-field__error" id={errorId}>
+        {#if error}
+          {error}
+        {:else if errorSlot}
+          {@render errorSlot()}
+        {/if}
+      </div>
+    {/if}
   {/if}
 </svelte:element>
 
@@ -150,6 +158,17 @@
         gap: var(--rs-field-gap, var(--rs-space-3, 12px));
       }
 
+      /// A choice row: the control in the first column, its Label, hint and error in the second.
+      /// The Label's first line centres on the 24px control through Label's offset variable.
+      &--inline {
+        --rs-field-text-column: 2;
+        --rs-label-offset: calc((24px - 1lh) / 2);
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: start;
+        column-gap: var(--rs-field-inline-gap, #{rs-token(space-2)});
+      }
+
       &--disabled {
         .rs-field__label,
         .rs-field__control,
@@ -168,6 +187,7 @@
       &__hint {
         color: var(--rs-field-hint-color, var(--rs-color-muted, #4f5b7d));
         font-size: var(--rs-field-hint-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+        grid-column: var(--rs-field-text-column, auto);
         line-height: var(--rs-line-height-base, 1.45);
         margin: 0;
       }
@@ -175,6 +195,7 @@
       &__error {
         color: var(--rs-field-error-color, var(--rs-color-danger-fg, #3d0a08));
         font-size: var(--rs-field-error-font-size, var(--rs-font-size-sm, #{to-rem(14)}));
+        grid-column: var(--rs-field-text-column, auto);
         line-height: var(--rs-line-height-base, 1.45);
         margin: 0;
       }

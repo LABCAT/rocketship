@@ -289,16 +289,32 @@ const mountControlFixture = async (markup, script = '') => {
   ).href
   const { mount, flushSync } = await import(clientEntry)
 
-  for (const name of ['Field', 'Input', 'Label', 'Select', 'Textarea']) {
+  for (const name of [
+    'Checkbox',
+    'Field',
+    'Fieldset',
+    'FileInput',
+    'Input',
+    'Label',
+    'Radio',
+    'RangeInput',
+    'Select',
+    'Textarea',
+  ]) {
     await writeClientComponent(name, loadComponentSource(name), { stable: true })
   }
 
   const Fixture = await loadFixtureComponent(
     `ControlFixture-${randomUUID()}`,
     `<script lang="ts">
+  import Checkbox from './Checkbox.svelte'
   import Field from './Field.svelte'
+  import Fieldset from './Fieldset.svelte'
+  import FileInput from './FileInput.svelte'
   import Input from './Input.svelte'
   import Label from './Label.svelte'
+  import Radio from './Radio.svelte'
+  import RangeInput from './RangeInput.svelte'
   import Select from './Select.svelte'
   import Textarea from './Textarea.svelte'
   ${script}
@@ -319,6 +335,8 @@ ${markup}`,
     input: () => target.querySelector('input'),
     textarea: () => target.querySelector('textarea'),
     select: () => target.querySelector('select'),
+    fieldsets: () => [...target.querySelectorAll('fieldset')],
+    controls: () => [...target.querySelectorAll('input, select, textarea, button')],
   }
 }
 
@@ -364,7 +382,7 @@ test('packages/svelte exports the Alert, Button, Card, Container, Grid, Stack an
   )
 })
 
-test('packages/svelte exports Table from the barrel and as a subpath, without an Astro counterpart', () => {
+test('packages/svelte exports Table from the barrel and as a subpath, like the Astro package', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
@@ -376,9 +394,10 @@ test('packages/svelte exports Table from the barrel and as a subpath, without an
     './src/components/Table.svelte',
     'packages/svelte must export ./components/Table',
   )
-  assert.ok(
-    !basePkg.exports?.['./components/Table'],
-    'Table is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports?.['./components/Table'],
+    './src/components/Table.astro',
+    'Table is a port, so the import path matches the Astro entry',
   )
   assert.match(
     barrel,
@@ -950,7 +969,7 @@ test('Stack is exported from the barrel, as a subpath, with its prop union types
 
   const source = loadComponentSource('Stack')
   assert.match(source, /export type StackTag = 'div' \| 'ul' \| 'ol'/)
-  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large'/)
+  assert.match(source, /export type StackGap = 'small' \| 'medium' \| 'large' \| 'xlarge'/)
 })
 
 test('Stack renders .rs-stack on a div with no gap modifier for the default medium gap', async () => {
@@ -963,7 +982,7 @@ test('Stack renders .rs-stack on a div with no gap modifier for the default medi
   )
   assert.deepEqual(classList(renderMarkup(Stack, { gap: 'medium' })), ['rs-stack'])
 
-  for (const gap of ['small', 'large']) {
+  for (const gap of ['small', 'large', 'xlarge']) {
     assert.deepEqual(classList(renderMarkup(Stack, { gap })), ['rs-stack', `rs-stack--${gap}`])
   }
 })
@@ -1005,7 +1024,12 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
   const source = styleBlockOf('Stack')
   const css = await compileStyleBlock(source)
 
-  for (const selector of ['.rs-stack', '.rs-stack--small', '.rs-stack--large']) {
+  for (const selector of [
+    '.rs-stack',
+    '.rs-stack--small',
+    '.rs-stack--large',
+    '.rs-stack--xlarge',
+  ]) {
     assert.ok(css.includes(selector), `compiled Stack CSS must contain ${selector}`)
   }
 
@@ -1015,6 +1039,11 @@ test('Stack styles compile through the shared barrel and mirror the Astro rule b
     css,
     /\.rs-stack--large\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-6,/,
     'large is 24px',
+  )
+  assert.match(
+    css,
+    /\.rs-stack--xlarge\s*\{\s*--rs-stack-gap:\s*var\(--rs-space-8,/,
+    'xlarge is 40px, the space decision 30 puts between consecutive fieldsets',
   )
   assert.ok(!css.includes('.rs-stack--medium'), 'medium has no modifier rule')
   assert.match(
@@ -2219,6 +2248,29 @@ test('the README Astro-original column matches what is actually on disk', () => 
   }
 })
 
+test('the Checks workflow runs the Svelte package tests after the type check', () => {
+  const workflow = readFileSync(join(repoRoot, '.github', 'workflows', 'checks.yml'), 'utf8')
+
+  const steps = [...workflow.matchAll(/^\s*- name: (.+)$[\s\S]*?^\s*run: (.+)$/gm)].map(
+    ([, name, run]) => ({ name: name.trim(), run: run.trim() }),
+  )
+
+  const typeCheck = steps.findIndex((step) => step.name === 'Svelte type check')
+  const packageTests = steps.findIndex((step) => step.name === 'Svelte package tests')
+
+  assert.ok(typeCheck !== -1, 'checks.yml must keep the Svelte type check step')
+  assert.ok(packageTests !== -1, 'checks.yml must run the Svelte package tests')
+  assert.ok(
+    typeCheck < packageTests,
+    'the Svelte package tests run after the type check, so a type error fails first',
+  )
+  assert.equal(
+    steps[packageTests].run,
+    'pnpm --filter @labcat2020/rocketship-svelte test',
+    'the step must run the package test script, not a different command',
+  )
+})
+
 test('Figure is exported from the barrel, as a subpath, with its prop union types', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
@@ -2911,7 +2963,7 @@ test('Input and Textarea styles compile through the shared barrel with container
   assert.ok(!/@media\s*\(min-width/.test(textarea), 'Textarea must not use viewport media queries')
 })
 
-test('Select is exported from the barrel, as a subpath, with its prop union types', () => {
+test('Select is exported from the barrel and as a subpath like the Astro package', () => {
   const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
   const basePkg = JSON.parse(
     readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
@@ -2919,119 +2971,26 @@ test('Select is exported from the barrel, as a subpath, with its prop union type
   const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
 
   assert.equal(pkg.exports['./components/Select'], './src/components/Select.svelte')
-  assert.ok(
-    !basePkg.exports?.['./components/Select'],
-    'Select is Svelte-first, so the Astro package must not expose it yet',
+  assert.equal(
+    basePkg.exports?.['./components/Select'],
+    './src/components/Select.astro',
+    'Select is a port, so the import path matches the Astro entry',
   )
   assert.match(barrel, /export \{ default as Select \} from '\.\/components\/Select\.svelte'/)
   assert.match(barrel, /export type \* from '\.\/components\/Select\.svelte'/)
-  assert.match(loadComponentSource('Select'), /export type SelectSize = 'sm' \| 'md' \| 'lg'/)
 })
 
-test('Select is a native select inside .rs-select with one size modifier and the chevron', async () => {
+test('Select renders one native select carrying .rs-select, with no wrapper or icon element', async () => {
   const Select = await loadComponent('Select')
 
-  const markup = renderMarkup(Select)
-  assert.ok(
-    /<span class="rs-select rs-select--md">\s*<select/.test(visible(markup)),
-    'the select must sit inside the .rs-select block, so the chevron can be positioned',
-  )
-  assert.deepEqual(classList(renderMarkup(Select, { size: 'md' }), 'select'), [
-    'rs-select__control',
-  ])
-  assert.match(openingTag(markup, 'select'), /class="rs-select__control"/)
-  assert.match(markup, /class="rs-select__icon"/, 'the chevron is part of the block')
-  assert.match(openingTag(markup, 'svg'), /aria-hidden="true"/, 'the chevron is decorative')
-  assert.match(openingTag(markup, 'svg'), /focusable="false"/)
-
-  for (const size of ['sm', 'md', 'lg']) {
-    const classes = classList(renderMarkup(Select, { size }), 'span')
-    assert.deepEqual(classes, ['rs-select', `rs-select--${size}`])
-  }
+  const markup = visible(renderMarkup(Select))
+  assert.deepEqual(classList(markup, 'select'), ['rs-select'])
+  assert.ok(markup.startsWith('<select'), 'the control is the root, so it owns class and aria-*')
+  assert.doesNotMatch(markup, /<span/, 'the block is the control itself, not a wrapper')
+  assert.doesNotMatch(markup, /<svg/, 'the chevron is painted, never an element')
 })
 
-test('Select forwards a numeric native size and drops the chevron for a listbox', async () => {
-  const Select = await loadComponent('Select')
-
-  const markup = renderMarkup(Select, { size: 4 })
-  assert.match(
-    openingTag(markup, 'select'),
-    /size="4"/,
-    'a numeric size is the native visible-row count, not a variant',
-  )
-  assert.ok(
-    classList(markup, 'span').includes('rs-select--md'),
-    'a listbox still carries the default size modifier',
-  )
-  assert.doesNotMatch(
-    markup,
-    /rs-select__icon/,
-    'a listbox has no dropdown affordance, so the chevron must not render',
-  )
-})
-
-test('Select invalid raises aria-invalid and the invalid class, but an explicit attribute wins', async () => {
-  const Select = await loadComponent('Select')
-
-  const invalid = renderMarkup(Select, { invalid: true })
-  assert.match(openingTag(invalid, 'select'), /aria-invalid="true"/)
-  assert.deepEqual(classList(invalid, 'span'), ['rs-select', 'rs-select--md', 'rs-select--invalid'])
-
-  const valid = renderMarkup(Select)
-  assert.doesNotMatch(openingTag(valid, 'select'), /aria-invalid/)
-  assert.ok(!classList(valid, 'span').includes('rs-select--invalid'))
-
-  const overridden = renderMarkup(Select, { invalid: true, 'aria-invalid': 'false' })
-  assert.match(openingTag(overridden, 'select'), /aria-invalid="false"/)
-  assert.ok(
-    !classList(overridden, 'span').includes('rs-select--invalid'),
-    'the modifier must follow the effective aria-invalid, not the prop alone',
-  )
-})
-
-test('Select renders the placeholder as a disabled empty-valued option and leaves it out when absent', async () => {
-  const Select = await loadComponent('Select')
-
-  const withPlaceholder = renderMarkup(Select, { placeholder: 'Choose a team' })
-  const option = withPlaceholder.match(/<option\b[^>]*>[^<]*<\/option>/)?.[0] ?? ''
-  assert.match(option, /value=""/, 'the placeholder must own the empty value')
-  assert.match(option, /disabled/, 'the placeholder must not be selectable')
-  assert.match(option, /Choose a team/)
-
-  assert.doesNotMatch(
-    renderMarkup(Select, { placeholder: '   ' }),
-    /<option/,
-    'a whitespace-only placeholder is no placeholder',
-  )
-  assert.doesNotMatch(
-    renderMarkup(Select),
-    /<option/,
-    'without a placeholder the component renders no option of its own',
-  )
-})
-
-test('Select renders the options handed to it through the children snippet, optgroups included', async () => {
-  const Select = await loadComponent('Select')
-
-  const markup = visible(
-    renderMarkup(Select, {
-      placeholder: 'Choose a team',
-      children: snippet(
-        '<optgroup label="Design"><option value="product">Product design</option></optgroup>' +
-          '<option value="platform">Platform</option>',
-      ),
-    }),
-  )
-
-  assert.match(markup, /<optgroup label="Design">/)
-  assert.match(markup, /<option value="product">Product design<\/option>/)
-  assert.ok(
-    markup.indexOf('Choose a team') < markup.indexOf('Product design'),
-    'the placeholder renders before the snippet options',
-  )
-})
-
-test('Select composes a consumer class and spreads native attributes onto the select', async () => {
+test('Select composes a consumer class onto the control and spreads native attributes', async () => {
   const Select = await loadComponent('Select')
 
   const markup = renderMarkup(Select, {
@@ -3042,14 +3001,93 @@ test('Select composes a consumer class and spreads native attributes onto the se
   const tag = openingTag(markup, 'select')
 
   assert.match(tag, /name="region"/)
-  assert.match(tag, /required/, 'native attributes land on the control, not the wrapper')
-  assert.deepEqual(classList(markup, 'select'), ['rs-select__control'])
-  assert.deepEqual(classList(markup, 'span'), ['rs-select', 'rs-select--md', 'consumer-class'])
+  assert.match(tag, /required/, 'native attributes land on the control')
+  assert.deepEqual(classList(markup, 'select'), ['rs-select', 'consumer-class'])
+})
+
+test('Select derives rs-select--list from multiple or a row count above one', async () => {
+  const Select = await loadComponent('Select')
+
+  for (const props of [{ multiple: true }, { size: 4 }, { multiple: true, size: 4 }]) {
+    assert.ok(
+      classList(renderMarkup(Select, props), 'select').includes('rs-select--list'),
+      `${JSON.stringify(props)} renders a list box, which must drop the dropdown chevron`,
+    )
+  }
+
+  for (const props of [{}, { size: 1 }]) {
+    assert.ok(
+      !classList(renderMarkup(Select, props), 'select').includes('rs-select--list'),
+      `${JSON.stringify(props)} is a dropdown, so the chevron stays`,
+    )
+  }
+
+  assert.match(
+    openingTag(renderMarkup(Select, { size: 4 }), 'select'),
+    /size="4"/,
+    'the native size attribute still renders the visible row count',
+  )
+})
+
+test('Select derives rs-select--invalid from aria-invalid alone, with no invalid prop', async () => {
+  const Select = await loadComponent('Select')
+
+  for (const value of ['true', true]) {
+    assert.ok(
+      classList(renderMarkup(Select, { 'aria-invalid': value }), 'select').includes(
+        'rs-select--invalid',
+      ),
+      `aria-invalid=${JSON.stringify(value)} must style the control as an error`,
+    )
+  }
+
+  for (const props of [
+    {},
+    { 'aria-invalid': 'false' },
+    { 'aria-invalid': 'spelling' },
+    { invalid: true },
+  ]) {
+    assert.ok(
+      !classList(renderMarkup(Select, props), 'select').includes('rs-select--invalid'),
+      `${JSON.stringify(props)} must not paint an error, because the control does not announce one`,
+    )
+  }
+
+  assert.doesNotMatch(
+    loadComponentSource('Select'),
+    /invalid\?:/,
+    'the reviewed Astro original has no invalid prop; the attribute is the one source of truth',
+  )
+})
+
+test('Select renders the options handed to it through the children snippet, optgroups included', async () => {
+  const Select = await loadComponent('Select')
+
+  const markup = visible(
+    renderMarkup(Select, {
+      children: snippet(
+        '<optgroup label="Design"><option value="product">Product design</option></optgroup>' +
+          '<option value="platform">Platform</option>',
+      ),
+    }),
+  )
+
+  assert.match(markup, /<optgroup label="Design">/)
+  assert.match(markup, /<option value="product">Product design<\/option>/)
+  assert.ok(
+    markup.indexOf('Product design') < markup.indexOf('Platform'),
+    'the snippet options render in the order the consumer writes them',
+  )
+  assert.doesNotMatch(
+    markup,
+    /<option[^>]*value=""[^>]*>[\s\S]*<\/option>/,
+    'the component renders no option of its own, so there is no placeholder prop',
+  )
 })
 
 test('bind:value round-trips for Select in both directions', async () => {
   const { window, target, instance, flushSync, select } = await mountControlFixture(
-    `<Select bind:value={team} placeholder="Choose a team">
+    `<Select bind:value={team}>
     <option value="product">Product design</option>
     <option value="platform">Platform</option>
   </Select>
@@ -3074,89 +3112,35 @@ test('bind:value round-trips for Select in both directions', async () => {
   assert.equal(target.querySelector('[data-echo]').textContent, 'product')
 })
 
-test('Select keeps the placeholder unreachable once a real option is chosen', async () => {
+test('a multiple Select binds an array of chosen values', async () => {
   const { window, target, instance, flushSync, select } = await mountControlFixture(
-    `<Select bind:value={team} placeholder="Choose a team">
-    <option value="product">Product design</option>
-    <option value="platform">Platform</option>
+    `<Select bind:value={topics} multiple size={4}>
+    <option value="components">Components</option>
+    <option value="tokens">Design tokens</option>
   </Select>
-  <p data-echo>{team}</p>`,
-    `let team = $state('')
-  export const read = () => team
-  export const write = (next: string) => { team = next }`,
+  <p data-echo>{topics.join(',')}</p>`,
+    `let topics = $state(['components'])
+  export const read = () => topics`,
   )
 
   const element = select()
-  const [placeholder, product, platform] = element.options
+  assert.equal(element.multiple, true)
+  assert.equal(element.options[0].selected, true, 'the bound array owns the initial selection')
+  assert.equal(element.options[1].selected, false)
 
-  assert.ok(
-    placeholder.disabled,
-    'the placeholder must be a disabled option, so the dropdown cannot offer it again',
-  )
-  assert.equal(placeholder.value, '')
-  assert.equal(element.value, '', 'an empty value starts on the placeholder')
-  assert.equal(target.querySelector('[data-echo]').textContent, '')
-
-  chooseOption(window, element, 'platform')
+  element.options[1].selected = true
+  element.dispatchEvent(new window.Event('change', { bubbles: true }))
   flushSync()
 
-  assert.equal(instance.read(), 'platform', 'a user pick must reach the bound state')
-  assert.equal(element.value, 'platform')
-  assert.equal(placeholder.selected, false, 'the chosen option owns the selection')
-  assert.equal(platform.selected, true)
-  assert.ok(
-    placeholder.disabled,
-    'the placeholder stays disabled after a pick, so it cannot be chosen back',
-  )
-
-  // The placeholder's `selected` attribute is reactive, so it has to leave the placeholder once a
-  // value is set. Otherwise a form reset, and the first paint after hydration, would return to it.
-  assert.ok(
-    !placeholder.hasAttribute('selected'),
-    'the placeholder must drop selected once a value is set',
-  )
-  assert.equal(
-    platform.selected,
-    true,
-    'the element reports the chosen option as selected, so a reset target exists',
-  )
-
-  // A parent reset is still allowed to move the control back to the placeholder.
-  instance.write('')
-  flushSync()
-  assert.equal(element.value, '', 'a parent update may reset the control to the placeholder')
-  assert.equal(product.selected, false)
+  assert.deepEqual(instance.read(), ['components', 'tokens'], 'a user pick adds to the bound array')
+  assert.equal(target.querySelector('[data-echo]').textContent, 'components,tokens')
 })
 
-test('Select with a stale bound value selects nothing but keeps the placeholder disabled', async () => {
-  const { window, target, instance, flushSync, select } = await mountControlFixture(
-    `<Select bind:value={team} placeholder="Choose a team">
-    <option value="product">Product design</option>
-  </Select>
-  <p data-echo>{team}</p>`,
-    `let team = $state('retired-team')
-  export const read = () => team`,
-  )
-
-  const element = select()
-  assert.equal(
-    element.selectedIndex,
-    -1,
-    'a value that matches no option must leave the control with nothing selected, not jump to the placeholder',
-  )
-
-  chooseOption(window, element, 'product')
-  flushSync()
-  assert.equal(instance.read(), 'product', 'the user can recover by picking a real option')
-  assert.equal(target.querySelector('[data-echo]').textContent, 'product')
-  assert.equal(element.options[0].disabled, true)
-})
-
-test('the invalid state Field derives from its error reaches the Select control', async () => {
+test('the invalid state Field derives from its error reaches the Select control itself', async () => {
   const { target } = await mountControlFixture(
     `<Field label="Billing plan" error="Choose a plan before you start the trial.">
     {#snippet children(control)}
-      <Select {...control} placeholder="Choose a plan">
+      <Select {...control} name="plan">
         <option value="starter">Starter</option>
       </Select>
     {/snippet}
@@ -3175,8 +3159,8 @@ test('the invalid state Field derives from its error reaches the Select control'
     'the control must point at the error text',
   )
   assert.ok(
-    target.querySelector('.rs-select').classList.contains('rs-select--invalid'),
-    'the Field error must reach the control styling',
+    element.classList.contains('rs-select--invalid'),
+    'the error state lands on the control, which is the block',
   )
   assert.equal(
     target.querySelector('label').getAttribute('for'),
@@ -3189,7 +3173,7 @@ test('a Field without an error leaves its Select control valid and pointed at th
   const { target } = await mountControlFixture(
     `<Field label="Team" hint="Controls which runbooks appear in your sidebar.">
     {#snippet children(control)}
-      <Select {...control} placeholder="Choose a team">
+      <Select {...control}>
         <option value="platform">Platform</option>
       </Select>
     {/snippet}
@@ -3198,7 +3182,7 @@ test('a Field without an error leaves its Select control valid and pointed at th
 
   const element = target.querySelector('select')
   assert.equal(element.getAttribute('aria-invalid'), null, 'no error must mean no aria-invalid')
-  assert.ok(!target.querySelector('.rs-select').classList.contains('rs-select--invalid'))
+  assert.ok(!element.classList.contains('rs-select--invalid'))
   assert.equal(element.getAttribute('aria-describedby'), target.querySelector('.rs-field__hint').id)
 })
 
@@ -3237,66 +3221,1113 @@ test('a disabled Field disables its Select control while an enabled one stays fo
   )
 })
 
-test('Select styles compile through the shared barrel with container queries and no viewport media queries', async () => {
+test('Select styles compile through the shared barrel and match the Astro rule block', async () => {
   const css = await compileStyleBlock(styleBlockOf('Select'))
 
-  for (const selector of [
-    '.rs-select',
-    '.rs-select--sm',
-    '.rs-select--md',
-    '.rs-select--lg',
-    '.rs-select--invalid',
-    '.rs-select__control',
-    '.rs-select__icon',
-  ]) {
+  for (const selector of ['.rs-select', '.rs-select--list', '.rs-select--invalid']) {
     assert.ok(css.includes(selector), `compiled Select CSS must contain ${selector}`)
   }
 
   assert.match(
     css,
-    /@container\s*\(min-width:\s*500px\)/,
-    'Select must restate its touch-target scale at the sm container query',
+    /appearance:\s*none/,
+    'the native arrow is replaced by the painted chevron, so appearance must reset',
+  )
+  assert.match(
+    css,
+    /background-image:\s*var\(--rs-select-icon\)/,
+    'the chevron is painted through --rs-select-icon, never an element',
+  )
+  assert.match(
+    css,
+    /--rs-select-icon-color:\s*var\(--rs-color-muted,/,
+    'the chevron follows the theme through the muted colour token',
+  )
+  assert.match(
+    css,
+    /--rs-select-border-color:\s*var\(--rs-color-border-control,/,
+    'the control edge comes from the control-border token, not a decorative line',
+  )
+  assert.match(
+    css,
+    /\.rs-select--invalid\s*\{[^}]*--rs-select-border-color:\s*var\(--rs-color-danger-accent,/m,
+    'the error modifier reassigns the local the block already reads',
+  )
+  assert.match(
+    css,
+    /@media\s*\(forced-colors:\s*active\)\s*\{[^}]*appearance:\s*auto/,
+    'forced colours drop background images, so high-contrast users get the native arrow',
+  )
+  assert.match(
+    css,
+    /--rs-select-icon:\s*none/,
+    'the list modifier and the forced-colours fallback both remove the chevron',
   )
   assert.ok(
-    !/@media\s*\(min-width/.test(css),
-    'Select sizes with container queries, so it must not use viewport min-width media queries',
+    !/@media\s*\(min-width/.test(css) && !/@container/.test(css),
+    'Select has one size, so it takes no container or viewport size query',
   )
-  assert.match(
-    css,
-    /appearance:\s*none/,
-    'the native arrow is replaced by the chevron, so the control must reset its appearance',
+  assert.ok(
+    !/:invalid/.test(css),
+    'a required empty select matches :invalid on load, so errors come from aria-invalid only',
   )
-  assert.match(
-    css,
-    /--rs-select-bg:\s*var\(--rs-color-surface,\s*#ffffff\)/,
-    'the variant-owned background keeps the token over the literal',
+  assert.ok(
+    !/font-family/.test(css),
+    'text controls inherit the page typeface through font: inherit',
   )
-  assert.match(
-    css,
-    /\.rs-select--invalid\s+:global\s+\.rs-select__control\s*\{[^}]*--rs-select-bg:\s*var\(--rs-select-invalid-bg\)/m,
-    'the invalid modifier reassigns the local the control already reads',
+  assert.ok(
+    !/:hover/.test(css),
+    'form controls have no hover state, because a hover border reads as focus',
   )
-  assert.match(
-    css,
-    /--rs-select-invalid-bg:\s*var\(--rs-color-danger-bg,/,
-    'the invalid local keeps the semantic danger token over the literal',
+  assert.ok(
+    !/--rs-select-(sm|md|lg)\b|--rs-select-font-size|--rs-select-min-height/.test(css),
+    'the reviewed original has no size steps, min-height or font-size hook',
   )
 
   // Every literal in the block must restate a value that already exists in variables.scss; a new
   // hex would mean a colour the design system does not define.
   const source = styleBlockOf('Select')
-  const knownLiterals = new Set([
-    '#ffffff',
-    '#c8d2eb',
-    '#131a2f',
-    '#296dff',
-    '#2f5bdb',
-    '#4f5b7d',
-    '#ffeef0',
-    '#f0a8b0',
-    '#c5221f',
-  ])
-  const authored = [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex.toLowerCase())
-  const invented = authored.filter((hex) => !knownLiterals.has(hex))
-  assert.deepEqual(invented, [], 'Select must not introduce hex values of its own')
+  assert.deepEqual(
+    [...source.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Select must paint only through rs-token(), with no hex values of its own',
+  )
+})
+
+test('Fieldset is exported from the barrel, as a subpath, with the props type', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  assert.equal(
+    pkg.exports['./components/Fieldset'],
+    './src/components/Fieldset.svelte',
+    'packages/svelte must export ./components/Fieldset',
+  )
+  assert.equal(
+    basePkg.exports['./components/Fieldset'],
+    './src/components/Fieldset.astro',
+    'the Astro package is the source of truth, so it must export the same subpath',
+  )
+  assert.match(
+    barrel,
+    /export \{ default as Fieldset \} from '\.\/components\/Fieldset\.svelte'/,
+    'the barrel must export the Fieldset value',
+  )
+  assert.match(
+    barrel,
+    /export type \* from '\.\/components\/Fieldset\.svelte'/,
+    'the barrel must re-export the Fieldset props type',
+  )
+  assert.match(
+    loadComponentSource('Fieldset'),
+    /export type FieldsetProps = \{/,
+    'Fieldset must export its prop type so a consumer can wrap it',
+  )
+})
+
+test('Fieldset is a fixed fieldset root with no as prop, mirroring the Astro original', () => {
+  const source = loadComponentSource('Fieldset')
+
+  // Decision 1: `as` only where more than one root tag is valid. A fieldset group is only ever
+  // a <fieldset>, so the Svelte port must not carry a tag union the Astro original lacks.
+  assert.doesNotMatch(source, /FieldsetTag|as\?:/, 'a fieldset group has one valid root tag')
+  assert.match(
+    source,
+    /^<fieldset \{\.\.\.attrs\} class=\{classes\}>/m,
+    'the root is the semantic element itself, with consumer attrs spread onto it',
+  )
+  // Decision 24: a prop never re-declares a native attribute, so `disabled` flows through `...attrs`.
+  assert.doesNotMatch(
+    source,
+    /^\s*disabled\??:/m,
+    'disabled is a native fieldset attribute, so it is not re-declared as a prop',
+  )
+})
+
+test('Fieldset renders the native block with no legend of its own by default', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const markup = visible(renderMarkup(Fieldset))
+  assert.match(markup, /^<fieldset class="rs-fieldset">/, 'the root is a real fieldset')
+  assert.doesNotMatch(markup, /<legend/, 'a fieldset with no legend renders no legend element')
+  assert.match(markup, /<\/fieldset>$/)
+})
+
+test('Fieldset renders the legend snippet as the fieldset first child', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const markup = visible(
+    renderMarkup(Fieldset, { legend: snippet('Billing <strong>address</strong>') }),
+  )
+  assert.match(
+    markup,
+    /^<fieldset class="rs-fieldset"><legend class="rs-fieldset__legend">Billing <strong>address<\/strong><\/legend>/,
+    'the legend must be the first child of the fieldset, which is the only position the browser accepts',
+  )
+})
+
+test('Fieldset takes the native disabled attribute through attrs and keeps consumer attrs on the root', async () => {
+  const Fieldset = await loadComponent('Fieldset')
+
+  const enabled = renderMarkup(Fieldset, { legend: snippet('Contact') })
+  assert.doesNotMatch(openingTag(enabled, 'fieldset'), /disabled/)
+
+  const disabled = renderMarkup(Fieldset, { legend: snippet('Contact'), disabled: true })
+  assert.match(openingTag(disabled, 'fieldset'), /disabled/, 'disabled is the native attribute')
+
+  const composed = renderMarkup(Fieldset, {
+    legend: snippet('Contact'),
+    name: 'billing',
+    'aria-labelledby': 'billing-heading',
+    class: 'consumer-class',
+  })
+  assert.deepEqual(classList(composed, 'fieldset'), ['rs-fieldset', 'consumer-class'])
+  assert.match(openingTag(composed, 'fieldset'), /name="billing"/)
+  assert.match(
+    openingTag(composed, 'fieldset'),
+    /aria-labelledby="billing-heading"/,
+    'native and ARIA attributes land on the fieldset, so it can be named by an external heading',
+  )
+})
+
+test('a disabled Fieldset disables every nested control from the control components', async () => {
+  const { target } = await mountControlFixture(
+    `<Fieldset legend={undefined} disabled>
+    <Field label="Full name">
+      {#snippet children(control)}
+        <Input {...control} value="Ada Lovelace" />
+      {/snippet}
+    </Field>
+    <Field label="Country">
+      {#snippet children(control)}
+        <Select {...control} value="gb"><option value="gb">United Kingdom</option></Select>
+      {/snippet}
+    </Field>
+    <Field label="Purchase order">
+      {#snippet children(control)}
+        <Textarea {...control} rows="2" value="PO-4471"></Textarea>
+      {/snippet}
+    </Field>
+    <button type="button">Remove contact</button>
+  </Fieldset>`,
+  )
+
+  const [fieldset] = target.querySelectorAll('fieldset')
+  assert.equal(fieldset.disabled, true, 'the fieldset itself must carry the disabled attribute')
+  assert.match(fieldset.className, /\brs-fieldset\b/)
+
+  const controls = [...target.querySelectorAll('input, select, textarea, button')]
+  assert.equal(controls.length, 4, 'the fixture must render one of each control')
+
+  for (const control of controls) {
+    assert.equal(
+      control.matches(':disabled'),
+      true,
+      `${control.tagName.toLowerCase()} must be disabled by the fieldset, with no per-control prop`,
+    )
+    assert.equal(
+      control.hasAttribute('disabled'),
+      false,
+      'the fieldset disables descendants itself, so no component may hard-code the attribute',
+    )
+  }
+})
+
+test('an enabled Fieldset leaves its controls operable, and toggling disabled locks and unlocks them', async () => {
+  const { target, instance, flushSync, window } = await mountControlFixture(
+    `<Fieldset disabled={locked}>
+    <Field label="Full name">
+      {#snippet children(control)}
+        <Input {...control} value="Ada Lovelace" />
+      {/snippet}
+    </Field>
+  </Fieldset>`,
+    `let locked = $state(false)
+  export const lock = () => { locked = true }
+  export const unlock = () => { locked = false }`,
+  )
+
+  const [fieldset] = target.querySelectorAll('fieldset')
+  const input = target.querySelector('input')
+
+  assert.equal(input.matches(':disabled'), false, 'precondition: an enabled group is editable')
+  input.focus()
+  assert.equal(window.document.activeElement, input, 'an enabled control takes focus')
+  // Focus has to be released while the control is still focusable: a disabled control cannot be
+  // blurred, so it would stay the active element and the check below would prove nothing.
+  input.blur()
+  assert.equal(window.document.activeElement.tagName, 'BODY')
+
+  instance.lock()
+  flushSync()
+  assert.equal(fieldset.disabled, true, 'a prop change must reach the native attribute')
+  assert.equal(input.matches(':disabled'), true, 'the nested control is disabled at runtime too')
+
+  input.focus()
+  assert.equal(
+    window.document.activeElement.tagName,
+    'BODY',
+    'a control inside a disabled fieldset cannot take focus, so it cannot be edited',
+  )
+
+  instance.unlock()
+  flushSync()
+  assert.equal(fieldset.disabled, false, 'unlocking must clear the native attribute')
+  assert.equal(input.matches(':disabled'), false)
+  input.focus()
+  assert.equal(window.document.activeElement, input, 'the control becomes focusable again')
+})
+
+test('a disabled Fieldset leaves interactions in its legend alone, and keeps them out of the form data', async () => {
+  const { target, window } = await mountControlFixture(
+    `<form>
+    <Fieldset disabled>
+      {#snippet legend()}
+        Billing contact <button type="button" data-legend-action>Edit</button>
+      {/snippet}
+      <Input aria-label="Account label" name="label" value="Primary" />
+    </Fieldset>
+    <Input aria-label="Separate field" name="separate" value="kept" />
+  </form>`,
+  )
+
+  const legendButton = target.querySelector('[data-legend-action]')
+  assert.equal(
+    legendButton.matches(':disabled'),
+    false,
+    'the HTML spec exempts controls inside the legend from the fieldset disabled state',
+  )
+  legendButton.focus()
+  assert.equal(
+    window.document.activeElement,
+    legendButton,
+    'so an action in the legend stays operable',
+  )
+
+  const form = target.querySelector('form')
+  const submitted = [...new window.FormData(form).keys()]
+  assert.deepEqual(
+    submitted,
+    ['separate'],
+    'a disabled fieldset also drops its controls from the submitted form data',
+  )
+})
+
+test('Fieldset styles compile through the shared barrel and match the Astro rule block', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Fieldset'))
+
+  for (const selector of [
+    '.rs-fieldset',
+    '.rs-fieldset__legend',
+    '.rs-fieldset__hint',
+    '.rs-fieldset__error',
+  ]) {
+    assert.ok(css.includes(selector), `compiled Fieldset CSS must contain ${selector}`)
+  }
+
+  // Decision 25: Fieldset groups, it does not box. The native chrome is reset and nothing paints.
+  assert.match(css, /border:\s*0/, 'the native border is reset rather than styled')
+  assert.match(css, /min-inline-size:\s*0/, 'a fieldset must shrink inside a grid or flex parent')
+  assert.ok(!/background|border-radius|box-shadow/.test(css), 'Fieldset adds no box of its own')
+  assert.ok(!/@container|@media/.test(css), 'the Astro block has no query, so the port has none')
+
+  // Decision 26: float opts the legend out of the border-notch layout so the gap reaches it.
+  assert.match(css, /float:\s*inline-start/, 'the legend floats to become an ordinary flex item')
+  // Decision 27: no disabled legend style; disabled controls dim through their own rules.
+  assert.ok(
+    !/:disabled/.test(css),
+    'a disabled fieldset has no legend rule, so the caption stays readable',
+  )
+
+  assert.deepEqual(
+    [...styleBlockOf('Fieldset').matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+    [],
+    'Fieldset names tokens only, never a hex literal',
+  )
+})
+
+test('Checkbox and Radio are exported from the barrel, as subpaths, like the Astro package', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['Checkbox', 'Radio']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.equal(
+      basePkg.exports[`./components/${name}`],
+      `./src/components/${name}.astro`,
+      `${name} is a port, so the Svelte subpath mirrors the Astro entry`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export \\{ default as ${name} \\} from '\\./components/${name}\\.svelte'`),
+      `the barrel must export the ${name} value`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export type \\* from '\\./components/${name}\\.svelte'`),
+      `the barrel must re-export the ${name} props type`,
+    )
+  }
+})
+
+test('Checkbox is one native checkbox carrying .rs-checkbox, with no wrapper or mark element', async () => {
+  const Checkbox = await loadComponent('Checkbox')
+
+  const markup = visible(renderMarkup(Checkbox))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="checkbox"/, 'the native type is the behaviour')
+  assert.deepEqual(classList(markup, 'input'), ['rs-checkbox'])
+  assert.doesNotMatch(markup, /<span/, 'the block is the control itself, not a wrapper')
+  assert.doesNotMatch(markup, /<svg/, 'the tick is a clipped ::before, never an element')
+})
+
+test('Radio is one native radio carrying .rs-radio, with no wrapper or mark element', async () => {
+  const Radio = await loadComponent('Radio')
+
+  const markup = visible(renderMarkup(Radio))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="radio"/, 'the native type is the behaviour')
+  assert.deepEqual(classList(markup, 'input'), ['rs-radio'])
+  assert.doesNotMatch(markup, /<span/, 'the block is the control itself, not a wrapper')
+  assert.doesNotMatch(markup, /<svg/, 'the dot is a clipped ::before, never an element')
+})
+
+test('a consumer cannot override the control type, because type is omitted from the props', () => {
+  for (const [name, type] of [
+    ['Checkbox', 'checkbox'],
+    ['Radio', 'radio'],
+  ]) {
+    const source = loadComponentSource(name)
+    assert.match(
+      source,
+      /Omit<HTMLInputAttributes, 'type'>/,
+      `${name} must omit type so a consumer cannot turn the control into another input`,
+    )
+    assert.match(
+      source,
+      new RegExp(`<input \{\\.\\.\\.attrs\\} type="${type}" class=\\{classes\\} \\/>`),
+      `${name} spreads attrs first and fixes the native type last`,
+    )
+  }
+})
+
+test('Checkbox and Radio compose a consumer class and spread native attributes onto the control', async () => {
+  for (const [name, type, block] of [
+    ['Checkbox', 'checkbox', 'rs-checkbox'],
+    ['Radio', 'radio', 'rs-radio'],
+  ]) {
+    const Component = await loadComponent(name)
+    const markup = renderMarkup(Component, {
+      id: `${type}-notify`,
+      name: 'notify',
+      value: 'builds',
+      checked: true,
+      required: true,
+      class: 'consumer-class',
+      'aria-describedby': 'notify-hint',
+    })
+    const tag = openingTag(markup, 'input')
+
+    assert.deepEqual(classList(markup, 'input'), [block, 'consumer-class'])
+    assert.match(tag, new RegExp(`id="${type}-notify"`), 'the id lands on the control itself')
+    assert.match(tag, /name="notify"/)
+    assert.match(tag, /value="builds"/)
+    assert.match(tag, /checked/, 'checked is a native attribute, not a prop')
+    assert.match(tag, /required/)
+    assert.match(tag, /aria-describedby="notify-hint"/)
+  }
+})
+
+test('Checkbox and Radio derive their error modifier from aria-invalid alone, with no invalid prop', async () => {
+  for (const [name, block] of [
+    ['Checkbox', 'rs-checkbox--invalid'],
+    ['Radio', 'rs-radio--invalid'],
+  ]) {
+    const Component = await loadComponent(name)
+
+    for (const value of ['true', true]) {
+      assert.ok(
+        classList(renderMarkup(Component, { 'aria-invalid': value }), 'input').includes(block),
+        `${name} with aria-invalid=${JSON.stringify(value)} must style the control as an error`,
+      )
+    }
+
+    for (const props of [
+      {},
+      { 'aria-invalid': 'false' },
+      { 'aria-invalid': 'spelling' },
+      { invalid: true },
+    ]) {
+      assert.ok(
+        !classList(renderMarkup(Component, props), 'input').includes(block),
+        `${name} with ${JSON.stringify(props)} must not paint an error, because the control does not announce one`,
+      )
+    }
+
+    assert.doesNotMatch(
+      loadComponentSource(name),
+      /invalid\??:/,
+      `${name} takes no invalid prop; the control's own aria-invalid is the one source of truth`,
+    )
+  }
+})
+
+test('Checkbox and Radio expose no indeterminate, size or transition, mirroring the Astro original', () => {
+  for (const name of ['Checkbox', 'Radio']) {
+    const source = loadComponentSource(name)
+    const script = source.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1] ?? ''
+
+    // Decision 33: indeterminate is a DOM property only script can set, and no HTML attribute
+    // exists. A prop could only paint a dash while assistive tech announced "not checked".
+    assert.doesNotMatch(
+      script,
+      /indeterminate\??:/,
+      `${name} must not declare an indeterminate prop`,
+    )
+    assert.doesNotMatch(
+      script,
+      /size\??:/,
+      `${name} has one reviewed size, so it takes no size prop`,
+    )
+    assert.doesNotMatch(
+      source,
+      /transition/,
+      'a choice control changes state instantly, so it declares no transition',
+    )
+  }
+})
+
+test('the Checkbox and Radio style blocks compile to the Astro rule block', async () => {
+  for (const [name, block, radius] of [
+    ['Checkbox', 'rs-checkbox', 'radius-sm'],
+    ['Radio', 'rs-radio', 'radius-pill'],
+  ]) {
+    const source = styleBlockOf(name)
+    const css = await compileStyleBlock(source)
+
+    for (const selector of [`.${block}`, `.${block}--invalid`]) {
+      assert.ok(css.includes(selector), `compiled ${name} CSS must contain ${selector}`)
+    }
+
+    assert.match(css, /appearance:\s*none/, 'the native box is replaced, not restyled')
+    assert.match(
+      css,
+      new RegExp(`block-size:\\s*var\\(--${block}-size,\\s*24px\\)`),
+      'the control meets WCAG 2.2 target size through its own 24px hook',
+    )
+    assert.match(
+      css,
+      new RegExp(`inline-size:\\s*var\\(--${block}-size,\\s*24px\\)`),
+      'the box is square through the same hook',
+    )
+    assert.match(
+      css,
+      new RegExp(`border:\\s*var\\(--${block}-border-width,\\s*var\\(--rs-border-width-sm,`),
+      'the edge is one border-width-sm line',
+    )
+    assert.match(
+      css,
+      new RegExp(`--${block}-border-color:\\s*var\\(--rs-color-border-control,`),
+      'the control edge comes from the control-border token, not a decorative line',
+    )
+    assert.match(
+      css,
+      new RegExp(`border-radius:\\s*var\\(--${block}-border-radius,\\s*var\\(--rs-${radius},`),
+      `the corners read the ${radius} token through a hook`,
+    )
+    assert.match(css, /clip-path:/, 'the mark is shaped with clip-path, never an SVG data URI')
+    assert.ok(!/data:image/.test(css), 'the mark is painted from a variable, not a data URI')
+    assert.match(css, /content:\s*(""|'')/, "the mark is the input's own ::before")
+
+    // Decision 34: states reassign the block's own locals instead of repainting declarations.
+    assert.match(
+      css,
+      new RegExp(`\\.${block}:checked[^{]*\\{[^}]*--${block}-bg:\\s*var\\(--rs-color-accent,`, 'm'),
+      'checked sets the fill to the accent colour through the block local',
+    )
+    assert.match(
+      css,
+      new RegExp(
+        `\\.${block}:checked[^{]*\\{[^}]*--${block}-mark-color:\\s*var\\(--rs-color-accent-contrast,`,
+        'm',
+      ),
+      'checked sets the mark to accent-contrast, so it passes contrast on the fill',
+    )
+    assert.match(
+      css,
+      new RegExp(
+        `\\.${block}--invalid\\s*\\{[^}]*--${block}-border-color:\\s*var\\(--rs-color-danger-accent,`,
+        'm',
+      ),
+      'the error modifier reassigns the local the block already reads',
+    )
+    assert.match(
+      css,
+      /@media\s*\(forced-colors:\s*active\)\s*\{[^}]*appearance:\s*auto/,
+      'forced colours restore the native control, because author backgrounds can drop',
+    )
+    assert.match(
+      css,
+      /@media\s*\(forced-colors:\s*active\)\s*\{[\s\S]*content:\s*none/,
+      'forced colours also drop the painted ::before mark',
+    )
+  }
+})
+
+test('the choice controls keep the shared focus, disabled and no-motion rules', async () => {
+  for (const name of ['Checkbox', 'Radio']) {
+    const css = await compileStyleBlock(styleBlockOf(name))
+
+    assert.match(css, /:focus-visible/, 'the control shows the shared focus ring')
+    assert.match(
+      css,
+      /outline:\s*2px solid var\(--rs-color-focus-ring,/,
+      'focus is 2px, per the rule',
+    )
+    assert.match(css, /outline-offset:\s*2px/)
+    assert.match(css, /cursor:\s*pointer/, 'at rest a choice control reads as clickable')
+    assert.match(css, /:disabled/, 'a disabled control keeps its native state painted')
+    assert.match(css, /cursor:\s*not-allowed/, 'a disabled control tells the pointer it cannot act')
+    assert.match(css, /opacity:\s*0\.55/, 'disabled matches Input, so the dimming is one value')
+
+    assert.ok(!/:hover/.test(css), 'a choice control has no hover state')
+    assert.ok(!/transition/.test(css), 'decision 38: a choice control changes state instantly')
+    assert.ok(
+      !/@media\s*\(min-width/.test(css) && !/@container/.test(css),
+      `${name} has one size, so it takes no container or viewport size query`,
+    )
+    assert.ok(!/:invalid/.test(css), 'errors come from aria-invalid, never :invalid')
+    assert.ok(!/font-family/.test(css), 'a choice control inherits the page typeface')
+
+    assert.deepEqual(
+      [...styleBlockOf(name).matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+      [],
+      `${name} must paint only through rs-token(), with no hex values of its own`,
+    )
+  }
+})
+
+test('Checkbox paints the tick, and its indeterminate dash is a :indeterminate rule only', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Checkbox'))
+
+  assert.match(css, /clip-path:\s*polygon\(/, 'the tick is a polygon clip')
+  assert.match(
+    css,
+    /:indeterminate[^{]*\{[^}]*--rs-checkbox-bg:/,
+    'indeterminate shares the checked fill, so the box reads as selected',
+  )
+  assert.match(
+    css,
+    /:indeterminate::before\s*\{[^}]*clip-path:\s*inset\(/,
+    'indeterminate overrides the tick with an inset dash on the same pseudo-element',
+  )
+})
+
+test('Radio paints a dot, and never styles an indeterminate state', async () => {
+  const css = await compileStyleBlock(styleBlockOf('Radio'))
+
+  assert.match(css, /clip-path:\s*circle\(50%\)/, 'the dot is a circular clip')
+  assert.ok(!/:indeterminate/.test(css), 'a radio has no indeterminate state to paint')
+  assert.match(css, /block-size:\s*10px/, 'the dot is 10px, so the ring stays visible around it')
+})
+
+test('a Field inline row puts the control and Label side by side and links them', async () => {
+  const { target } = await mountControlFixture(
+    `<Field inline>
+    {#snippet children()}
+      <Checkbox id="row-summary" name="summary" aria-describedby="row-summary-hint" />
+      <Label for="row-summary">Email me a monthly summary</Label>
+      <p class="rs-field__hint" id="row-summary-hint">We send one email a month.</p>
+    {/snippet}
+  </Field>`,
+  )
+
+  const field = target.querySelector('.rs-field')
+  assert.ok(field.classList.contains('rs-field--inline'), 'inline adds the row modifier')
+
+  const control = target.querySelector('input.rs-checkbox')
+  const label = target.querySelector('label.rs-label')
+  assert.equal(label.getAttribute('for'), control.id, 'the Label points at the control')
+  assert.equal(control.getAttribute('aria-describedby'), 'row-summary-hint')
+  assert.equal(
+    control.parentElement,
+    field,
+    'the control is a direct child of the row, so the grid has two columns',
+  )
+  assert.ok(
+    !target.querySelector('.rs-field__control'),
+    'an inline Field renders no control wrapper, or the row would have a single cell',
+  )
+})
+
+test('the invalid state Field derives from its error reaches the Checkbox and Radio controls', async () => {
+  const { target } = await mountControlFixture(
+    `<Field label="Terms" error="Accept the terms to continue.">
+    {#snippet children(control)}
+      <Checkbox {...control} name="terms" />
+    {/snippet}
+  </Field>
+  <Field label="Delivery" error="Choose a delivery option.">
+    {#snippet children(control)}
+      <Radio {...control} name="delivery" value="standard" />
+    {/snippet}
+  </Field>`,
+  )
+
+  const [checkbox, radio] = target.querySelectorAll('input')
+  for (const [element, block] of [
+    [checkbox, 'rs-checkbox--invalid'],
+    [radio, 'rs-radio--invalid'],
+  ]) {
+    assert.equal(element.getAttribute('aria-invalid'), 'true')
+    assert.ok(
+      element.classList.contains(block),
+      `the error state lands on the control, which is the .${block.split('--')[0]} block`,
+    )
+  }
+})
+
+test('a disabled Fieldset disables the choice controls while an enabled one stays operable', async () => {
+  const { target, window } = await mountControlFixture(
+    `<Fieldset disabled>
+    {#snippet legend()}Gift wrapping{/snippet}
+    <Field inline>
+      {#snippet children()}
+        <Radio id="wrap-none" name="wrap" value="none" />
+        <Label for="wrap-none">No wrapping</Label>
+      {/snippet}
+    </Field>
+  </Fieldset>
+  <Fieldset>
+    {#snippet legend()}Delivery{/snippet}
+    <Field inline>
+      {#snippet children()}
+        <Radio id="delivery-standard" name="delivery" value="standard" />
+        <Label for="delivery-standard">Standard, 3 to 5 days</Label>
+      {/snippet}
+    </Field>
+  </Fieldset>`,
+  )
+
+  const [locked, enabled] = target.querySelectorAll('input[type="radio"]')
+  assert.equal(locked.matches(':disabled'), true, 'the fieldset disables its radios')
+  assert.equal(locked.hasAttribute('disabled'), false, 'no component hard-codes the attribute')
+  assert.equal(
+    target.querySelector('label[for="wrap-none"]').textContent.trim(),
+    'No wrapping',
+    'the Label beside a disabled control stays readable',
+  )
+
+  // Release any focus a previous fixture left behind: a disabled control cannot be blurred, so a
+  // stale active element would make the check below prove nothing.
+  if (window.document.activeElement instanceof window.HTMLElement) {
+    window.document.activeElement.blur()
+  }
+  locked.focus()
+  assert.equal(window.document.activeElement.tagName, 'BODY')
+
+  enabled.focus()
+  assert.equal(window.document.activeElement, enabled, 'an enabled radio still takes focus')
+})
+
+test('indeterminate is set only from the consumer script, never rendered by the component', async () => {
+  const Checkbox = await loadComponent('Checkbox')
+  const markup = visible(renderMarkup(Checkbox, { id: 'notify-all', name: 'notify' }))
+
+  assert.doesNotMatch(
+    markup,
+    /indeterminate/,
+    'the rendered markup carries no indeterminate attribute, because HTML has none',
+  )
+
+  const { target, flushSync } = await mountControlFixture(
+    `<Field inline>
+    {#snippet children()}
+      <Checkbox id="notify-all" name="notify" value="all" />
+      <Label for="notify-all">All topics</Label>
+    {/snippet}
+  </Field>`,
+  )
+
+  const control = target.querySelector('input.rs-checkbox')
+  assert.equal(control.indeterminate, false, 'precondition: a fresh checkbox is not indeterminate')
+
+  control.indeterminate = true
+  flushSync()
+  assert.equal(control.indeterminate, true, 'script alone sets the state')
+  assert.ok(control.matches(':indeterminate'), 'the native pseudo-class follows the property')
+})
+
+/**
+ * Builds a genuine FileList for a file input. jsdom exposes the interface but has no constructor
+ * and no `DataTransfer`, so the wrapper the platform would hand to `change` is built from jsdom's
+ * own implementation, the same way the browser produces it from a picker.
+ */
+const jsdomFileList = (window, names) => {
+  const jsdomRoot = dirname(require.resolve('jsdom/package.json'))
+  const fileListInterface = require(join(jsdomRoot, 'lib', 'generated', 'idl', 'FileList.js'))
+  const idlUtils = require(join(jsdomRoot, 'lib', 'generated', 'idl', 'utils.js'))
+
+  const impl = fileListInterface.createImpl(window, [], {})
+  for (const name of names) impl.push(new window.File([`contents of ${name}`], name))
+
+  return impl[idlUtils.wrapperSymbol]
+}
+
+test('FileInput and RangeInput are exported from the barrel, as subpaths, like the Astro package', () => {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'))
+  const basePkg = JSON.parse(
+    readFileSync(join(repoRoot, 'packages', 'base', 'package.json'), 'utf8'),
+  )
+  const barrel = readFileSync(join(packageRoot, 'src', 'index.ts'), 'utf8')
+
+  for (const name of ['FileInput', 'RangeInput']) {
+    assert.equal(
+      pkg.exports[`./components/${name}`],
+      `./src/components/${name}.svelte`,
+      `packages/svelte must export ./components/${name}`,
+    )
+    assert.equal(
+      basePkg.exports?.[`./components/${name}`],
+      `./src/components/${name}.astro`,
+      `${name} is a port, so the Svelte subpath mirrors the Astro entry`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export \\{ default as ${name} \\} from '\\./components/${name}\\.svelte'`),
+      `the barrel must export the ${name} value`,
+    )
+    assert.match(
+      barrel,
+      new RegExp(`export type \\* from '\\./components/${name}\\.svelte'`),
+      `the barrel must re-export the ${name} props type`,
+    )
+  }
+})
+
+test('FileInput is one native file input carrying .rs-file-input, never a wrapper', async () => {
+  const FileInput = await loadComponent('FileInput')
+
+  const markup = visible(renderMarkup(FileInput, { id: 'notes', name: 'notes', multiple: true }))
+  assert.ok(markup.startsWith('<input'), 'the control is the root, so it owns class and aria-*')
+  assert.match(openingTag(markup, 'input'), /type="file"/, 'the native type is the behaviour')
+  assert.match(openingTag(markup, 'input'), /multiple/, 'multiple is a native attribute')
+  assert.deepEqual(classList(markup, 'input'), ['rs-file-input'])
+  assert.doesNotMatch(markup, /<label|<span|<div/, 'no wrapper: the input is the whole block')
+})
+
+test('FileInput spreads accept, multiple and class, and derives --invalid from aria-invalid', async () => {
+  const FileInput = await loadComponent('FileInput')
+
+  const plain = visible(renderMarkup(FileInput, { accept: 'application/pdf', multiple: true }))
+  assert.match(openingTag(plain, 'input'), /accept="application\/pdf"/, 'accept is a passthrough')
+  assert.doesNotMatch(plain, /--invalid/, 'a valid input carries no modifier')
+
+  const invalid = visible(renderMarkup(FileInput, { 'aria-invalid': 'true', class: 'consumer' }))
+  assert.deepEqual(
+    classList(invalid, 'input'),
+    ['rs-file-input', 'rs-file-input--invalid', 'consumer'],
+    'the error modifier is derived from the control attribute and joins the consumer class',
+  )
+})
+
+test('RangeInput is one native range input carrying .rs-range-input with min, max and step', async () => {
+  const RangeInput = await loadComponent('RangeInput')
+
+  const markup = visible(
+    renderMarkup(RangeInput, { id: 'workers', name: 'workers', min: 1, max: 8, step: 1 }),
+  )
+  assert.ok(markup.startsWith('<input'), 'the control is the root')
+  assert.match(openingTag(markup, 'input'), /type="range"/)
+  assert.match(openingTag(markup, 'input'), /min="1"/)
+  assert.match(openingTag(markup, 'input'), /max="8"/)
+  assert.match(openingTag(markup, 'input'), /step="1"/)
+  assert.deepEqual(classList(markup, 'input'), ['rs-range-input'])
+
+  const invalid = visible(renderMarkup(RangeInput, { 'aria-invalid': 'true', class: 'consumer' }))
+  assert.deepEqual(
+    classList(invalid, 'input'),
+    ['rs-range-input', 'rs-range-input--invalid', 'consumer'],
+    'the error modifier is derived from the control attribute, like every other control',
+  )
+})
+
+test('neither component lets a consumer override the native type through attrs', () => {
+  for (const [name, type] of [
+    ['FileInput', 'file'],
+    ['RangeInput', 'range'],
+  ]) {
+    const source = loadComponentSource(name)
+    assert.match(
+      source,
+      /Omit<HTMLInputAttributes, 'type'/,
+      `${name} must omit type so a consumer cannot turn the control into another input`,
+    )
+    assert.match(source, new RegExp(`type="${type}"`), `${name} fixes the native type itself`)
+  }
+})
+
+test('the FileInput and RangeInput style blocks compile to the Astro rule block', async () => {
+  for (const [name, block] of [
+    ['FileInput', 'rs-file-input'],
+    ['RangeInput', 'rs-range-input'],
+  ]) {
+    const css = await compileStyleBlock(styleBlockOf(name))
+
+    for (const selector of [`.${block}`, `.${block}--invalid`]) {
+      assert.ok(css.includes(selector), `compiled ${name} CSS must contain ${selector}`)
+    }
+
+    assert.match(css, /opacity:\s*0\.55/, 'a disabled control dims as a whole')
+    assert.match(css, /cursor:\s*not-allowed/, 'and says so with the cursor')
+    assert.ok(
+      !/pointer-events/.test(css),
+      'the native disabled attribute blocks the control, not CSS',
+    )
+    assert.ok(!/transition/.test(css), 'a form control changes state instantly')
+    assert.deepEqual(
+      [...styleBlockOf(name).matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map(([hex]) => hex),
+      [],
+      `${name} names tokens only, never a hex literal`,
+    )
+  }
+
+  const fileInput = await compileStyleBlock(styleBlockOf('FileInput'))
+  assert.match(
+    fileInput,
+    /::file-selector-button/,
+    'the browse button is the input part, so it is styled here rather than rendered',
+  )
+  assert.match(
+    fileInput,
+    /border:\s*1px solid ButtonBorder/,
+    'forced colours give the borderless pill a system edge',
+  )
+  assert.match(
+    fileInput,
+    /border-radius:\s*var\(--rs-file-input-button-border-radius,\s*var\(--rs-radius-pill,/,
+    'the browse button reads the pill radius through its own hook',
+  )
+
+  const rangeInput = await compileStyleBlock(styleBlockOf('RangeInput'))
+  for (const part of [
+    '::-webkit-slider-runnable-track',
+    '::-webkit-slider-thumb',
+    '::-moz-range-track',
+    '::-moz-range-thumb',
+  ]) {
+    assert.ok(rangeInput.includes(part), `the slider parts are styled: ${part}`)
+  }
+  assert.match(
+    rangeInput,
+    /block-size:\s*calc\(var\(--rs-range-input-thumb-size,\s*24px\)/,
+    'the box is thumb plus the inside gap, so the focus ring clears the thumb',
+  )
+  assert.ok(
+    !/inline-size:\s*100%/.test(rangeInput),
+    'the range never sets its own width; the placer decides',
+  )
+})
+
+test('FileInput binds files, so the consumer lists the chosen names and clears them', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<FileInput accept="application/pdf" multiple bind:files={files} />`,
+    `let files = $state<FileList | null>(null)
+  export const names = () => (files ? [...files].map((file) => file.name) : [])
+  export const clear = () => {
+    files = null
+  }`,
+  )
+
+  const input = target.querySelector('input[type="file"]')
+  assert.deepEqual(instance.names(), [], 'nothing is chosen on mount')
+
+  input.files = jsdomFileList(window, ['release-notes.pdf', 'checksums.pdf'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+
+  assert.deepEqual(
+    instance.names(),
+    ['release-notes.pdf', 'checksums.pdf'],
+    'each chosen name reaches the bound state, so the consumer can render the list',
+  )
+
+  instance.clear()
+  flushSync()
+
+  assert.deepEqual(instance.names(), [], 'clearing the state empties the selection')
+  assert.equal(input.files.length, 0, 'and the platform FileList is emptied with it')
+  assert.equal(
+    input.value,
+    '',
+    'the displayed filename text is cleared too, which a null files assignment would leave behind',
+  )
+})
+
+test('FileInput keeps the platform text when a selection is replaced without being cleared', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<FileInput multiple bind:files={files} />`,
+    `let files = $state<FileList | null>(null)
+  export const names = () => (files ? [...files].map((file) => file.name) : [])`,
+  )
+
+  const input = target.querySelector('input[type="file"]')
+
+  input.files = jsdomFileList(window, ['build.log'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+  assert.deepEqual(instance.names(), ['build.log'])
+
+  input.files = jsdomFileList(window, ['build.log', 'trace.log'])
+  input.dispatchEvent(new window.Event('change', { bubbles: true }))
+  flushSync()
+  assert.deepEqual(
+    instance.names(),
+    ['build.log', 'trace.log'],
+    'a second pick replaces the selection instead of appending to it',
+  )
+  assert.notEqual(input.value, '', 'the platform still prints the first file name')
+})
+
+test('a FileInput error comes from aria-invalid and a disabled one keeps its text', async () => {
+  const { window, target, flushSync } = await mountControlFixture(
+    `<Field label="Signing certificate" error="Add a .pem certificate to sign the build.">
+    {#snippet children(control)}
+      <FileInput {...control} accept=".pem" />
+    {/snippet}
+  </Field>
+  <FileInput id="artifact" name="artifact" aria-label="Build artifact" disabled />`,
+  )
+
+  const [certificate, artifact] = target.querySelectorAll('input[type="file"]')
+
+  assert.equal(certificate.getAttribute('aria-invalid'), 'true')
+  assert.equal(
+    certificate.getAttribute('aria-describedby'),
+    target.querySelector('.rs-field__error').id,
+    'the error text is linked to the control',
+  )
+  assert.ok(
+    certificate.classList.contains('rs-file-input--invalid'),
+    'the error modifier follows the attribute Field set',
+  )
+
+  assert.equal(artifact.disabled, true, 'disabled is the native attribute')
+  assert.equal(
+    target.querySelector('label[for="artifact"]'),
+    null,
+    'precondition: this example is labelled by aria-label, not a Label element',
+  )
+
+  window.document.body.focus()
+  artifact.focus()
+  assert.notEqual(
+    window.document.activeElement,
+    artifact,
+    'a disabled control takes no focus, so the picker cannot be opened from the keyboard',
+  )
+  assert.equal(flushSync(), undefined, 'the fixture flushed without an error')
+})
+
+test('RangeInput writes its value into the control and reads the platform-accepted value back', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={1} max={8} name="workers" bind:value={workers} />`,
+    `let workers = $state<number | undefined>(undefined)
+  export const read = () => workers
+  export const write = (next: number) => {
+    workers = next
+  }`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.ok(!Number.isNaN(input.valueAsNumber), 'precondition: a fresh slider shows a number')
+
+  instance.write(3)
+  flushSync()
+  assert.equal(input.value, '3', 'a state write reaches the control')
+  assert.equal(instance.read(), 3)
+
+  // The platform clamps out-of-range writes, so the thumb and the state must not disagree.
+  instance.write(20)
+  flushSync()
+  assert.equal(input.value, '8', 'the platform clamps to max')
+  assert.equal(instance.read(), 8, 'the bound state adopts the clamped number, not 20')
+
+  instance.write(-4)
+  flushSync()
+  assert.equal(instance.read(), 1, 'and the minimum clamps the other way')
+})
+
+test('a user drag updates the bound value, and the value an output renders tracks it', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={0} max={100} step={25} bind:value={rollout} />
+  <output data-echo>{rollout}</output>`,
+    `let rollout = $state(25)
+  export const read = () => rollout`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(target.querySelector('[data-echo]').textContent, '25', 'the output starts at 25')
+
+  input.value = '75'
+  input.dispatchEvent(new window.Event('input', { bubbles: true }))
+  flushSync()
+
+  assert.equal(instance.read(), 75, 'dragging updates the bound state')
+  assert.equal(
+    target.querySelector('[data-echo]').textContent,
+    '75',
+    'so an output the consumer writes from it tracks the value',
+  )
+})
+
+test('RangeInput adopts the platform default when no value is given, and snaps a step on write', async () => {
+  const { target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={0} max={100} step={25} bind:value={rollout} />`,
+    `let rollout = $state<number | undefined>(undefined)
+  export const read = () => rollout`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(instance.read(), 50, 'an unset value adopts the number the slider shows')
+  assert.equal(input.value, '50')
+
+  input.value = '30'
+  input.dispatchEvent(new window.Event('input', { bubbles: true }))
+  flushSync()
+  assert.equal(
+    instance.read(),
+    Number(input.value),
+    'the state follows whatever the platform accepted for the step',
+  )
+})
+
+test('a disabled RangeInput keeps its value and cannot be moved by the user', async () => {
+  const { window, target, instance, flushSync } = await mountControlFixture(
+    `<RangeInput min={7} max={90} name="retention" bind:value={retention} disabled
+      aria-label="Log retention in days" />`,
+    `let retention = $state(30)
+  export const read = () => retention`,
+  )
+
+  const input = target.querySelector('input[type="range"]')
+  assert.equal(input.disabled, true, 'disabled is the native attribute')
+  assert.equal(input.value, '30', 'the value still renders, so the field is readable')
+
+  window.document.body.focus()
+  input.focus()
+  assert.notEqual(window.document.activeElement, input, 'a disabled slider takes no focus')
+
+  flushSync()
+  assert.equal(instance.read(), 30, 'mounting does not disturb the value')
 })

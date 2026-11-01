@@ -1,6 +1,6 @@
 # Fast checks that enforce the agent rules on every PR: component style lint, the token map
-# staying in sync with the DTCG JSON, Svelte type checks and the Svelte Storybook host tests.
-# The packages/svelte unit tests join this job once their three failures on main are fixed.
+# staying in sync with the DTCG JSON, and the Svelte type checks and unit tests plus the
+# Svelte Storybook host tests.
 name: Checks
 
 on:
@@ -46,6 +46,9 @@ jobs:
 
       - name: Svelte type check
         run: pnpm --filter @labcat2020/rocketship-svelte check
+
+      - name: Svelte package tests
+        run: pnpm --filter @labcat2020/rocketship-svelte test
 
       - name: Svelte Storybook host tests
         run: pnpm --filter @rocketship/svelte-storybook test

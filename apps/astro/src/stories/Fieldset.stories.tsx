@@ -8,7 +8,7 @@ import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof FieldsetDefault> = {
-  title: 'Components/Fieldset',
+  title: 'Forms/Fieldset',
   component: FieldsetDefault,
   parameters: {
     a11y: { disable: false },

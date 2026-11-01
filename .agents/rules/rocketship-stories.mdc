@@ -21,9 +21,11 @@ Copy and voice: `rocketship-story-copy.mdc`. Reasons: `_planning/component-revie
 ## Titles
 
 - `Base/`: Container, Grid, Stack, Scroll, Button, Typography. Add new `Base/` stories to the sort order in `.storybook/preview.ts`.
+- `Forms/`: form controls and their wrappers (Field, Fieldset, Label).
 - `Components/`: every other component.
 - `Foundations/`: tokens.
-- Titles are spaced words: `Components/File Input`, not `Components/FileInput`.
+- Titles are spaced words: `Forms/File Input`, not `Forms/FileInput`.
+- Sort by type, not alphabetically. `Forms/`: wrappers, text controls, choices, native-part controls. `Components/`: content on the page first, then what opens on demand.
 - A Svelte story uses the same title as its Astro story.
 - A component with a second story is listed in the sort order with `Default` first: `'Disclosure', ['Default', 'Accordion']`.
 

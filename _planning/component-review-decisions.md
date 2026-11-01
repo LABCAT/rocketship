@@ -1093,6 +1093,14 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 
 - At 375px the five docs pages overflowed sideways, up to 448px wide, because the API tables' long type strings cannot wrap. Each table now sits in `<Scroll tabindex="0" role="region" aria-labelledby="…">`, named by its caption (`<span slot="caption" id="props-caption">`). `rocketship-stories.mdc` and the docs page template say the same, so new pages start this way.
 
+### 147. Form stories get their own `Forms/` group; both groups sort by type
+
+**Agreed 2026-11-01 (RCL-08, RCL-21).**
+
+- `Components/` was one flat list of 18 mixed items, and Dialog, Popover, File Input and Range Input were missing from the sort order. Shane: forms go in their own group; `Foundations/` and `Base/` stay as they are.
+- `Forms/`: Field, Fieldset, Label, Input, Textarea, Select, Checkbox, Radio, File Input, Range Input (wrappers, text controls, choices, native-part controls).
+- `Components/` is not split further at 8 items. Order: Card, Table, Figure, Alert, Disclosure, Dialog, Popover, Tooltip (content on the page first, then what opens on demand).
+
 ## Parked for later
 
 - **Prose figures:** prose `figure`/`figcaption` (Markdown output, no classes) waited on the prose exception, which decision 142 settled. Typography still has no rule for them.

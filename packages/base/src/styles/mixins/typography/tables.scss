@@ -1,20 +1,21 @@
+@use '../tokens' as *;
 @mixin typography-table {
   border-collapse: collapse;
   border-spacing: 0;
-  margin-bottom: var(--rs-space-5, 20px);
+  margin-block-end: #{rs-token(space-5)};
   min-width: min(100%, 576px);
   width: 100%;
 
   th,
   td {
-    border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
-    padding: var(--rs-space-2, 8px) var(--rs-space-3, 12px);
-    text-align: left;
+    border: #{rs-token(border-width)} solid #{rs-token(color-border)};
+    padding: #{rs-token(space-2)} #{rs-token(space-3)};
+    text-align: start;
     vertical-align: top;
   }
 
   thead th {
-    background: var(--rs-color-surface, #ffffff);
-    font-weight: var(--rs-font-weight-semibold, 600);
+    background: #{rs-token(color-surface)};
+    font-weight: #{rs-token(font-weight-semibold)};
   }
 }

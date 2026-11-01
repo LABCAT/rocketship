@@ -1,11 +1,12 @@
+@use '../tokens' as *;
 @mixin typography-list {
-  margin-block: 0 var(--rs-list-spacing-bottom, 16px);
-  padding-inline-start: var(--rs-space-6, 24px);
+  margin-block: 0 #{rs-token(list-spacing-bottom)};
+  padding-inline-start: #{rs-token(space-6)};
 }
 
 @mixin typography-li {
-  margin-block: var(--rs-space-2, 8px);
-  padding-inline-start: var(--rs-space-1, 4px);
+  margin-block: #{rs-token(space-2)};
+  padding-inline-start: #{rs-token(space-1)};
 }
 
 @mixin typography-ul {
@@ -14,8 +15,8 @@
 
   > li > ul {
     list-style: circle;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   > li > ul > li > ul {
@@ -23,7 +24,7 @@
   }
 
   > li > ol {
-    margin-top: var(--rs-space-2, 8px);
+    margin-block-start: #{rs-token(space-2)};
   }
 }
 
@@ -31,7 +32,7 @@
   @include typography-list;
   counter-reset: level1;
   list-style: none;
-  padding-inline-start: var(--rs-space-5, 20px);
+  padding-inline-start: #{rs-token(space-5)};
 
   > li {
     counter-increment: level1;
@@ -41,15 +42,15 @@
 
   > li::before {
     content: counter(level1) '.';
-    left: calc(-1 * var(--rs-space-5, 20px));
+    inset-inline-start: calc(-1 * #{rs-token(space-5)});
     position: absolute;
   }
 
   > li > ol {
     counter-reset: level2;
     list-style: none;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   > li > ol > li {
@@ -60,14 +61,14 @@
 
   > li > ol > li::before {
     content: counter(level2, lower-alpha) '.';
-    left: calc(-1 * var(--rs-space-5, 20px));
+    inset-inline-start: calc(-1 * #{rs-token(space-5)});
     position: absolute;
   }
 
   > li > ol > li > ol {
     counter-reset: level3;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   > li > ol > li > ol > li {
@@ -78,7 +79,7 @@
 
   > li > ol > li > ol > li::before {
     content: counter(level3, lower-roman) '.';
-    left: calc(-1 * var(--rs-space-5, 20px));
+    inset-inline-start: calc(-1 * #{rs-token(space-5)});
     position: absolute;
   }
 }
@@ -86,14 +87,14 @@
 @mixin typography-list-bridges {
   ol > li > ul {
     list-style: disc;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-6, 24px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-6)};
   }
 
   ol > li > ul > li > ul {
     list-style: circle;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   ol > li > ul > li > ul > li > ul {
@@ -103,8 +104,8 @@
   ul > li > ol {
     counter-reset: level2;
     list-style: none;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   ul > li > ol > li {
@@ -115,14 +116,14 @@
 
   ul > li > ol > li::before {
     content: counter(level2, lower-alpha) '.';
-    left: calc(-1 * var(--rs-space-5, 20px));
+    inset-inline-start: calc(-1 * #{rs-token(space-5)});
     position: absolute;
   }
 
   ul > li > ol > li > ol {
     counter-reset: level3;
-    margin-top: var(--rs-space-2, 8px);
-    padding-inline-start: var(--rs-space-5, 20px);
+    margin-block-start: #{rs-token(space-2)};
+    padding-inline-start: #{rs-token(space-5)};
   }
 
   ul > li > ol > li > ol > li {
@@ -133,7 +134,7 @@
 
   ul > li > ol > li > ol > li::before {
     content: counter(level3, lower-roman) '.';
-    left: calc(-1 * var(--rs-space-5, 20px));
+    inset-inline-start: calc(-1 * #{rs-token(space-5)});
     position: absolute;
   }
 }

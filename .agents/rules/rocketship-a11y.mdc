@@ -26,6 +26,7 @@ Reasons: `_planning/component-review-decisions.md`.
 - Add ARIA only when HTML cannot express the meaning.
 - `<ul>`/`<ol>` with `list-style: none` adds `role="list"` (Safari drops list semantics otherwise).
 - Never colour alone: words say what happened. Errors are semibold text plus words.
+- A linked card has one link, on its title (`rs-card__link`), so screen readers hear one link named by the title. Never wrap a card in `<a>`, which makes every word the link's name.
 
 ## Roles
 

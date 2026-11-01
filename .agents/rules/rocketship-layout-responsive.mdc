@@ -20,16 +20,18 @@ Reasons: `_planning/component-review-decisions.md`.
 
 - Only for a layout change: a Grid gaining columns, Card media moving beside the text. Never for size, type or density steps.
 - A component with one layout has one size. Body copy never shrinks.
+- The one exception is Typography: prose headings and paragraphs step up as their container widens.
 - Write `@include container-query-up($rs-cq-md)`. Thresholds `$rs-cq-sm/md/lg` (500/700/900px) live in `styles/mixins/container-query.scss`.
 - It queries the nearest container of any kind. Put `container-type: inline-size` on layout boxes (pages, panels), never on a leaf component.
 - Never tie a component's size to the viewport.
 
 ## Container component
 
-- `.rs-container` sets max-width and page gutters (`--rs-container-gutter`, `-left`, `-right`).
-- Widths: default (`--rs-container-width-default`, no modifier), `wide` (1200px), `content` (600px, 800px at `lg`), `full`.
-- `padded` adds vertical inset from `--rs-container-padding-block` (20/30/40px at base/`md`/`lg`, set on `:root` in `variables.scss`). Unpadded containers set it to `0`.
-- `--rs-container-padding-block-start` / `-end` override one side. They resolve with the safe area into `--rs-container-gutter-top` / `-bottom`.
+- `.rs-container` sets max-width and page gutters (`--rs-container-gutter`). Padding always clears the safe area.
+- Widths: default (1000px, no modifier), `wide` (1200px), `content` (600px, 800px at `lg`), `full`, from the `container-width-*` tokens.
+- `padded` adds vertical inset from `--rs-container-padding-block` (20/30/40px at base/`md`/`lg`, set on `:root` in `variables.scss`). Unpadded containers have none.
+- `flush` removes the side gutters.
+- `--rs-container-padding-block-start` / `-end` override one side, padded or not.
 
 ## Scrolling
 

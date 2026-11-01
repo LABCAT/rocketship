@@ -500,11 +500,11 @@ test('Typography html renders raw markup and takes precedence over children', as
   const Typography = await loadComponent('Typography')
 
   const markup = renderMarkup(Typography, {
-    html: '<p class="intro-text">From html</p>',
+    html: '<p>From html</p>',
     children: snippet('<p>From children</p>'),
   })
 
-  assert.match(markup, /<p class="intro-text">From html<\/p>/)
+  assert.match(markup, /<p>From html<\/p>/)
   assert.doesNotMatch(markup, /From children/)
 })
 
@@ -573,10 +573,6 @@ test('Typography styles compile through the shared barrel and keep the Astro ele
   for (const selector of ['.rs-typography', '.rs-typography h1', '.rs-typography a']) {
     assert.ok(css.includes(selector), `compiled Typography CSS must contain ${selector}`)
   }
-  assert.ok(
-    css.includes('.rs-typography .intro-text'),
-    'the intro-text element rule must be preserved',
-  )
 })
 
 test('Button renders .rs-button with exactly one variant and one size modifier', async () => {

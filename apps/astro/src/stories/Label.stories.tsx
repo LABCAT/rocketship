@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof LabelMarkers> = {
-  title: 'Components/Label',
+  title: 'Forms/Label',
   component: LabelMarkers,
   parameters: {
     a11y: { disable: false },

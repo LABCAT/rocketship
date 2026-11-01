@@ -1,0 +1,124 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+
+const usageCode = `---
+import Container from '@labcat2020/rocketship/components/Container'
+---
+
+<Container size="content" padded>
+  …
+</Container>`
+
+const attributes = [
+  {
+    name: 'size',
+    type: "'default' | 'content' | 'wide' | 'full'",
+    default: "'default'",
+    description:
+      'The widest the content gets: 1000px, 600px (800px from 992px), 1200px, or the whole width. The gutters sit outside it.',
+  },
+  {
+    name: 'padded',
+    type: 'boolean',
+    default: 'false',
+    description: 'Adds space above and below: 20px, then 30px from 768px and 40px from 992px.',
+  },
+  {
+    name: 'flush',
+    type: 'boolean',
+    default: 'false',
+    description: 'Removes the side gutters. Content still clears a phone’s notch.',
+  },
+  {
+    name: 'as',
+    type: "'div' | 'section' | 'main' | 'article' | 'header' | 'footer' | 'nav'",
+    default: "'div'",
+    description: 'The root element.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const hooks = [
+  { name: '--rs-container-gutter', default: '--rs-space-4' },
+  { name: '--rs-container-padding-block', default: '20px, 30px from md, 40px from lg' },
+  { name: '--rs-container-padding-block-start', default: '—' },
+  { name: '--rs-container-padding-block-end', default: '—' },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Container</h1>
+      <p>
+        A container centres content and caps its width, with a gutter on each side. Components
+        inside it, such as Grid, respond to its width rather than the screen’s.
+      </p>
+    </Typography>
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre tabindex="0" role="region" aria-labelledby="usage-heading"><code>{usageCode}</code></pre>
+    </Typography>
+
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption"
+      ><Table
+        ><span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            attributes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.type}</code>
+                </td>
+                <td class="rs-table__cell">{row.default}</td>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="hooks-caption"
+      ><Table
+        ><span slot="caption" id="hooks-caption">CSS hooks</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Property</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            hooks.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.default}</code>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+  </Stack>
+</Container>

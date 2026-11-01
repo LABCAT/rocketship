@@ -1,44 +1,18 @@
+@use '../tokens' as *;
 @use '../functions' as *;
 @use '../container-query' as *;
 
 @mixin typography-p {
-  color: var(--rs-color-fg, #131a2f);
-  font-family: var(
-    --rs-font-family-sans,
-    'Inter',
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif
-  );
+  color: #{rs-token(color-fg)};
   font-size: var(--rs-typography-p-size, to-rem(16));
-  font-weight: var(--rs-font-weight-regular, 400);
-  line-height: var(--rs-line-height-relaxed, 1.7);
-  margin-bottom: var(--rs-text-spacing-bottom, 16px);
-  margin-top: 0;
+  font-weight: #{rs-token(font-weight-regular)};
+  line-height: #{rs-token(line-height-relaxed)};
+  margin-block-end: #{rs-token(text-spacing-bottom)};
+  margin-block-start: 0;
 
   @include container-query-up($rs-cq-md) {
     font-size: var(--rs-typography-p-size-md, to-rem(17));
   }
-}
-
-@mixin typography-intro {
-  color: var(--rs-color-fg, #131a2f);
-  font-family: var(
-    --rs-font-family-sans,
-    'Inter',
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  font-size: var(--rs-typography-intro-size, to-rem(19));
-  font-weight: var(--rs-font-weight-medium, 500);
-  line-height: 1.55;
-  margin-bottom: var(--rs-text-spacing-bottom, 16px);
-  margin-top: 0;
 }
 
 @mixin typography-em {
@@ -46,11 +20,11 @@
 }
 
 @mixin typography-strong {
-  font-weight: var(--rs-font-weight-semibold, 600);
+  font-weight: #{rs-token(font-weight-semibold)};
 }
 
 @mixin typography-hr {
   border: 0;
-  border-top: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
-  margin-block: var(--rs-space-6, 24px);
+  border-block-start: #{rs-token(border-width)} solid #{rs-token(color-border)};
+  margin-block: #{rs-token(space-6)};
 }

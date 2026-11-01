@@ -15,20 +15,20 @@ Reasons: `_planning/component-review-decisions.md`.
 - Independent on/off options: a boolean. Table `striped`, Scroll `vertical`, Field `inline`.
 - Name an option for what the consumer decides, not the CSS: `vertical`, not `axis="both"`.
 - `Props` = your options + `class?: string` + the root tag's native attributes. Defaults go in the destructure. Spread `...attrs` onto the root.
-- `as?` only when more than one root tag is valid, as a union of those tags: Stack `'div' | 'ul' | 'ol'`. Alert is always a `div`, so it has no `as`.
+- `as?` only when more than one root tag is valid, as a union of those tags: Stack `'div' | 'ul' | 'ol'`. Alert is always a `div`, so it has no `as`. When a prop already decides the element, there is no `as`: Button's `href` makes it an `<a>`.
 - Never a prop that shadows a native attribute: no `title` prop.
-- Never re-declare a native attribute as a prop: `disabled` and `checked` flow through `...attrs`. No React names like `defaultChecked`.
+- Never re-declare a native attribute as a prop: `disabled` and `checked` flow through `...attrs`. No React names like `defaultChecked`. The one exception is Button's `disabled`, because its `<a>` form has no native attribute.
 - A prop may narrow a native attribute's values: Alert `role?: 'alert' | 'status' | 'note'`, Input `type?: InputType`.
 - Never a prop for a state markup cannot express: no `indeterminate` prop. Style `:indeterminate`.
-- No `size`, `compact` or density prop.
+- No `size`, `compact` or density prop. The one exception is Button: `small`, `medium`, `large`, fixed sizes where text never shrinks.
 
 ## Markup
 
 - The component is the semantic element, never a wrapper: Table renders one `<table>`, and `class`, `id`, `aria-*` land on it.
 - A control is one element: `class`, `id`, `aria-*` land on the native control. No wrapper `<span>`.
 - Decoration is painted (`background-image`, `::before`), never an extra element.
-- The consumer writes content elements. No title, heading, description, label or legend props, and no content wrappers. The consumer writes `<h3 class="rs-alert__title">`; the root renders `<slot />`.
-- A named slot only for an element with a fixed position: Fieldset `legend`, Table `caption` (both must be the first child). Render it only when the slot is filled:
+- The consumer writes content elements. No title, heading, description, label or legend props, and no content wrappers. The consumer writes `<h3 class="rs-alert__title">`; the root renders `<slot />`. The one exception is Card's `__body`, which pads the content so media can reach the card's edges.
+- A named slot only for an element with a fixed position: Fieldset `legend`, Table `caption` (both must be the first child), Card `media` (first) and `meta` (last). Render a wrapper only when the slot is filled:
   ```astro
   {Astro.slots.has('legend') && <legend class="rs-fieldset__legend"><slot name="legend" /></legend>}
   ```

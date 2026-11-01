@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/RangeInput'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof RangeInputStates> = {
-  title: 'Components/Range Input',
+  title: 'Forms/Range Input',
   component: RangeInputStates,
   parameters: {
     a11y: { disable: false },

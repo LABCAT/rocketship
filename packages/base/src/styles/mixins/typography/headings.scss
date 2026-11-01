@@ -1,21 +1,13 @@
+@use '../tokens' as *;
 @use '../functions' as *;
 @use '../container-query' as *;
 
 @mixin typography-heading-base {
-  color: var(--rs-color-fg, #131a2f);
-  font-family: var(
-    --rs-font-family-sans,
-    'Inter',
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  font-weight: var(--rs-font-weight-bold, 700);
-  line-height: var(--rs-line-height-tight, 1.2);
-  margin-bottom: var(--rs-heading-spacing-bottom, 12px);
-  margin-top: var(--rs-heading-spacing-top, 32px);
+  color: #{rs-token(color-fg)};
+  font-weight: #{rs-token(font-weight-bold)};
+  line-height: #{rs-token(line-height-tight)};
+  margin-block-end: #{rs-token(heading-spacing-bottom)};
+  margin-block-start: #{rs-token(heading-spacing-top)};
 }
 
 @mixin typography-h1 {
@@ -46,7 +38,7 @@
 
 @mixin typography-h2-alt {
   @include typography-h2;
-  font-weight: var(--rs-font-weight-semibold, 600);
+  font-weight: #{rs-token(font-weight-semibold)};
   letter-spacing: var(--rs-typography-h2-alt-letter-spacing, 0.16px);
 }
 

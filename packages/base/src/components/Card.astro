@@ -1,30 +1,21 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 
-export type CardTag = 'article' | 'section' | 'div' | 'li'
+export type CardTag = 'div' | 'article' | 'section' | 'li'
 
 type Props = {
   as?: CardTag
   class?: string
-} & HTMLAttributes<'article'>
+} & HTMLAttributes<'div'>
 
-const { as = 'article', class: className, ...attrs } = Astro.props as Props
+const { as = 'div', class: className, ...attrs } = Astro.props as Props
 const Tag = as
-const showMedia = Astro.slots.has('media')
 ---
 
 <Tag {...attrs} class:list={['rs-card', className]}>
-  {
-    showMedia ? (
-      <div class="rs-card__media">
-        <slot name="media" />
-      </div>
-    ) : null
-  }
+  <slot name="media" />
   <div class="rs-card__body">
-    <div class="rs-card__content">
-      <slot />
-    </div>
+    <slot />
     {
       Astro.slots.has('meta') ? (
         <div class="rs-card__meta">
@@ -39,84 +30,90 @@ const showMedia = Astro.slots.has('media')
   @use '../styles/mixins' as *;
 
   .rs-card {
-    --rs-card-media-bg: var(--rs-color-surface-elevated, #eef2ff);
-    background: var(--rs-color-surface, #ffffff);
-    border: var(--rs-card-border-width, var(--rs-border-width-sm, 1px)) solid
-      var(--rs-card-border-color, var(--rs-color-border, #c8d2eb));
-    border-radius: var(--rs-card-border-radius, var(--rs-radius-md, 10px));
+    --rs-card-media-bg: #{rs-token(color-surface-elevated)};
+    background: #{rs-token(color-surface)};
+    border: var(--rs-card-border-width, #{rs-token(border-width-sm)}) solid
+      var(--rs-card-border-color, #{rs-token(color-border)});
+    border-radius: var(--rs-card-border-radius, #{rs-token(radius-md)});
     box-shadow: var(--rs-card-shadow, none);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    position: relative;
 
+    /// Consumer-written on the slotted image (or any block), like Figure's `__media`. Every card in
+    /// a row crops to the same shape, so the row lines up.
     &__media {
+      aspect-ratio: var(--rs-card-media-aspect-ratio, 16 / 9);
       background: var(--rs-card-media-bg);
-      min-height: var(--rs-card-media-min-height, 96px);
+      block-size: auto;
+      display: block;
+      inline-size: 100%;
+      margin: 0;
+      object-fit: cover;
     }
 
     &__body {
       display: flex;
+      flex: 1 1 auto;
       flex-direction: column;
-      gap: var(--rs-card-body-gap, var(--rs-space-3, 12px));
-      padding: var(--rs-card-body-padding, var(--rs-space-4, 16px));
-    }
-
-    &__content {
-      display: flex;
-      flex-direction: column;
-      gap: var(--rs-card-content-gap, var(--rs-space-1, 4px));
-      min-width: 0;
+      gap: var(--rs-card-body-gap, #{rs-token(space-2)});
+      padding: var(--rs-card-body-padding, #{rs-token(space-4)});
     }
 
     &__meta {
+      color: #{rs-token(color-muted)};
       display: flex;
       flex-wrap: wrap;
-      gap: var(--rs-card-meta-gap, var(--rs-space-2, 8px));
-      min-width: 0;
+      gap: var(--rs-card-meta-gap, #{rs-token(space-2)});
+      margin-block-start: auto;
+      min-inline-size: 0;
     }
 
     &__title {
-      color: var(--rs-color-fg, #131a2f);
-      font-family: var(
-        --rs-font-family-sans,
-        'Inter',
-        'Segoe UI',
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif
-      );
-      font-size: var(--rs-font-size-lg, #{to-rem(18)});
-      font-weight: var(--rs-font-weight-semibold, 600);
-      line-height: var(--rs-line-height-tight, 1.2);
+      color: #{rs-token(color-fg)};
+      font-size: var(--rs-card-title-font-size, #{rs-token(font-size-lg)});
+      font-weight: var(--rs-card-title-font-weight, #{rs-token(font-weight-semibold)});
+      line-height: #{rs-token(line-height-tight)};
       margin: 0;
     }
 
     &__description {
-      color: var(--rs-color-muted, #4f5b7d);
-      font-family: var(
-        --rs-font-family-sans,
-        'Inter',
-        'Segoe UI',
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif
-      );
-      font-size: var(--rs-font-size-md, #{to-rem(16)});
-      line-height: var(--rs-line-height-base, 1.45);
+      color: #{rs-token(color-muted)};
       margin: 0;
     }
 
-    &__token {
-      background: var(--rs-color-surface-elevated, #eef2ff);
-      border-radius: var(--rs-radius-sm, 6px);
-      color: var(--rs-color-muted, #4f5b7d);
-      display: inline-block;
-      font-family: var(--rs-font-family-mono, ui-monospace, monospace);
-      font-size: var(--rs-font-size-sm, #{to-rem(14)});
-      line-height: var(--rs-line-height-base, 1.45);
-      overflow-wrap: anywhere;
-      padding-block: 2px;
-      padding-inline: var(--rs-space-2, 8px);
+    /// The card's one link. Its `::after` covers the whole card, so the card is one click target
+    /// that screen readers announce once, named by the title.
+    &__link {
+      color: inherit;
+      text-decoration: none;
+
+      &::after {
+        border-radius: calc(
+          var(--rs-card-border-radius, #{rs-token(radius-md)}) - var(
+              --rs-card-border-width,
+              #{rs-token(border-width-sm)}
+            )
+        );
+        content: '';
+        inset: 0;
+        position: absolute;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      /// The ring goes on the overlay, inset, so focus outlines the whole card.
+      &:focus-visible {
+        outline: none;
+      }
+
+      &:focus-visible::after {
+        outline: 2px solid #{rs-token(color-focus-ring)};
+        outline-offset: -2px;
+      }
     }
   }
 </style>

@@ -847,6 +847,16 @@ test('Alert is always a div and takes no as prop, mirroring the Astro original',
     /svelte:element/,
     'the root is a fixed div, not a polymorphic element',
   )
+  assert.match(
+    source,
+    /& HTMLAttributes<HTMLDivElement>/,
+    'the fixed div root types the native attributes of a div, not HTMLElement',
+  )
+  assert.doesNotMatch(
+    source,
+    /HTMLAttributes<HTMLElement>/,
+    'Alert never widens the native attributes beyond the div it renders',
+  )
 })
 
 test('Alert takes an opt-in role with no default and never derives it from the variant', async () => {

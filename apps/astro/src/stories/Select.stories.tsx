@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/Select'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof SelectStates> = {
-  title: 'Components/Select',
+  title: 'Forms/Select',
   component: SelectStates,
   parameters: {
     a11y: { disable: false },

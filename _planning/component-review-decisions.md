@@ -823,11 +823,287 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - `rocketship-stories.mdc` gains "Docs pages (Astro)" and the template's story wrapper becomes the docs page plus its example file (decision 80, amended), so components built next start as docs pages. Popover and Tooltip move over in RCL-21.
 - Dialog (RCL-13) landed first and joins the row: `Dialog.astro` (modal `<dialog>`, `:modal`, `::backdrop`, invoker commands). The stop rule no longer lists `::backdrop`; Dialog is its reference.
 
+### 118. Grid lists keep their semantics; the gap reads a token (applies decisions 6 and 13)
+
+**Agreed 2026-10-26 (RCL-08).**
+
+- When `as` is `ul` or `ol`, Grid adds `role="list"`, as Stack does: `list-style: none` drops list semantics in Safari/VoiceOver. A `role` in `...attrs` still overrides it. Resolves the parked Grid note in Progress.
+- The gap fallback is `var(--rs-grid-gap, #{rs-token(space-4)})`, replacing the hand-written `var(--rs-space-4, 16px)` chain. Same value.
+
+### 119. Grid stories: `Default` is the docs page; the column stories stay
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).**
+
+- The three column stories are a good set and stay separate aspects (decision 29). Two columns is the default, so a separate docs page would repeat `TwoColumns`; instead `TwoColumns` becomes `Default`, the docs page (`Grid.stories.tsx`, `GridDefault.astro`, example `GridDefaultExample.astro`), as with Disclosure → `Default` and `Accordion`. `ThreeColumns` and `FourColumns` are unchanged. Sort order: `Default`, `ThreeColumns`, `FourColumns`.
+- The page follows decision 80 (amended): description, a two-column Grid of four Cards with real `<h2>` titles, the usage code, and tables for props and attributes (`columns`, `as`, `class`) and CSS hooks (`--rs-grid-gap`). The slots table was dropped in decision 125.
+- Shane: teach people to use the CSS variables and to use Grid for their own layouts. After the tables, a `Customising` section with code snippets: changing the gap with `--rs-grid-gap` on their own class (with a spacing token), making any box a container with `container-type: inline-size` so the grid fits a sidebar, giving one item the whole row with `grid-column: 1 / -1` (safe at every step, unlike `span 2`, which adds a column in the one-column layout), and rendering a list. It states why the column steps are fixed: container queries cannot read CSS variables.
+- Snippets are code only: stories have no CSS, so the techniques are not rendered live. Whether every docs page gets a Customising section is part of the RCL-21 proposal (`_planning/rcl-08-audit.md`).
+- **Amended 2026-10-27:** Shane: the page was overcooked ("we like our steak medium rare"), the same as Container's first draft (decision 125). Cut to what a user asks: a two-sentence description, and two how-tos as plain `<h2>` sections with no "Customising" wrapper: "Use it in a sidebar" (make the box a container; no container means one column) and "Span the whole row" (`1 / -1`, not `span 2`). "Change the gap" and "Render a list" went, because the hooks table and the `as` row already say them, and so did the paragraph on why the column steps are fixed.
+- **Amended again 2026-10-27:** Shane saw no value in those two how-tos either ("as a user what would I want to know?"). Spanning a row is generic CSS grid. The one real gotcha, that a grid with no container around it stays one column, moves into the description: "It measures its container, not the screen, so place it inside a Container". The page is now description, example, usage, props and hooks, the same shape as Container.
+- The Svelte `Base/Grid` → `TwoColumns` story keeps its old name until it is ported (a Daruma task).
+- No 6-column grid. Proposed as `columns={6}` (1, then 2, 3 and 6 at 500/700/900px); Shane declined it on 2026-10-27. `columns` stays `2 | 3 | 4`.
+
+### 120. Container reads its tokens and uses logical sizes (applies decisions 6 and 9)
+
+**Agreed 2026-10-27 (RCL-08).** No visual change.
+
+- The five values that have tokens read them through `rs-token()`: `container-gutter` (both gutters), `container-width-content-sm`, `container-width-content-lg`, `container-width-wide` and `container-padding-block`. The hand-written `var(--rs-x, literal)` fallbacks go.
+- `width` and `max-width` become `inline-size` and `max-inline-size`.
+- `container-name: rs-component` goes. Nothing has queried it since `container-query-up` stopped needing the name (decision 9); `container-type: inline-size` stays, because Container is a layout box.
+- The block's variables come first, then `container-type`, as the style rule orders them.
+
+### 121. New token `container-width-default` (1000px)
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- The default width was the only Container width without a token: `var(--rs-container-width-default, 1000px)` read a variable nothing defined. `container.width.default` joins `wide`, `content.sm` and `content.lg` in `foundation.tokens.json`, and the map is regenerated.
+- Container reads `#{rs-token(container-width-default)}`. Same value and the same variable name, so consumers who already set `--rs-container-width-default` see no change; the variable is now on `:root`, in Figma exports and themeable.
+
+### 122. `padded` keeps the safe area and the one-side overrides
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `rs-container--padded` replaced `padding-block` outright, so a padded container ignored the safe-area insets and `--rs-container-padding-block-start` / `-end`. The layout rule's "they resolve with the safe area" held only for unpadded containers.
+- The block sets an internal local, `--rs-container-inset-block: 0px`, and the gutters read `max(env(safe-area-inset-*), var(--rs-container-padding-block-start|end, var(--rs-container-inset-block)))`. `padded` only reassigns the local to `container-padding-block`. A modifier changes a variable, not the property (decision 3).
+- No change on screens without insets (20/30/40px at base/`md`/`lg`). With `viewport-fit=cover`, a padded container gets the larger of the inset and its padding, and the one-side overrides now work when padded.
+- The local is set by the modifier, not a documented hook (like decision 47).
+
+### 123. `flush` replaces `--no-gutters`: a container with no side padding
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: there is a real use for a container with no padding (a full-bleed banner or image, a Container inside something already padded). The Astro `rs-container--no-gutters` rule had no prop, so it was reachable only by hand-adding the class, and its `padding-inline: 0` also dropped the side safe-area insets.
+- New prop `flush?: boolean`, off by default with no class (decision 42), emitting `rs-container--flush`. Named for the result (edges flush with the parent), not a negative `noGutters`.
+- The block sets an internal local, `--rs-container-inset-inline: #{rs-token(container-gutter)}`, and the side gutters read `max(env(safe-area-inset-*), var(--rs-container-inset-inline))`. `flush` reassigns the local to `0px`, so content reaches the edges on ordinary screens and still clears a landscape notch.
+- A local, not `--rs-container-gutter: 0px` on the modifier: custom properties inherit, so setting the public hook would also strip the gutters of any Container nested inside. Every Container redeclares the local, so nothing leaks. The `--rs-container-gutter` hook still works on any ancestor. Shane doubts Containers should nest; the local stays as a guard anyway, because the full-bleed band (`size="full" flush` around a `content` Container) is the likeliest way consumers will nest them.
+- No block padding comes with it: a Container has none unless `padded`, so `flush` alone is padding-free.
+- `Container.svelte` and its tests still use `--no-gutters` until the Svelte port (a Daruma task).
+
+### 124. Container's size classes are `rs-container--<size>`
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `size="full"` emitted `rs-container--full-width`, the only class that did not match its prop value. It is now `rs-container--full`, so every size follows the reviewed pattern (Alert `--error`, Stack `--large`), and the frontmatter is one line: ``size !== 'default' && `rs-container--${size}` ``. `padded` and `flush` use the same `&&` form.
+- The prop is unchanged; only hand-written `rs-container--full-width` classes break. `Container.svelte` and its tests keep the old name until the Svelte port.
+
+### 125. Container's docs page is three sibling Containers, kept short
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).**
+
+- A live Container inside the page's own `<Container size="content" padded>` would teach nesting. The page is three siblings instead: a content Container with the `<h1>` and description, the example (`ContainerDefaultExample.astro`: a default-width Container holding one Card, whose edges show the container's 1000px width against the narrower text; a Grid of Cards was dropped because it brought in a second component a reader could take for part of Container), and a content Container with the usage code, tables and Customising. The only docs page that is not one Container; the usage code is still the example's `?raw` source.
+- The example Container is not `padded`: padded, the space between the three siblings doubled.
+- Shane: the first draft had too much information. Cut to: a two-sentence description; props and attributes (`size` with its widths, `padded` with its steps, `flush`, `as`, `class`); four CSS hooks (`--rs-container-gutter`, `--rs-container-padding-block`, `-start`, `-end`), leaving the width tokens to the `size` row; and no Customising section. A second pass also dropped the two how-tos: a background behind a Container is ordinary CSS with nothing Container-specific, and the `flush` row already says what `flush` does.
+- Shane: "lets not write content just for sake of writing content … lets write what a user will actually want to know." A docs page section earns its place only by answering a question the example and the tables do not. Grid keeps its Customising section because its container behaviour and full-row items are not in the tables.
+- No slots table when the only slot is the default one: a "(default): the content" row says nothing. Applied to Grid too (its one useful note, that list children are `<li>`, moved to the `as` row).
+- `Base/Container` → `Default` is `Container.stories.tsx`.
+- **Amended 2026-10-27:** once `Sizes` (decision 126) showed the widths side by side, the live example repeated it. Shane agreed to drop it: the page is one content Container like every other docs page (the three-sibling exception above is gone), and Usage is a short static snippet (`<Container size="content" padded>…</Container>` with its import) instead of an example file's `?raw` source. `ContainerDefaultExample.astro` is removed.
+
+### 126. Container's sizes are one comparison story
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `Content`, `Wide` and `FullWidth` each rendered the same legal-notice document (`ContainerDocument.astro`) at one width through a Storybook control, with instruction copy in the canvas (decision 80). No canvas showed one width against another.
+- One `Sizes` story replaces them (`Container.sizes.stories.tsx`, `ContainerSizes.astro`), like Button → `Sizes` and Stack → `Gaps`: four sibling padded Containers, narrowest to widest, each holding one Card with the size's name and width. `ContainerDocument.astro` and the control are removed. Sort order: `Default`, `Sizes`.
+- Kept rather than dropped (the props table already lists the widths) because a width is easier to judge by eye than from a number.
+
+### 127. Card keeps an opinionated anatomy; only `__content` goes
+
+**Agreed 2026-10-27 (RCL-08).** Amends decision 5's description of Card.
+
+- Shane: a bare `<article class="rs-card"><slot /></article>` has no opinion about what a card is, and component libraries give Card one. They do: Bootstrap (`card-img-top`, `card-body`, `card-footer`), Shoelace (`image`, `header`, `footer` slots), MUI (`CardMedia`, `CardContent`, `CardActions`), Spectrum (preview, title, description, footer). The shared anatomy is media at the top edge to edge, padded content, and details or actions at the bottom.
+- Card keeps that anatomy: the `media` slot first (edge to edge), a padded `__body`, and the `meta` slot last. Both named slots are structural positions (decision 31). Card is the exception to decision 5's "no component-rendered wrappers": `__body` exists so media can bleed to the edges while the content is padded.
+- `__content`, a second wrapper inside `__body` with its own 4px gap, is removed. The body is the one flex column, and `--rs-card-body-gap` (now `space-2`, 8px, as Alert) spaces everything in it. Title to description goes from 4px to 8px; content to meta from 12px to 8px. `--rs-card-content-gap` is gone.
+- Meta pins to the bottom: the block is a flex column, `__body` grows (`flex: 1 1 auto`) and `__meta` takes `margin-block-start: auto`, so meta lines up across cards of different lengths in a Grid row.
+- Meta stays inside `__body`, so it shares the body padding; the sketch in review showed it as a sibling, which would have needed its own padding.
+- No story markup changes. `Card.svelte` and its tests still render `__content` until the Svelte port.
+
+### 128. RCL-08 components read every token through `rs-token()`, without a question each
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: apply the token conversion everywhere, not one component at a time. Card, Button and Typography (including the typography mixins in `styles/mixins/typography/`) replace every hand-written `var(--rs-x, literal)` fallback with `#{rs-token(x)}`. Same values; standalone dark mode works because the fallbacks become `light-dark()` pairs (decision 6).
+- Done for Card: surface, border, radius, gaps, padding, title and description colour and type, and the `__token` chip. The literal `96px` media height and `2px` chip padding wait for the media and `__token` questions.
+- Shane, on the same day: "if the answer is obvious there is no need to ask the question, if not obvious then please ask." Changes that follow directly from an agreed decision or rule (no `font-family`, logical properties, rule order, `///` comments, a default variant with no class, the motion rule) are applied without a question and listed in the review summary. Open design choices are still asked one at a time.
+
+### 129. Card's title and description follow decisions 8, 11 and 100
+
+**Applied 2026-10-27 (RCL-08)** without a question, under decision 128.
+
+- No `font-family` on `__title` or `__description` (decision 8).
+- `__description` sets only `color` (`color-muted`) and `margin: 0`; its `font-size-md` and `line-height-base` go, so card body copy matches the page (decision 11).
+- `__title` heads a whole surface, so it keeps its size step, as Dialog's title does (decision 100): `font-size-lg` through `--rs-card-title-font-size`, semibold through `--rs-card-title-font-weight`, `line-height-tight`, its own `color-fg`, `margin: 0`. Same look as before; the two hooks are new.
+- Logical sizes: `min-height` → `min-block-size` on `__media`, `min-width` → `min-inline-size` on `__meta`.
+
+### 130. No `rs-card__token`; docs pages show token names with Typography's inline code
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- `rs-card__token` was a monospace chip that existed only for the Foundations pages: docs styling in the library, not part of what a card is. Its `font-family` was also the last thing keeping Card in stylelint's `ignoreFiles`. Removed; Card now passes the BEM rules and leaves the ignore list.
+- Shane tried plain `<code slot="meta">` first and missed the background. The Foundations pages (Colors, Borders, Spacing, Shadows; 32 cards) now write `<Typography slot="meta"><code>--rs-color-bg</code></Typography>`: Typography's existing inline-code style draws the same pill (elevated surface, `radius-sm`, monospace), so Card stays free of docs styling.
+- Only the swapped lines change in those stories. Prettier would also reformat Borders, Spacing and Shadows (not Prettier-clean on `main`); that churn is left out.
+
+### 131. A linked card is one link on its title, stretched over the card
+
+**Agreed 2026-10-27 (RCL-08).**
+
+- Shane: a card should have one link, and there is an accessibility trick for it. The stretched link (Heydon Pickering's pseudo-content trick in _Inclusive Components_; Bootstrap's `.stretched-link`): the consumer writes the link in the title, `<h2 class="rs-card__title"><a class="rs-card__link" href="…">Build 482</a></h2>`, and the link's `::after` covers the whole card (`position: absolute; inset: 0` against `.rs-card { position: relative }`).
+- The whole card is the click target, and screen readers hear one link named by the title. Wrapping the card in an `<a>` instead makes every word of the card the link's name.
+- The link looks like the title (`color: inherit`, no underline). Hovering anywhere on the card hovers the overlay, which belongs to the link, so the title underlines: a clickable card is an action, so decision 44's no-hover rule for static content does not apply.
+- Focus: the link's own outline is replaced by a `2px` `color-focus-ring` outline on its `::after`, offset `-2px`, with the card's radius minus its border width, so the ring outlines the whole card inside its border and `overflow: hidden` never clips it. `.rs-card__link:focus-visible::after` is one class with a pseudo-class and a pseudo-element (decision 3).
+- One link per card. Text in a linked card cannot be selected, and any second link or button must sit above the overlay; the docs say so.
+- `overflow: hidden` stays (the review's concern was overstated: content sits inside 16px of body padding, so ordinary focus rings never reach the edge).
+
+### 132. Card is a `div` by default
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 1 more strictly.
+
+- `article` claims every card is self-contained content, and screen readers announce "article" on entering each one (six in a grid of six). A stat tile or a colour swatch is not an article.
+- `as` defaults to `div`, which claims nothing. `article`, `section` and `li` stay in the union: `as="li"` inside `<Grid as="ul">` for a set of cards ("list, 6 items"), `as="article"` for a card that is standalone content. Props are typed `HTMLAttributes<'div'>`, like Stack.
+- Shane asked whether an `article` reads its heading twice. It does not: an article takes no name from its content, so the heading is read once. It would double only with `aria-labelledby` on the article, which Card does not add.
+- Stories that relied on the default (Stack, Scroll, Grid, Container) now render `div`; the Foundations pages already pass `as="li"`.
+
+### 133. Card media is a consumer-written `rs-card__media`, cropped to 16:9
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 58 (Figure) to Card.
+
+- The `media` slot rendered inside a component-owned `<div class="rs-card__media">`, so an `<img>` in it could only be styled through a descendant selector (decision 3). Images sat inline, with a gap below, and did not fill or crop.
+- Card renders `<slot name="media" />` first, with no wrapper. The consumer writes the class on the element: `<img slot="media" class="rs-card__media" …>`. A colour swatch is `<div slot="media" class="rs-card__media">`.
+- `rs-card__media`: `display: block`, `inline-size: 100%`, `block-size: auto` (cancels the `height` attribute), `aspect-ratio: var(--rs-card-media-aspect-ratio, 16 / 9)`, `object-fit: cover`, `background: var(--rs-card-media-bg)`, `margin: 0`. Every card in a row crops to the same shape. The `96px` minimum and `--rs-card-media-min-height` are gone; swatches are 16:9 now.
+- Cost, as with Figure: an image without the class is unstyled.
+- Applied without a question (decision 128): `__meta` sets its own `color-muted` (decision 11), so dates and details read as secondary.
+
+### 134. Card's docs page shows linked image cards in a list
+
+**Agreed 2026-10-27 (RCL-08, RCL-21).** Shane: the card stories need images.
+
+- `Components/Card` → `Default` (`Card.stories.tsx`, `CardDefault.astro`, example `CardDefaultExample.astro`). Description: what a card is, the one-link rule and its caveats (a second link sits under the overlay; text in a linked card cannot be selected).
+- Example: `<Grid as="ul">` of two `<Card as="li">`: Artemis II on the pad at sunset and Apollo 11 clearing the tower (the NASA photos already in `story-assets`), each with an `rs-card__media` image, an `<h2 class="rs-card__title">` holding an `rs-card__link` to the NASA mission page, a description, and a `<time slot="meta">`.
+- Tables: props and attributes (`as`, `class`), slots (`media`, default, `meta`), element classes (`__media`, `__title`, `__link`, `__description`: the anatomy is consumer-written, so the classes are the API), and CSS hooks. The variant-owned local `--rs-card-media-bg` is not listed.
+- Checked in Chromium: the keyboard focus ring outlines the whole card.
+
+### 135. Button keeps three fixed sizes; text never shrinks
+
+**Agreed 2026-10-27 (RCL-08).** An exception to the component-API rule "No `size` … prop" (decision 21).
+
+- Shane: most libraries ship button sizes, the same argument as Card's anatomy (decision 127): a component carries the opinion people expect. Button keeps `size?: 'small' | 'medium' | 'large'`.
+- No container-query growth (decision 9): a button is the same size wherever it sits. The 18 `--rs-button-*` values on `:root` in `variables.scss` (and its now unused `functions` import) are gone; sizes are locals on the block, reassigned by the modifier.
+- `medium` is the default and emits no class (decision 4). It lines up with Input: `min-block-size: calc(line-height-base × 1em + 2 × space-2 + 2 × border-width-sm)`, about 41px at 16px text, padding-inline `space-4`.
+- `small`: 32px, padding-inline `space-3`, page-size text. Smaller through height and padding, never text (decision 17).
+- `large`: 48px, padding-inline `space-6`, `font-size-lg` (18px). Text may step up, never down.
+- Label text inherits the page size (`--rs-button-font-size: 100%`, which `large` reassigns). A percentage, not `inherit`, because a custom property set to `inherit` would inherit the property itself.
+
+### 136. Button conformance applied without a question (decision 128)
+
+**Applied 2026-10-27 (RCL-08).**
+
+- Every fallback through `rs-token()`; the `#ffffff` accent-contrast fallback from decision 104's note is gone. `padding-block: 8px` and the `36px` base height go: the size's `min-block-size` and `align-items: center` set the height.
+- No `font-family` (decision 8). Variables first, then `all: unset` (style rule order).
+- `primary` is the base and emits no class (decision 4); `rs-button--primary` had no rule.
+- The disabled link's `[aria-disabled='true']` attribute selector becomes a derived modifier, `rs-button--disabled`, added in the frontmatter when a link is disabled (decision 3, as `--invalid` from `aria-invalid`).
+- The motion rule (decision 114): `--rs-button-duration` reads the opt-in `--rs-button-transition-duration` (fallback `transition-fast`); `prefers-reduced-motion: reduce` sets it to `0s`.
+- The standard focus ring, `2px` `color-focus-ring` at `2px` offset; the `--rs-button-focus-ring-color` local goes.
+- Button leaves stylelint's `ignoreFiles`.
+- Still open: hover and active (`filter: brightness()`), the secondary hover's `color-link-hover`, and the `disabled` prop and `href="#"` link handling.
+
+### 137. New token `color-accent-text`: accent-coloured text on page surfaces
+
+**Agreed 2026-10-27 (RCL-08).** Applies decision 18, as `color-danger-text` did.
+
+- Secondary and ghost Buttons wrote their labels in `color-accent`, a stroke-and-fill role that only promises 3:1. It passes 4.5:1 as text today, but retuning the accent for softer borders would silently break the labels.
+- `color.accent.text: {color.accent.$root}` in `light.tokens.json` and `dark.tokens.json` (`color-accent-text: (alias: color-accent)` in the map). Same value today, so nothing changes visually; the contract is now "text, 4.5:1", and it can take its own value later without touching components.
+- Secondary and ghost labels read it; the secondary border stays `color-accent` (a stroke). `Foundations/Colors` shows it after Accent contrast.
+
+### 138. Button hover is mixed from tokens with `color-mix()`
+
+**Agreed 2026-10-28 (RCL-08).** Shane: "maybe acceptable but still a bit subtle". If it is revisited, the step lives in one place, the `color-accent-hover` values in the token files.
+
+- Shane noticed no difference from the first attempt (secondary fill-only `color-surface-elevated`, about 1.06:1 on white) and found primary's `filter: brightness(1.08)` hover lame. Secondary's old hover also borrowed `color-link-hover`, a link-text role (decision 18).
+- Each variant owns two locals, `--rs-button-hover-bg` and `--rs-button-hover-border-color`; one `&:hover` rule assigns them. No new tokens: every theme gets a hover derived from its own accent.
+- Primary: `color-mix(in srgb, color-accent, color-fg 15%)`, border the same. `color-fg` is navy in light and near-white in dark, so the fill darkens in light and lightens in dark, always away from its label.
+- Secondary: `color-mix(in srgb, color-accent 10%, color-surface)`, border stays `color-accent`. Ghost: `color-mix(in srgb, color-accent 10%, transparent)`. 12% was tried first: the dark secondary label measured 4.48:1, under 4.5.
+- Measured on hover (label against fill): primary 6.9 light, 7.2 dark; secondary 5.0 light, 4.65 dark; ghost about 4.7 light, 4.6 dark on a surface.
+- Press keeps `filter: brightness(0.94)`.
+- Shane still found the primary hover boring. Primary now lifts: hover adds `box-shadow: var(--rs-button-hover-shadow)` (`shadow-md`, a soft glow in dark mode), transitioned with the other properties and instant under reduced motion. Secondary and ghost set the local to `none`. The primary mix rises from 15% to 20%, which only raises its label contrast. No movement; a `translate: 0 -1px` nudge is the follow-up if it still feels flat.
+- Shane: good in light mode, not in dark. Mixing toward `color-fg` (near-white in dark) washed the hovered fill out to a pale periwinkle. A `light-dark()` in Button was proposed and rejected: it would put mode logic in a component, and `light-dark()` cannot hold a shadow. New `color-accent-hover` and `shadow-accent` tokens were proposed next; Shane asked whether existing tokens already cover it. They do: `shadow-md`'s dark glow is the system's designed dark elevation (decision 7, `Foundations/Shadows`).
+- Primary's hover fill stayed `color-accent` with `shadow-md` alone. Shadow-only proved invisible at normal size: `shadow-md`'s dark glow (8px, white at 40%) disappears beside a bright blue button, and light mode lost its darkening. Earlier checks used zoomed captures; hovers are now checked at normal size.
+- Primary hover then tried `color-mix(in srgb, color-accent, color-fg 10%)` with `shadow-lg`. Dark was fine; Shane found light mode horrendous (the heavy shadow).
+- Shane asked what other libraries do and wanted live buttons to try, not code. Primer and Carbon put a per-mode hover colour in the token layer (Primer's `button.primary.bgColor.hover` is darker than rest in light and lighter in dark); Bootstrap 5.3 darkens 15% (`shade-color($primary, 15%)`). None adds a hover shadow. Shane tried them live and chose Bootstrap's look.
+- **Settled:** new token `color-accent-hover`, Bootstrap's 15% step computed into the token files. Light `#284dba` (15% darker than `#2f5bdb`, white label 7.4:1). Dark `#699bff` (15% lighter than `#4f89ff`, Bootstrap's `tint-color`): darkening in dark would drop our navy label (decision 104) to about 4.4:1. Primary hover changes only its fill and border to the token. No `color-mix()`, no shadow, no mode logic in Button. Secondary and ghost keep the 10% accent wash. `Foundations/Colors` shows Accent hover.
+
+### 139. `href` decides Button's element; `disabled` works on both
+
+**Agreed 2026-10-28 (RCL-08).** Decided without a question as obvious (Shane, relayed by the coordinating session, and confirmed).
+
+- The `as` prop goes. With `href` Button renders an `<a>`, without it a `<button>`: one way to make a link, and no `<a href="#">` link to nowhere (the old `as="a"` with no `href`). Nothing in the repo used `as` on Button.
+- `disabled` stays a prop, because links have no native `disabled` (decision 24's exception: one prop across two elements, not a re-declared attribute). On a `<button>` it is the native attribute. On a link it drops the `href` and adds `role="link"`, `aria-disabled="true"`, `tabindex="-1"` and the derived `rs-button--disabled` (decision 136), so it is announced as an unavailable link and does nothing when clicked.
+- Disabled keeps `opacity: 0.55` and `pointer-events: none`; the `cursor: not-allowed` beside it is removed, since no pointer events means the cursor never shows.
+
+### 140. Button stories: `Default` is the docs page, `Sizes` stays an aspect
+
+**Applied 2026-10-28 (RCL-08, RCL-21)** without a question, following decisions 119 and 125.
+
+- `Base/Button` → `Variants` becomes `Default` (`Button.stories.tsx`, `ButtonDefault.astro`, example `ButtonDefaultExample.astro`): a short description (one primary per view), the example (Deploy, Preview and Cancel in the three variants; a link to Astro's deploy guide through `href`; a disabled "Deploying"), the usage code, props and attributes (`variant`, `size`, `href`, `disabled`, `type`, `class`) and the opt-in CSS hooks. No slots table (decision 125). Variant-owned locals (fill, colour, padding, height, hover) are not listed.
+- `Sizes` stays its own aspect (decision 135), rebuilt to the stories rule: one content Container and a small Stack of three rows, small, medium and large, each in the three variants. The old rows used Containers as spacers, `<h3>` headings with no outline above them, and `aria-label`s that did not match the visible text (WCAG 2.5.3).
+- Buttons in a row are separated with `{' '}`, because Astro drops the whitespace between components on separate lines (decision 62); without it the Variants buttons touched.
+
+### 141. Typography conformance applied without a question (decision 128)
+
+**Applied 2026-10-28 (RCL-08).**
+
+- The prose mixins in `styles/mixins/typography/` read every token through `rs-token()` (colours, spacing, weights, line heights, radii, border width, transition, the heading and text spacing tokens, `font-size-sm`, `font-family-mono`), so standalone dark mode works (decision 6). Typography's own size hooks (`--rs-typography-h1-size` and so on) are not tokens and keep their literal fallbacks.
+- No sans `font-family` on headings, paragraphs or the intro (decision 8). Code, `kbd`, `samp` and `var` keep `font-family-mono`: that is the code face, not the page's.
+- Logical properties: `margin-top`/`-bottom` → `margin-block-start`/`-end`, the list counters' `left` → `inset-inline-start`, `text-align: left` → `start`, `border-top` → `border-block-start`.
+- `.intro-text` was first renamed `rs-typography__intro` here; Shane pointed out that was not obvious, and it is removed instead (decision 143).
+
+### 142. Prose is the one exception to decision 3, at tag weight through `:where()`
+
+**Agreed 2026-10-28 (RCL-08).** Resolves the parked "Typography mixins" question.
+
+- Typography styles bare tags (`h2`, `p`, `a`, lists, tables) because Markdown and CMS output has no classes. It is the one component allowed descendant tag selectors, and it stays in stylelint's `ignoreFiles` as that documented exception.
+- Its scope is `:where(.rs-typography)`, which matches the same elements but adds no specificity: `:where(.rs-typography) p` is (0,0,1). Before, `.rs-typography p` and `.rs-typography a` (0,1,1) beat every single library class (0,1,0), so a `<Button href>` inside prose rendered as blue underlined link text on a blue pill, and a Card description took paragraph margins. Now any class inside the prose wins. Checked in Chromium: a Button inside prose is white with no underline, and a plain link keeps its link colour and underline.
+- The link mixin's states are `&:where(:hover)`, `&:where(:visited)`, `&:where(:focus-visible)`, so a visited or hovered state cannot add the weight back. Same order, so a visited link's colour still wins over hover, as before.
+- `:where()` is in every current browser (Chrome 88, Firefox 78, Safari 14). The Svelte Typography uses the same mixins, so it picks up the link change on its next build; its own selectors are ported later.
+
+### 143. No intro class in Typography
+
+**Agreed 2026-10-28 (RCL-08).**
+
+- `.intro-text` (`.rs-typography .intro-text`) was an author-facing class: an editor working in a CMS, who cannot use components, could mark the opening paragraph as a lead (bigger, medium weight), like Bootstrap's `.lead`. Unprefixed so it was easy to type in content.
+- Removed from the Astro library: nothing used it but the Typography specimen story, it was the library's only author-facing and only unprefixed class, and plain Markdown cannot add a class anyway. If a lead paragraph is wanted later, it comes back deliberately, with its name decided then.
+- Shane: a decision that affects Svelte must not leave a mess there. Removed in the same change: the `.intro-text` rule in `Typography.svelte`, its two assertions in `packages/svelte/test/components.test.mjs` (the raw-HTML test now uses a plain `<p>`), `class="intro-text"` in the Svelte `TypographyExample` and `ContainerExample` stories, and the `typography-intro` mixin itself.
+
+### 144. Prose headings grow with their container (an exception to decision 9)
+
+**Agreed 2026-10-28 (RCL-08).**
+
+- Typography's headings step up as their container widens (h1 32 → 36 → 44px at 500 and 900px; h2 to h4 likewise) and prose paragraphs go from 16 to 17px at 700px. The review proposed fixing them at one size under decision 9; Shane: an h1 is expected to be smaller on mobile than on desktop.
+- Decision 9 is about components changing density (Alert, Button, controls). Page typography with a heading scale that grows with space is standard (Bootstrap's responsive headings, GOV.UK's larger headings from tablet, Tailwind's prose sizes), so the steps stay.
+- They keep measuring the nearest container, not the viewport, so an article in a narrow sidebar gets the small sizes. Text still never shrinks below its base size.
+
+### 145. Typography stories: `Default` is the docs page, `Prose` is the specimen
+
+**Applied 2026-10-29 (RCL-08, RCL-21)** without a question, following decisions 119, 125 and 140.
+
+- `Base/Typography` → `Default` (`Typography.stories.tsx`, `TypographyDefault.astro`, example `TypographyDefaultExample.astro`): what Typography is for (prose you don't write classes for), that headings grow with their container, and that components and classes inside it keep their own styles (decision 142). The example is a short release note with a heading, paragraphs, inline code, a list and a link. Tables: props and attributes (`as`, `html` with a "trusted HTML only" note, `class`) and the size hooks, one row per step, because each step has its own hook (`--rs-typography-h1-size`, `-sm`, `-lg`).
+- The 250-line terms document stays as its own aspect, `Base/Typography` → `Prose` (`Typography.prose.stories.tsx`, `TypographyProse.astro`), the full specimen of every element. Sort order `Default`, `Prose`; the stale `TermsStyleDocument` entry in `preview.ts` is gone.
+
+### 146. Docs page tables scroll inside `<Scroll>`
+
+**Applied 2026-11-01 (RCL-08, RCL-21)** without a question, following decisions 40 and 41.
+
+- At 375px the five docs pages overflowed sideways, up to 448px wide, because the API tables' long type strings cannot wrap. Each table now sits in `<Scroll tabindex="0" role="region" aria-labelledby="…">`, named by its caption (`<span slot="caption" id="props-caption">`). `rocketship-stories.mdc` and the docs page template say the same, so new pages start this way.
+
+### 147. Form stories get their own `Forms/` group; both groups sort by type
+
+**Agreed 2026-11-01 (RCL-08, RCL-21).**
+
+- `Components/` was one flat list of 18 mixed items, and Dialog, Popover, File Input and Range Input were missing from the sort order. Shane: forms go in their own group; `Foundations/` and `Base/` stay as they are.
+- `Forms/`: Field, Fieldset, Label, Input, Textarea, Select, Checkbox, Radio, File Input, Range Input (wrappers, text controls, choices, native-part controls).
+- `Components/` is not split further at 8 items. Order: Card, Table, Figure, Alert, Disclosure, Dialog, Popover, Tooltip (content on the page first, then what opens on demand).
+
 ## Parked for later
 
-- **Button review:** `rs-button--primary` is emitted with no rule; `rs-button--medium` is the default but has a rule that redefines the base; 18 `--rs-button-*` tokens live in `:root` in `variables.scss` instead of the component; `all: unset` sits before the custom properties.
-- **Card review:** stories use `<p class="rs-card__title">`; titles should be headings.
-- **Typography mixins:** `lists.scss` uses tag and child selectors (`ol > li > ul`). Decide deliberately whether prose is an exception to rule 3. Prose `figure`/`figcaption` (Markdown output, no classes) waits on the same decision; RCL-11 leaves Typography untouched.
+- **Prose figures:** prose `figure`/`figcaption` (Markdown output, no classes) waited on the prose exception, which decision 142 settled. Typography still has no rule for them.
 - **Alert:** once the role goes, "error" is conveyed by colour plus title text only. Decide on a non-colour signal.
 - **Style queries:** check current browser support (Firefox) before making rule 3's style-query clause binding. Resolved 2026-10-24: Firefox 151 (19 May 2026) shipped `@container style()` for custom properties, completing cross-browser support (Chrome/Edge 111, Safari 18). The clause is binding for exact-value matches only; range syntax (`>`, `<`) is still behind a Firefox flag and is not allowed.
 - **Svelte:** `Alert.svelte` has the same issues, and `packages/svelte/test/components.test.mjs` asserts the prop-beats-slot title behaviour. The `@labcat2020/rocketship/styles/mixins` subpath export is needed for `rs-token()` to reach Svelte.
@@ -854,10 +1130,11 @@ Decisions from the line-by-line review of the Astro library with Shane, started 
 - PR #9 (RCL-10): Table rebuilt with decisions 40–54 as a single `<table>` (caption slot, consumer-written header/cell/row classes, `striped`, numeric modifier, clip-path corners); new `Scroll` primitive (`vertical` option). Stories `Components/Table` → `Default`, `Striped`; `Base/Scroll` → `Horizontal`, `Vertical`. Verified light and dark, axe clean (Chromium; Firefox/Safari caption clipping unchecked). Skills, templates, a11y/bem-scss/layout/svelte rules and the port checklist updated. The Svelte Table predates these decisions and needs porting with Scroll.
 - PR #64 (RCL-11): Figure rebuilt with decisions 56–62 as a fixed `<figure>` with a caption slot and a consumer-written `__media` class, capped at 80svh. `Components/Figure` → `Default` (landscape) and `Portrait`, with NASA photos. Verified light and dark, axe clean. PR #5 closed. The Svelte Figure (PR #51) predates these decisions and still needs porting; its README row names `Figure.astro`, which the provenance test enforces.
 - Open: whether the source of truth becomes a DTCG `tokens.json` (W3C Design Tokens format) that generates `$rs-tokens`, so Figma variables can sync with it. Decided: decision 55.
-- Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles).
+- Parked: Grid renders `ul`/`ol` with `list-style: none` but no `role="list"` (same Safari/VoiceOver issue Stack handles). Resolved by decision 118.
 - PR #12 (RCL-29): File Input and Range Input rebuilt with decisions 63–78 as one `<input>` each, styling their native parts (browse button; track and thumb), with Input's box for File Input and a 24px thumb for Range. Stories `Components/File Input` → `States` and `Components/Range Input` → `States`. The PR's skill-friction log was dropped (its axe recipe is parked). Skill (native-part controls), bem-scss (no vendor prefixes), a11y (forced colours) and stories (spaced titles, no inert markup, error examples) rules updated. Forced colours reasoned, not yet seen on Windows. No Svelte ports exist yet.
 - RCL-13: Dialog built with decisions 95–103 and 106 as a native modal `<dialog>` (invoker commands to open, `<form method="dialog">` to close, layout under `:modal`, opacity fade off under reduced motion). New `color-backdrop` token, shown in `Foundations/Colors`. Decision 104 fixed dark text on accent (Button, Checkbox and Radio marks). `Components/Dialog` → `Default`. Verified light and dark, axe clean, in Chromium only. Skill and rules not yet updated for the JS-tier native pattern; no Svelte port.
 - RCL-12: Disclosure built with decisions 107–117 as a fixed `<details>` with a `summary` slot, styled from `:open` and `::details-content`, a border chevron, and a CSS-only height transition (`interpolate-size`, Chromium; instant elsewhere). New token `transition-medium` (210ms). No Accordion component: a shared `name`. Stories `Components/Disclosure` → `Default` and `Accordion` are the first docs pages (decision 80, amended). Skill (native open state row: Disclosure, Popover, Dialog), patterns, stories rule and template updated. Axe clean light and dark. The Svelte Disclosure and Accordion (RCL-58) predate these decisions and need porting; the Svelte README now names `Disclosure.astro` as its original.
+- RCL-08: Grid, Container, Card, Button and Typography reviewed with decisions 118–145. New tokens `container-width-default`, `color-accent-text`, `color-accent-hover`. Every Astro component now leaves stylelint's ignore list except Typography, the documented prose exception. All five have docs pages; card titles in stories are real headings. Skill and rules updated, including the exceptions: Button's `size` and `disabled`, Card's `__body`, Typography's selectors and heading steps. Svelte clean-up for shared changes is done (`intro-text`, Button's size values); the five Svelte ports are Daruma tasks to file after this merges. Checked in headless Chromium: axe clean on all 39 Astro stories in light and dark; real mouse hover and press and keyboard focus on Button and Card in both modes; no page overflow at 375px; Container widths and padding at three breakpoints; Grid columns at three widths; `:where(:visited)` painting a visited link. Forced colours and reduced motion were emulated, not seen on a Windows contrast theme. Firefox and Safari are not checked. `Base/Button` → `Default` renders a disabled link: in both modes it has no `href`, `role="link"` and `aria-disabled="true"`, Tab skips it, and axe is clean.
 
 ## Sequence
 

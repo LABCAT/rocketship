@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof CheckboxStates> = {
-  title: 'Components/Checkbox',
+  title: 'Forms/Checkbox',
   component: CheckboxStates,
   parameters: {
     a11y: { disable: false },

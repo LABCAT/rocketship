@@ -8,7 +8,7 @@ import '@labcat2020/rocketship/components/Radio'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof RadioStates> = {
-  title: 'Components/Radio',
+  title: 'Forms/Radio',
   component: RadioStates,
   parameters: {
     a11y: { disable: false },

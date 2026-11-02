@@ -62,6 +62,16 @@
           "components": [0.0235, 0.0431, 0.0941],
           "hex": "#060b18"
         }
+      },
+      "text": {
+        "$value": "{color.accent.$root}"
+      },
+      "hover": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.4118, 0.6078, 1],
+          "hex": "#699bff"
+        }
       }
     },
     "link": {

@@ -66,9 +66,9 @@ const instanceOverrideExample = `/* your-theme.scss */
           style={`width: var(--rs-space-${space.name}); background: var(--rs-color-accent); border-radius: var(--rs-radius-sm); height: var(--rs-space-3); margin-block-end: var(--rs-space-2);`}
           aria-hidden="true"
         />
-        <p class="rs-card__title">Space {space.name}</p>
+        <h3 class="rs-card__title">Space {space.name}</h3>
         <p class="rs-card__description">{space.value}</p>
-        <span slot="meta" class="rs-card__token">--rs-space-{space.name}</span>
+        <Typography slot="meta"><code>--rs-space-{space.name}</code></Typography>
       </Card>
     ))}
   </Grid>

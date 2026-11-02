@@ -1,25 +1,26 @@
+@use '../tokens' as *;
 @mixin typography-a {
-  color: var(--rs-color-link, #1f49c6);
+  color: #{rs-token(color-link)};
   text-decoration: underline;
   text-decoration-color: currentcolor;
   text-underline-offset: var(--rs-typography-link-underline-offset, 3px);
   text-decoration-thickness: var(--rs-typography-link-underline-thickness, 1px);
   transition:
-    color var(--rs-transition-fast, 140ms) ease,
-    text-decoration-thickness var(--rs-transition-fast, 140ms) ease;
+    color #{rs-token(transition-fast)} ease,
+    text-decoration-thickness #{rs-token(transition-fast)} ease;
 
-  &:hover {
-    color: var(--rs-color-link-hover, #173ea8);
+  &:where(:hover) {
+    color: #{rs-token(color-link-hover)};
     text-decoration-thickness: var(--rs-typography-link-underline-thickness-hover, 2px);
   }
 
-  &:visited {
-    color: var(--rs-color-link-visited, #6a3fc2);
+  &:where(:visited) {
+    color: #{rs-token(color-link-visited)};
   }
 
-  &:focus-visible {
-    border-radius: var(--rs-radius-sm, 6px);
-    outline: 2px solid var(--rs-color-focus-ring, #296dff);
+  &:where(:focus-visible) {
+    border-radius: #{rs-token(radius-sm)};
+    outline: 2px solid #{rs-token(color-focus-ring)};
     outline-offset: 3px;
   }
 }

@@ -25,7 +25,10 @@ Copy only these files from `packages/base/src/components/`:
 | Building                                     | Copy                                                | Also read in `references/patterns.md` |
 | -------------------------------------------- | --------------------------------------------------- | ------------------------------------- |
 | Content block with variants                  | `Alert.astro`                                       | —                                     |
-| Layout primitive with `as`                   | `Stack.astro`                                       | —                                     |
+| Layout primitive with `as`                   | `Stack.astro`, `Grid.astro`                         | —                                     |
+| Page box (width, gutters, safe area)         | `Container.astro`                                   | —                                     |
+| Action or link that looks like one           | `Button.astro`                                      | —                                     |
+| Surface with fixed regions (media, meta)     | `Card.astro`                                        | —                                     |
 | Region the placer constrains (scrolling)     | `Scroll.astro`                                      | Scroll                                |
 | Form wrapper, label or group                 | `Field.astro`, `Label.astro`, `Fieldset.astro`      | Forms                                 |
 | Text control                                 | `Input.astro`, `Textarea.astro`, `Select.astro`     | Text controls                         |
@@ -34,7 +37,7 @@ Copy only these files from `packages/base/src/components/`:
 | Structured content (rows, cells)             | `Table.astro`                                       | Table                                 |
 | Native open state (details, popover, dialog) | `Disclosure.astro`, `Popover.astro`, `Dialog.astro` | Native open state                     |
 
-Button, Card, Container, Grid and Typography predate the review. Never copy them. A button-like control may read `Button.astro`, but follows the rules wherever it differs.
+Never copy `Typography.astro`: it is the one component allowed to style bare tags, because Markdown has no classes. No other component does.
 
 ## 3. Stop and ask Shane if
 

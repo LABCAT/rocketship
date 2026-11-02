@@ -1,49 +1,50 @@
+@use '../tokens' as *;
 @use '../functions' as *;
 
 @mixin typography-blockquote {
-  border-inline-start: 4px solid var(--rs-color-border, #c8d2eb);
-  color: var(--rs-color-muted, #4f5b7d);
-  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  border-inline-start: 4px solid #{rs-token(color-border)};
+  color: #{rs-token(color-muted)};
+  margin-block: 0 #{rs-token(text-spacing-bottom)};
   margin-inline: 0;
   padding-block: 0;
-  padding-inline: var(--rs-space-5, 20px) 0;
+  padding-inline: #{rs-token(space-5)} 0;
 
   > :first-child {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 
   > :last-child {
-    margin-bottom: 0;
+    margin-block-end: 0;
   }
 }
 
 @mixin typography-blockquote-p {
-  margin-bottom: var(--rs-space-3, 12px);
+  margin-block-end: #{rs-token(space-3)};
 }
 
 @mixin typography-q {
-  color: var(--rs-color-muted, #4f5b7d);
+  color: #{rs-token(color-muted)};
   font-style: italic;
 }
 
 @mixin typography-code-inline {
-  background: var(--rs-color-surface-elevated, #eef2ff);
-  border-radius: var(--rs-radius-sm, 6px);
-  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  background: #{rs-token(color-surface-elevated)};
+  border-radius: #{rs-token(radius-sm)};
+  font-family: #{rs-token(font-family-mono)};
   font-size: 0.9em;
   padding: 0.125em 0.35em;
 }
 
 @mixin typography-pre {
-  background: var(--rs-color-surface, #ffffff);
-  border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
-  border-radius: var(--rs-radius-md, 10px);
-  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  background: #{rs-token(color-surface)};
+  border: #{rs-token(border-width)} solid #{rs-token(color-border)};
+  border-radius: #{rs-token(radius-md)};
+  font-family: #{rs-token(font-family-mono)};
   font-size: #{to-rem(14)};
-  line-height: var(--rs-line-height-relaxed, 1.7);
-  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  line-height: #{rs-token(line-height-relaxed)};
+  margin-block: 0 #{rs-token(text-spacing-bottom)};
   overflow-x: auto;
-  padding: var(--rs-space-4, 16px);
+  padding: #{rs-token(space-4)};
   tab-size: 2;
 }
 
@@ -56,9 +57,9 @@
 
 @mixin typography-kbd {
   @include typography-code-inline;
-  border: var(--rs-border-width, 1px) solid var(--rs-color-border, #c8d2eb);
-  box-shadow: 0 1px 0 var(--rs-color-border, #c8d2eb);
-  font-weight: var(--rs-font-weight-medium, 500);
+  border: #{rs-token(border-width)} solid #{rs-token(color-border)};
+  box-shadow: 0 1px 0 #{rs-token(color-border)};
+  font-weight: #{rs-token(font-weight-medium)};
 }
 
 @mixin typography-samp {
@@ -67,35 +68,35 @@
 
 @mixin typography-caption {
   caption-side: bottom;
-  color: var(--rs-color-muted, #4f5b7d);
-  font-size: var(--rs-font-size-sm, #{to-rem(14)});
-  line-height: var(--rs-line-height-base, 1.45);
-  margin-top: var(--rs-space-2, 8px);
+  color: #{rs-token(color-muted)};
+  font-size: #{rs-token(font-size-sm)};
+  line-height: #{rs-token(line-height-base)};
+  margin-block-start: #{rs-token(space-2)};
   text-align: start;
 }
 
 @mixin typography-dl {
-  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  margin-block: 0 #{rs-token(text-spacing-bottom)};
 }
 
 @mixin typography-dt {
-  font-weight: var(--rs-font-weight-semibold, 600);
-  margin-top: var(--rs-space-4, 16px);
+  font-weight: #{rs-token(font-weight-semibold)};
+  margin-block-start: #{rs-token(space-4)};
 
   &:first-child {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 }
 
 @mixin typography-dd {
   margin-inline-start: 0;
-  margin-top: var(--rs-space-2, 8px);
-  padding-inline-start: var(--rs-space-5, 20px);
+  margin-block-start: #{rs-token(space-2)};
+  padding-inline-start: #{rs-token(space-5)};
 }
 
 @mixin typography-small {
-  font-size: var(--rs-font-size-sm, #{to-rem(14)});
-  line-height: var(--rs-line-height-base, 1.45);
+  font-size: #{rs-token(font-size-sm)};
+  line-height: #{rs-token(line-height-base)};
 }
 
 @mixin typography-sub-sup {
@@ -116,9 +117,9 @@
 }
 
 @mixin typography-mark {
-  background: color-mix(in srgb, var(--rs-color-accent, #2f5bdb) 22%, transparent);
+  background: color-mix(in srgb, #{rs-token(color-accent)} 22%, transparent);
   border-radius: 2px;
-  color: var(--rs-color-fg, #131a2f);
+  color: #{rs-token(color-fg)};
   padding: 0.05em 0.2em;
 }
 
@@ -129,7 +130,7 @@
 }
 
 @mixin typography-del {
-  color: var(--rs-color-muted, #4f5b7d);
+  color: #{rs-token(color-muted)};
   text-decoration: line-through;
 }
 
@@ -141,13 +142,13 @@
 
 @mixin typography-address {
   font-style: normal;
-  line-height: var(--rs-line-height-relaxed, 1.7);
-  margin-block: 0 var(--rs-text-spacing-bottom, 16px);
+  line-height: #{rs-token(line-height-relaxed)};
+  margin-block: 0 #{rs-token(text-spacing-bottom)};
 }
 
 @mixin typography-dfn {
   font-style: italic;
-  font-weight: var(--rs-font-weight-semibold, 600);
+  font-weight: #{rs-token(font-weight-semibold)};
 }
 
 @mixin typography-cite {
@@ -155,7 +156,7 @@
 }
 
 @mixin typography-var {
-  font-family: var(--rs-font-family-mono, ui-monospace, monospace);
+  font-family: #{rs-token(font-family-mono)};
   font-style: italic;
 }
 

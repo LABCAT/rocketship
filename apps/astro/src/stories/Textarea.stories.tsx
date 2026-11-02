@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/Stack'
 import '@labcat2020/rocketship/components/Textarea'
 
 const meta: Meta<typeof TextareaStates> = {
-  title: 'Components/Textarea',
+  title: 'Forms/Textarea',
   component: TextareaStates,
   parameters: {
     a11y: { disable: false },

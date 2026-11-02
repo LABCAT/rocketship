@@ -1,0 +1,107 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import GridDefaultExample from './GridDefaultExample.astro'
+import exampleSource from './GridDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'columns',
+    type: '2 | 3 | 4',
+    default: '2',
+    description:
+      'Columns at the widest step. Every grid has two from 500px; three or four start at 700px.',
+  },
+  {
+    name: 'as',
+    type: "'div' | 'ul' | 'ol'",
+    default: "'div'",
+    description: 'The root element. A list keeps its list semantics; each child is an <li>.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const hooks = [{ name: '--rs-grid-gap', default: '--rs-space-4' }]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Grid</h1>
+      <p>
+        A grid lays items out in equal columns: one, then two from 500px, then three or four from
+        700px. It measures its container, not the screen, so place it inside a Container; with no
+        container around it, it stays one column.
+      </p>
+    </Typography>
+
+    <GridDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption"
+      ><Table
+        ><span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            attributes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.type}</code>
+                </td>
+                <td class="rs-table__cell">{row.default}</td>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="hooks-caption"
+      ><Table
+        ><span slot="caption" id="hooks-caption">CSS hooks</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Property</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            hooks.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.default}</code>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+  </Stack>
+</Container>

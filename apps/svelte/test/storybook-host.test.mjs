@@ -287,6 +287,264 @@ test('the Astro host is left unchanged', () => {
   assert.match(astroMain, /@storybook-astro\/framework/, 'the Astro host keeps its framework')
 })
 
+test('the Checkbox and Radio stories mirror the Astro States and Set stories', () => {
+  const expected = {
+    Checkbox: ['Checkbox.set.stories.ts', 'Checkbox.stories.ts'],
+    Radio: ['Radio.stories.ts'],
+    RadioGroup: ['RadioGroup.stories.ts'],
+  }
+
+  for (const [component, expectedFiles] of Object.entries(expected)) {
+    const files = readdirSync(storiesDir)
+      .filter((name) => new RegExp(`^${component}[.a-z]*\\.stories\\.ts$`).test(name))
+      .sort()
+    assert.deepEqual(
+      files,
+      expectedFiles,
+      `${component} has the same stories as the Astro original`,
+    )
+
+    for (const file of files) {
+      const story = read(join(storiesDir, file))
+      assert.match(
+        story,
+        new RegExp(`title:\\s*'Components/${component}'`),
+        `${file} uses the Astro title`,
+      )
+      assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+    }
+  }
+
+  assert.match(
+    read(join(storiesDir, 'Checkbox.stories.ts')),
+    /export const States: Story =/,
+    'Checkbox exports States, as the Astro story does',
+  )
+  assert.match(
+    read(join(storiesDir, 'Checkbox.set.stories.ts')),
+    /export const Set: Story =/,
+    'Checkbox exports Set, the one place indeterminate is demonstrated',
+  )
+  assert.match(
+    read(join(storiesDir, 'Radio.stories.ts')),
+    /export const States: Story =/,
+    'Radio exports States, as the Astro story does',
+  )
+  assert.match(
+    read(join(storiesDir, 'RadioGroup.stories.ts')),
+    /export const States: Story =/,
+    'RadioGroup exports States too, so the fieldset form is browsable',
+  )
+})
+
+test('the Radio and Checkbox stories bind the value rather than hard-coding checked', () => {
+  const radio = read(join(storiesDir, 'components', 'RadioStates.svelte'))
+  assert.match(radio, /bind:group=/, 'a radio set is one bound value, not checked attributes')
+  assert.ok(
+    !/\bchecked\b/.test(radio),
+    'a checked attribute on one radio would let two options look chosen',
+  )
+
+  const checkbox = read(join(storiesDir, 'components', 'CheckboxStates.svelte'))
+  assert.match(checkbox, /bind:checked=/, 'the state story exercises the two-way checkbox binding')
+})
+
+test('the RadioGroup story groups fieldsets with one checked, one disabled and one in error', () => {
+  const states = read(join(storiesDir, 'components', 'RadioGroupStates.svelte'))
+
+  assert.match(states, /<Container size="content" padded>/)
+  assert.ok(
+    (states.match(/<RadioGroup\b/g) ?? []).length === 3,
+    'the story shows three groups: enabled, disabled and in error',
+  )
+  assert.match(states, /<RadioGroup bind:group=\{delivery\}>/, 'the first group is bound')
+  assert.match(
+    states,
+    /<RadioGroup bind:group=\{wrapping\} disabled>/,
+    'the disabled group carries the binding and the native attribute',
+  )
+  assert.match(
+    states,
+    /<RadioGroup bind:group=\{contact\} aria-invalid="true" aria-describedby="group-contact-error">/,
+    'the invalid group keeps its error on the fieldset and points at it',
+  )
+  assert.match(
+    states,
+    /let wrapping = \$state\('none'\)/,
+    'the disabled group is bound too, so its radios read one value instead of stale locals',
+  )
+  assert.match(states, /class="rs-fieldset__error"/, "a group's error belongs to the fieldset")
+  assert.match(states, /<Radio\b/, 'each option is a Radio, so the group supplies the name')
+  assert.ok(
+    !/\bname="(?:delivery|wrap|contact)"/.test(states),
+    'the group names its radios, so the story never repeats a name',
+  )
+  assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
+  const radios = states.match(/<Radio\b[^>]*>/g) ?? []
+  assert.ok(radios.length > 0)
+  for (const radio of radios) {
+    assert.doesNotMatch(
+      radio,
+      /bind:group=/,
+      'a radio inside a group only reports its value; the binding lives on the RadioGroup',
+    )
+  }
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RadioGroupStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Checkbox States story shows rows in an inline Field, with an error, a hint and a disabled pair', () => {
+  const states = read(join(storiesDir, 'components', 'CheckboxStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'rows are spaced by Stack, never by Container')
+  assert.match(states, /<Field inline>/, 'a choice row is an inline Field')
+  assert.ok(
+    !/<Field[^>]*label=/.test(states),
+    'the Label is written by the consumer, so an inline row passes no label prop',
+  )
+  assert.match(states, /<Checkbox\b/, 'the story renders the reviewed Checkbox component')
+  assert.match(states, /<Label for="/, 'every control has a Label pointing at it')
+  assert.match(
+    states,
+    /Fields marked \* are required\./,
+    'a story with a required asterisk explains it once',
+  )
+  assert.match(states, /\brequired\b/, 'the story shows a required state')
+  assert.match(states, /checked/, 'the story shows a checked state')
+  assert.match(states, /disabled/, 'the story shows a disabled state')
+  assert.match(states, /aria-invalid="true"/, 'errors are announced from aria-invalid')
+  assert.match(
+    states,
+    /class="rs-field__error"/,
+    'an error row writes the Field error element itself',
+  )
+  assert.match(
+    states,
+    /class="rs-field__hint"/,
+    'a row with a hint writes the Field hint element itself',
+  )
+  assert.doesNotMatch(
+    states,
+    /indeterminate/,
+    'indeterminate belongs to the Set story, where the DOM property is set after mount',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'CheckboxStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Checkbox Set story sets indeterminate through the DOM property, never a prop', () => {
+  const set = read(join(storiesDir, 'components', 'CheckboxSet.svelte'))
+
+  assert.match(set, /<Container size="content" padded>/, 'the story sits in one content Container')
+  assert.match(set, /<Fieldset>/, 'a set of related checkboxes is a fieldset')
+  assert.match(set, /\{#snippet legend\(\)\}/, 'the legend comes from the legend snippet')
+  assert.match(set, /<Stack gap="small">/, 'options sit closer together than the groups')
+  assert.ok(
+    (set.match(/<Field inline>/g) ?? []).length === 5,
+    'every option is an inline Field row',
+  )
+  assert.match(set, /<Checkbox\b/, 'the story renders the reviewed Checkbox component')
+  assert.match(set, /<Label for="/, 'every checkbox has a Label pointing at it')
+  assert.match(set, /class="rs-field__hint"/, 'a row with a hint writes the Field hint element')
+
+  assert.match(
+    set,
+    /document\.getElementById\('notify-all'\)/,
+    'indeterminate is set on the element, the only way a native checkbox can express it',
+  )
+  assert.match(set, /\.indeterminate = true/, 'the story sets the DOM property')
+  assert.match(
+    set,
+    /instanceof HTMLInputElement/,
+    'the story narrows the element before setting the property',
+  )
+  assert.doesNotMatch(
+    set,
+    /indeterminate=|bind:this|indeterminate\?:/,
+    'indeterminate is never a prop, an attribute or a component binding',
+  )
+  assert.match(set, /bind:group=\{topics\}/, 'the set story binds one array of ticked values')
+  assert.match(
+    set,
+    /onMount\(/,
+    'the story sets the property after mount, when the control is in the DOM',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(set) && !/class="(?!rs-)/.test(set),
+    'CheckboxSet must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Radio States story groups fieldsets with one checked, one disabled and one in error', () => {
+  const states = read(join(storiesDir, 'components', 'RadioStates.svelte'))
+
+  assert.match(states, /<Container size="content" padded>/)
+  assert.match(
+    states,
+    /<Stack gap="xlarge">/,
+    'consecutive fieldsets go in an xlarge Stack, so groups sit further apart than their parts',
+  )
+  assert.ok(
+    (states.match(/<Fieldset\b/g) ?? []).length === 3,
+    'the story shows three groups: enabled, disabled and in error',
+  )
+  assert.match(states, /\{#snippet legend\(\)\}/, 'the legend comes from the legend snippet')
+  assert.match(states, /<Fieldset disabled>/, 'the disabled group carries the native attribute')
+  assert.match(
+    states,
+    /class="rs-fieldset__error"/,
+    "a group's error belongs to the fieldset, never to a Field",
+  )
+  assert.match(
+    states,
+    /<Fieldset aria-describedby="contact-error">/,
+    'the fieldset points at its own error text',
+  )
+  assert.match(states, /<Stack gap="small">/, 'options sit closer together than the groups')
+  assert.match(states, /<Field inline>/, 'each option is an inline Field row')
+  assert.match(states, /<Radio\b/, 'the story renders the reviewed Radio component')
+  assert.match(states, /<Label for="/, 'every radio has a Label pointing at it')
+  assert.match(
+    states,
+    /let delivery = \$state\('standard'\)/,
+    'the first option is the initial value of the bound group',
+  )
+  assert.match(
+    states,
+    /bind:group=\{delivery\}/,
+    'the story binds one variable per group, so checking a radio moves the selection',
+  )
+  assert.ok(
+    (states.match(/aria-invalid="true"/g) ?? []).length === 3,
+    'every radio in the invalid group announces the error',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RadioStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Checkbox and Radio stories document the indeterminate rule and the choice row', () => {
+  const readme = read(join(repoRoot, 'packages', 'svelte', 'README.md'))
+
+  assert.match(readme, /### `Checkbox` and `Radio`/, 'the README documents the choice controls')
+  assert.match(
+    readme,
+    /indeterminate/,
+    'the README explains that indeterminate is script-only, never a prop',
+  )
+  assert.match(readme, /<Field inline>/, 'the README documents the choice row composition')
+})
+
 test('the Field title lives in exactly one story file', () => {
   const storiesDir = join(appRoot, 'src', 'stories')
   const files = readdirSync(storiesDir).filter((name) => /\.stories\.ts$/.test(name))
@@ -546,5 +804,132 @@ test('the Stack stories share the Base/Stack title with one story per gap aspect
     read(join(storiesDir, 'Stack.gaps.stories.ts')),
     /export const Gaps: Story =/,
     'the comparison Stack story exports Gaps',
+  )
+})
+
+test('the File Input and Range Input stories mirror the Astro States stories', () => {
+  for (const [component, file, fixture, title] of [
+    ['FileInput', 'FileInput.stories.ts', 'FileInputStates.svelte', 'Components/File Input'],
+    ['RangeInput', 'RangeInput.stories.ts', 'RangeInputStates.svelte', 'Components/Range Input'],
+  ]) {
+    const files = readdirSync(storiesDir).filter((name) =>
+      new RegExp(`^${component}.*\\.stories\\.ts$`).test(name),
+    )
+    assert.deepEqual(files, [file], `${component} has one story file, as the Astro original does`)
+
+    const story = read(join(storiesDir, file))
+    assert.match(story, new RegExp(`title:\\s*'${title}'`), `${file} keeps the Astro title`)
+    assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+    assert.match(story, /export const States: Story =/, `${file} exports States, as Astro does`)
+    assert.match(
+      story,
+      new RegExp(`from '\\./components/${fixture}'`),
+      `${file} renders the fixture in the stories folder`,
+    )
+  }
+})
+
+test('the File Input story shows a hint, an error and a disabled field, and renders the chosen names', () => {
+  const states = read(join(storiesDir, 'components', 'FileInputStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'consecutive Fields go in a large Stack')
+  assert.match(
+    states,
+    /Fields marked \* are required\./,
+    'a story with a required asterisk explains it once',
+  )
+  assert.ok(
+    (states.match(/<Field\b/g) ?? []).length === 3,
+    'the story shows three fields: hint, error and disabled',
+  )
+  assert.match(states, /<FileInput\b/, 'the story renders the reviewed FileInput component')
+  assert.match(
+    states,
+    /accept="application\/pdf" multiple/,
+    'the hint explains the real restriction',
+  )
+  assert.match(states, /bind:files=/, 'the story binds the FileList, so the names can be listed')
+  assert.match(
+    states,
+    /\.map\(\(file\) => file\.name\)/,
+    'the selected file names come from the platform FileList, not a prop',
+  )
+  assert.match(
+    states,
+    /<output for="file-notes">Attached: \{chosen\.join\(', '\)\}<\/output>/,
+    'the chosen names render in an output, so the list follows the selection',
+  )
+  assert.match(
+    states,
+    /PDF only\. You can attach several files\./,
+    'the hint still states what the control allows, whatever is chosen',
+  )
+  assert.match(
+    states,
+    /\{\.\.\.control\}/,
+    'each control takes Field wiring, so label and error stay linked',
+  )
+  assert.match(
+    states,
+    /error="Add a \.pem certificate/,
+    'the error shows a rule accept cannot express',
+  )
+  assert.match(states, /\bdisabled\b/, 'the story shows a disabled field')
+  assert.doesNotMatch(
+    states,
+    /<FileInput[^>]*\bvalue=/,
+    'a file input has no value; the FileList is the value',
+  )
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'FileInputStates must not carry story-only styles or non-Rocketship classes',
+  )
+})
+
+test('the Range Input story shows min/max, a step with a value output, an error and a disabled field', () => {
+  const states = read(join(storiesDir, 'components', 'RangeInputStates.svelte'))
+
+  assert.match(
+    states,
+    /<Container size="content" padded>/,
+    'the story sits in one content Container',
+  )
+  assert.match(states, /<Stack gap="large">/, 'consecutive Fields go in a large Stack')
+  assert.ok(
+    (states.match(/<Field\b/g) ?? []).length === 3,
+    'the story shows three fields: hint, error and disabled',
+  )
+  assert.match(states, /<RangeInput\b/, 'the story renders the reviewed RangeInput component')
+  assert.match(states, /min=\{1\} max=\{8\}/, 'the story binds the slider to a real range')
+  assert.match(
+    states,
+    /step=\{25\}/,
+    'the story shows a step, in place of ticks a styled range cannot draw',
+  )
+  assert.match(
+    states,
+    /bind:value=\{rollout\}/,
+    'the story binds the value, so the output can track it',
+  )
+  assert.match(
+    states,
+    /<output for="range-workers">\{workers\}<\/output>/,
+    'the value output is an <output> bound for the slider, so it tracks the state',
+  )
+  assert.doesNotMatch(states, /<datalist\b/, 'a styled range draws no ticks, so no dead markup')
+  assert.match(
+    states,
+    /error="Rollout cannot go below/,
+    'the error shows a rule min and max cannot encode',
+  )
+  assert.match(states, /\bdisabled\b/, 'the story shows a disabled field')
+  assert.ok(
+    !/<style[\s>]/.test(states) && !/class="(?!rs-)/.test(states),
+    'RangeInputStates must not carry story-only styles or non-Rocketship classes',
   )
 })

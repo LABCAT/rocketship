@@ -9,7 +9,7 @@ import '@labcat2020/rocketship/components/Stack'
 import '@labcat2020/rocketship/components/Textarea'
 
 const meta: Meta<typeof FieldDefault> = {
-  title: 'Components/Field',
+  title: 'Forms/Field',
   component: FieldDefault,
   parameters: {
     a11y: { disable: false },

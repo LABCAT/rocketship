@@ -16,7 +16,7 @@
       The <code>{size}</code> modifier sets the max width through <code>--rs-container-width</code>.
       Gutters come from <code>--rs-container-gutter</code> and respect the device safe areas.
     </p>
-    <p class="intro-text">
+    <p>
       Resize the viewport to see how the container recentres and how its children respond to the
       container query context.
     </p>

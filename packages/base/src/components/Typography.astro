@@ -24,7 +24,9 @@ const Tag = as
 <style is:global lang="scss">
   @use '../styles/mixins' as *;
 
-  .rs-typography {
+  /// Prose is the one exception to single-class selectors: Markdown has no classes, so these
+  /// rules style tags. `:where()` keeps them at tag weight, so any class inside the prose wins.
+  :where(.rs-typography) {
     h1 {
       @include typography-h1;
     }
@@ -55,10 +57,6 @@ const Tag = as
 
     a {
       @include typography-a;
-    }
-
-    .intro-text {
-      @include typography-intro;
     }
 
     i,

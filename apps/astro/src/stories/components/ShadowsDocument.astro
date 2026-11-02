@@ -57,9 +57,9 @@ const instanceOverrideExample = `/* your-theme.scss */
   <Grid as="ul" columns={3}>
     {shadows.map((shadow) => (
       <Card as="li" style={`--rs-card-shadow: var(--rs-shadow-${shadow.name});`}>
-        <p class="rs-card__title">{shadow.title}</p>
+        <h3 class="rs-card__title">{shadow.title}</h3>
         <p class="rs-card__description">{shadow.description}</p>
-        <span slot="meta" class="rs-card__token">{shadow.token}</span>
+        <Typography slot="meta"><code>{shadow.token}</code></Typography>
       </Card>
     ))}
   </Grid>

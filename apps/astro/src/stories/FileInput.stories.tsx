@@ -7,7 +7,7 @@ import '@labcat2020/rocketship/components/Label'
 import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof FileInputStates> = {
-  title: 'Components/File Input',
+  title: 'Forms/File Input',
   component: FileInputStates,
   parameters: {
     a11y: { disable: false },

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html'
 import ButtonSizes from './components/ButtonSizes.astro'
 import '@labcat2020/rocketship/components/Button'
 import '@labcat2020/rocketship/components/Container'
-import '@labcat2020/rocketship/components/Typography'
+import '@labcat2020/rocketship/components/Stack'
 
 const meta: Meta<typeof ButtonSizes> = {
   title: 'Base/Button',

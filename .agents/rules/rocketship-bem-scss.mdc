@@ -23,6 +23,7 @@ Reasons: `_planning/component-review-decisions.md`.
 - Nest with `&__element`, `&--modifier`, `&:state`.
 - Never put an element inside a pseudo-class: `&:disabled { &__legend {} }` is wrong.
 - No class in markup without a rule. The default variant has no modifier class.
+- The one exception is Typography, which styles bare tags because Markdown has no classes. Its scope is `:where(.rs-typography)`, so any class inside the prose wins.
 
 ## Change other parts through variables
 
@@ -43,7 +44,8 @@ Reasons: `_planning/component-review-decisions.md`.
 - Use a token only for the role in its name:
   - `color-*-fg`: text on the matching `color-*-bg`.
   - `color-*-accent`: strokes and fills. Never text.
-  - `color-*-text`: text on page surfaces (`color-danger-text` for errors).
+  - `color-*-text`: text on page surfaces (`color-danger-text` for errors, `color-accent-text` for accent labels).
+  - `color-accent-hover`: accent fills under the pointer, one step from the accent in each mode.
   - `color-border`: decorative lines. Control edges use `color-border-control`.
 - Variant names describe the message, token names the palette role: Alert's `--error` reads `danger` tokens. Do not rename either.
 - Never write `prefers-color-scheme` in a component.
@@ -86,7 +88,7 @@ Use only these two patterns:
 - Every element class sets `margin: 0`.
 - An element on a component background sets its own `color`.
 - Body text (`__description`, `__hint`, `__error`): only `color`, `font-weight` if needed, `margin: 0`.
-- Titles: `font-size: inherit`, a weight, `line-height: #{rs-token(line-height-tight)}`, `color`, `margin: 0`.
+- Titles: `font-size: inherit`, a weight, `line-height: #{rs-token(line-height-tight)}`, `color`, `margin: 0`. A title that heads a whole surface (Dialog, Card) takes `font-size-lg` through a `--rs-<name>-title-font-size` hook.
 - `th` and `caption` classes set `text-align: inherit` or `start`.
 
 ## States
@@ -94,3 +96,4 @@ Use only these two patterns:
 - Nest states under the block or modifier: `&:hover`, `&:focus-visible`, `&:disabled`.
 - Focus: `&:focus-visible { outline: 2px solid #{rs-token(color-focus-ring)}; outline-offset: 2px; }`.
 - Static content has no hover state.
+- Motion: a `--rs-<name>-duration` local reads the hook `--rs-<name>-transition-duration`, with a `transition-*` token as fallback. `prefers-reduced-motion: reduce` sets the local to `0s`.

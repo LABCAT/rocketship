@@ -1,56 +1,25 @@
 ---
-import Container from '@labcat2020/rocketship/components/Container'
 import Button from '@labcat2020/rocketship/components/Button'
-import Typography from '@labcat2020/rocketship/components/Typography'
+import Container from '@labcat2020/rocketship/components/Container'
+import Stack from '@labcat2020/rocketship/components/Stack'
 
-const rows = [
-  {
-    title: 'Small',
-    description: 'Compact height and label size',
-    size: 'small' as const,
-  },
-  {
-    title: 'Medium',
-    description: 'Default size for most actions',
-    size: 'medium' as const,
-  },
-  {
-    title: 'Large',
-    description: 'Emphasis and touch-friendly targets',
-    size: 'large' as const,
-  },
-]
-
-const variants = [
-  { variant: 'primary' as const, label: 'Primary' },
-  { variant: 'secondary' as const, label: 'Secondary' },
-  { variant: 'ghost' as const, label: 'Ghost' },
-]
+const sizes = ['small', 'medium', 'large'] as const
 ---
 
-{
-  rows.map((row) => (
-    <>
-      <Container size="content" padded>
-        <Typography as="section">
-          <h3>{row.title} size</h3>
-          <p>{row.description}</p>
-        </Typography>
-      </Container>
-      <Container size="content">
-        {variants.map((v, i) => (
-          <>
-            {i > 0 ? ' ' : null}
-            <Button
-              size={row.size}
-              variant={v.variant}
-              aria-label={`${v.label}, ${row.title.toLowerCase()} size`}
-            >
-              {v.label} ({row.title.toLowerCase()})
-            </Button>
-          </>
-        ))}
-      </Container>
-    </>
-  ))
-}
+<Container size="content" padded>
+  <Stack gap="small">
+    {
+      sizes.map((size) => (
+        <div>
+          <Button size={size}>Deploy</Button>{' '}
+          <Button size={size} variant="secondary">
+            Preview
+          </Button>{' '}
+          <Button size={size} variant="ghost">
+            Cancel
+          </Button>
+        </div>
+      ))
+    }
+  </Stack>
+</Container>

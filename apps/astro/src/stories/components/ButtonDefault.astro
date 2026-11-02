@@ -1,0 +1,129 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import ButtonDefaultExample from './ButtonDefaultExample.astro'
+import exampleSource from './ButtonDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'variant',
+    type: "'primary' | 'secondary' | 'ghost'",
+    default: "'primary'",
+    description: 'Use one primary per view for the main action, secondary or ghost for the rest.',
+  },
+  {
+    name: 'size',
+    type: "'small' | 'medium' | 'large'",
+    default: "'medium'",
+    description: 'Medium lines up with a text input. Small is shorter; large has larger text.',
+  },
+  {
+    name: 'href',
+    type: 'string',
+    default: '—',
+    description: 'Renders a link that looks like a button. Without it, a <button>.',
+  },
+  {
+    name: 'disabled',
+    type: 'boolean',
+    default: 'false',
+    description: 'Disables a button, or turns a link into an unavailable one with no href.',
+  },
+  {
+    name: 'type',
+    type: "'button' | 'submit' | 'reset'",
+    default: "'button'",
+    description: 'Native attribute. Use submit for a form’s send button.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const hooks = [
+  { name: '--rs-button-gap', default: '--rs-space-2' },
+  { name: '--rs-button-border-radius', default: '--rs-radius-pill' },
+  { name: '--rs-button-font-weight', default: '--rs-font-weight-semibold' },
+  { name: '--rs-button-transition-duration', default: '--rs-transition-fast' },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Button</h1>
+      <p>
+        A button runs an action. Give it an <code>href</code> and it becomes a link that looks like a
+        button. Use one primary button for the main action on a page and secondary or ghost buttons for
+        the rest.
+      </p>
+    </Typography>
+
+    <ButtonDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption"
+      ><Table
+        ><span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            attributes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.type}</code>
+                </td>
+                <td class="rs-table__cell">{row.default}</td>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="hooks-caption"
+      ><Table
+        ><span slot="caption" id="hooks-caption">CSS hooks</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Property</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            hooks.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.default}</code>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+  </Stack>
+</Container>

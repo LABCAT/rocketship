@@ -206,6 +206,12 @@
       }
     },
     "width": {
+      "default": {
+        "$value": {
+          "value": 1000,
+          "unit": "px"
+        }
+      },
       "wide": {
         "$value": {
           "value": 1200,

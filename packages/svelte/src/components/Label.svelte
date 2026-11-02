@@ -60,6 +60,7 @@
       font-weight: var(--rs-label-font-weight, var(--rs-font-weight-medium, 500));
       gap: var(--rs-label-gap, var(--rs-space-1, 4px));
       line-height: var(--rs-label-line-height, var(--rs-line-height-base, 1.45));
+      padding-block-start: var(--rs-label-offset, 0);
 
       @include container-query-up($rs-cq-sm) {
         font-size: var(--rs-label-font-size, var(--rs-font-size-md, #{to-rem(16)}));

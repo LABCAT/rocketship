@@ -1,11 +1,189 @@
 ---
-import Card from '@labcat2020/rocketship/components/Card'
 import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import CardDefaultExample from './CardDefaultExample.astro'
+import exampleSource from './CardDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'as',
+    type: "'div' | 'article' | 'section' | 'li'",
+    default: "'div'",
+    description:
+      'The root element. Use li for a set of cards in <Grid as="ul">, article for a card that stands alone.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the root element.' },
+]
+
+const slots = [
+  {
+    name: 'media',
+    description: 'Rendered first, edge to edge. Put rs-card__media on the image.',
+  },
+  {
+    name: '(default)',
+    description: 'The title, description and anything else, spaced by one gap.',
+  },
+  {
+    name: 'meta',
+    description: 'Rendered last and pinned to the bottom, so a row of cards lines up.',
+  },
+]
+
+const classes = [
+  { name: 'rs-card__media', description: 'The image. Crops to 16:9 by default.' },
+  { name: 'rs-card__title', description: 'The heading. Pick the level that fits your page.' },
+  {
+    name: 'rs-card__link',
+    description: 'The one link, inside the title. It makes the whole card clickable.',
+  },
+  { name: 'rs-card__description', description: 'Body text.' },
+]
+
+const hooks = [
+  { name: '--rs-card-media-aspect-ratio', default: '16 / 9' },
+  { name: '--rs-card-body-padding', default: '--rs-space-4' },
+  { name: '--rs-card-body-gap', default: '--rs-space-2' },
+  { name: '--rs-card-meta-gap', default: '--rs-space-2' },
+  { name: '--rs-card-title-font-size', default: '--rs-font-size-lg' },
+  { name: '--rs-card-title-font-weight', default: '--rs-font-weight-semibold' },
+  { name: '--rs-card-border-width', default: '--rs-border-width-sm' },
+  { name: '--rs-card-border-color', default: '--rs-color-border' },
+  { name: '--rs-card-border-radius', default: '--rs-radius-md' },
+  { name: '--rs-card-shadow', default: 'none' },
+]
 ---
 
 <Container size="content" padded>
-  <Card>
-    <p class="rs-card__title">Default card</p>
-    <p class="rs-card__description">Surface, border, and radius. No media band.</p>
-  </Card>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Card</h1>
+      <p>
+        A card is a short summary on a raised surface: an optional image at the top, a title and
+        description, and details pinned to the bottom. Give it one link, on its title, and the whole
+        card becomes clickable while screen readers hear a single link.
+      </p>
+      <p>
+        Keep to one link per card. Its click area covers the card, so a second link or button would
+        sit underneath it, and text in a linked card cannot be selected.
+      </p>
+    </Typography>
+
+    <CardDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption"
+      ><Table
+        ><span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            attributes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.type}</code>
+                </td>
+                <td class="rs-table__cell">{row.default}</td>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="slots-caption"
+      ><Table
+        ><span slot="caption" id="slots-caption">Slots</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            slots.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="classes-caption"
+      ><Table
+        ><span slot="caption" id="classes-caption">Element classes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Class</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            classes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+
+    <Scroll tabindex="0" role="region" aria-labelledby="hooks-caption"
+      ><Table
+        ><span slot="caption" id="hooks-caption">CSS hooks</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Property</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            hooks.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.default}</code>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table></Scroll
+    >
+  </Stack>
 </Container>

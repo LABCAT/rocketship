@@ -4007,10 +4007,15 @@ test('RadioGroup exports from the barrel and as a subpath, with its prop types',
     'the barrel must re-export the RadioGroup props type',
   )
   assert.match(source, /export type RadioGroupProps =/, 'the props union is exported')
-  assert.match(
+  assert.doesNotMatch(
     source,
     /export type \{ RadioValue \}/,
-    'the bound value type is re-exported, so a consumer can type the binding',
+    'RadioGroup must not re-export RadioValue, so the barrel has one unambiguous source for it',
+  )
+  assert.match(
+    source,
+    /import type \{ RadioValue \} from '\.\/Radio\.svelte'/,
+    'RadioGroup still imports RadioValue for its own props',
   )
 })
 

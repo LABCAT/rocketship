@@ -21,8 +21,6 @@
   import type { HTMLFieldsetAttributes } from 'svelte/elements'
   import Fieldset from './Fieldset.svelte'
 
-  export type { RadioValue }
-
   /**
    * A fieldset of radios that owns the selected value. Bind `group`, give each `Radio` a `value`,
    * and the group keeps the choice, names every radio so arrows move between them, and marks them

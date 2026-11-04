@@ -5,7 +5,7 @@ import InputStates from './components/InputStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Input',
+  title: 'Forms/Input',
   component: InputDefault,
   parameters: {
     a11y: { disable: false },

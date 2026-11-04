@@ -3,7 +3,7 @@ import FieldsetDefault from './components/FieldsetDefault.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Fieldset',
+  title: 'Forms/Fieldset',
   component: FieldsetDefault,
   parameters: {
     a11y: { disable: false },

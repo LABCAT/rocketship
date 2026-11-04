@@ -3,7 +3,7 @@ import FileInputStates from './components/FileInputStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/File Input',
+  title: 'Forms/File Input',
   component: FileInputStates,
   parameters: {
     a11y: { disable: false },

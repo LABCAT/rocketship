@@ -3,7 +3,7 @@ import RadioStates from './components/RadioStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Radio',
+  title: 'Forms/Radio',
   component: RadioStates,
   parameters: {
     a11y: { disable: false },

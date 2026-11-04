@@ -5,7 +5,7 @@ import FieldSlots from './components/FieldSlots.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Field',
+  title: 'Forms/Field',
   component: FieldDefault,
   parameters: {
     a11y: { disable: false },

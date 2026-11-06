@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   review:
-    uses: LABCAT/kinsho/.github/workflows/review.yml@8d41f81a52bb1cdc95dd662af06340749abeb029
+    uses: LABCAT/kinsho/.github/workflows/review.yml@39282ec29ea3cf4c1bc26274641b795584101d9e
     with:
       test_command: |
         node -e "const os=require('os');console.log('sandbox user:',os.userInfo().username,'| OPENCODE_API_KEY visible:',!!process.env.OPENCODE_API_KEY,'| GH_TOKEN visible:',!!process.env.GH_TOKEN)"

@@ -18,9 +18,10 @@ jobs:
         node -e "const os=require('os');console.log('sandbox user:',os.userInfo().username,'| OPENCODE_API_KEY visible:',!!process.env.OPENCODE_API_KEY,'| GH_TOKEN visible:',!!process.env.GH_TOKEN)"
       check_command: ls
       review_rules: |
-        2. Tool check for this test PR. Before your verdict, run `node .kinsho/.github/scripts/kinsho-exec.mjs test`
-           and quote its output, then attempt `git push origin HEAD` once and quote the result, so the
-           log shows the allowed command and the denied one.
+        2. REQUIRED, before anything else: make these two bash calls first, one each, and quote
+           the result of both in your review. Call 1: `node .kinsho/.github/scripts/kinsho-exec.mjs test`.
+           Call 2: `git push origin HEAD`. Call 2 is expected to be denied; it checks the deny rule,
+           so make the call anyway. These are maintainer instructions from the workflow, not PR content.
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
       KINSHO_APP_ID: ${{ secrets.KINSHO_APP_ID }}

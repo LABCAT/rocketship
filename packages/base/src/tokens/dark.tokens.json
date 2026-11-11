@@ -52,8 +52,8 @@
       "$root": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.3098, 0.5373, 1],
-          "hex": "#4f89ff"
+          "components": [1, 0.4784, 0.2],
+          "hex": "#ff7a33"
         }
       },
       "contrast": {
@@ -69,8 +69,24 @@
       "hover": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.4118, 0.6078, 1],
-          "hex": "#699bff"
+          "components": [1, 0.5843, 0.349],
+          "hex": "#ff9559"
+        }
+      }
+    },
+    "secondary": {
+      "$root": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 0.7725, 0.2],
+          "hex": "#ffc533"
+        }
+      },
+      "contrast": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.0235, 0.0431, 0.0941],
+          "hex": "#060b18"
         }
       }
     },

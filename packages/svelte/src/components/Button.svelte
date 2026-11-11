@@ -62,9 +62,9 @@
   :global {
     .rs-button {
       all: unset;
-      --rs-button-bg: var(--rs-color-accent, #2f5bdb);
-      --rs-button-color: var(--rs-color-accent-contrast, #ffffff);
-      --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
+      --rs-button-bg: #{rs-token(color-accent)};
+      --rs-button-color: #{rs-token(color-accent-contrast)};
+      --rs-button-border-color: #{rs-token(color-accent)};
       --rs-button-border-width: var(--rs-border-width, 1px);
       --rs-button-border-radius: var(--rs-radius-pill, 999px);
       --rs-button-font-size: var(--rs-font-size-sm, #{to-rem(14)});
@@ -148,9 +148,9 @@
 
       &--secondary {
         --rs-button-bg: var(--rs-color-surface, #ffffff);
-        --rs-button-border-color: var(--rs-color-accent, #2f5bdb);
+        --rs-button-border-color: #{rs-token(color-accent)};
         --rs-button-border-width: var(--rs-border-width-md, 2px);
-        --rs-button-color: var(--rs-color-accent, #2f5bdb);
+        --rs-button-color: #{rs-token(color-accent)};
 
         &:hover {
           filter: none;
@@ -164,7 +164,7 @@
         --rs-button-bg: transparent;
         --rs-button-border-color: transparent;
         --rs-button-border-width: var(--rs-border-width-md, 2px);
-        --rs-button-color: var(--rs-color-accent, #2f5bdb);
+        --rs-button-color: #{rs-token(color-accent)};
 
         &:hover {
           filter: none;

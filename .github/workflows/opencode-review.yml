@@ -5,7 +5,7 @@
 # The workflow name stays `opencode-review`: `preview-deploy.yml` starts on a
 # finished run of that name, and the `pr-ready` label Kinsho writes is its gate.
 #
-# Requires Actions secrets: OPENCODE_API_KEY, KINSHO_APP_ID and
+# Requires Actions secrets: KINSHO_PROXY_TOKEN (same value as the dashboard Worker's), KINSHO_APP_ID and
 # KINSHO_APP_PRIVATE_KEY. The reusable workflow fails by name when one is unset.
 
 name: opencode-review
@@ -23,8 +23,14 @@ permissions:
 
 jobs:
   review:
-    uses: LABCAT/kinsho/.github/workflows/review.yml@v0.4.0
+    # Pinned to kinsho main at DD-136 (llm_base_url); no release tag exists for it yet.
+    uses: LABCAT/kinsho/.github/workflows/review.yml@cdd7583a69b01e34de630833347be0814d940117
     with:
+      # Through the Daruma dashboard LLM proxy: the provider and model are picked in
+      # dashboard settings (Agent LLM proxy -> kinsho). `model` is only the label shown
+      # in the review comment.
+      llm_base_url: https://daruma.labcat.workers.dev/api/llm/kinsho/v1
+      model: daruma
       run_commands: false
       test_command: pnpm --filter @labcat2020/rocketship-svelte test
       check_command: pnpm lint:styles
@@ -41,6 +47,6 @@ jobs:
       route_branch_prefix: openhands/
       route_body_marker: daruma-openhands-dispatch
     secrets:
-      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+      LLM_API_KEY: ${{ secrets.KINSHO_PROXY_TOKEN }}
       KINSHO_APP_ID: ${{ secrets.KINSHO_APP_ID }}
       KINSHO_APP_PRIVATE_KEY: ${{ secrets.KINSHO_APP_PRIVATE_KEY }}

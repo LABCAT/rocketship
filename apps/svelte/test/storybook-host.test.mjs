@@ -87,24 +87,161 @@ test('no two story files claim the same title and story name', () => {
   }
 })
 
-test('the Table variants share one story file with a11y enabled', () => {
-  const tableStories = readdirSync(storiesDir).filter((name) => /^Table.*\.stories\.ts$/.test(name))
-  assert.deepEqual(
-    tableStories,
-    ['Table.stories.ts'],
-    'all Table variants belong in Table.stories.ts',
-  )
+test('the Table stories mirror the Astro files: one aspect each, a11y enabled', () => {
+  const files = readdirSync(storiesDir).filter((name) => /^Table.*\.stories\.ts$/.test(name))
+  assert.deepEqual(files.sort(), ['Table.stories.ts', 'Table.striped.stories.ts'])
 
-  const story = read(join(storiesDir, 'Table.stories.ts'))
-  assert.match(story, /title:\s*'Components\/Table'/)
-  assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Table stories must enable a11y')
-  for (const variant of ['Default', 'Striped', 'Compact', 'Hover', 'Combined', 'Overflow']) {
+  for (const [file, exportName, component] of [
+    ['Table.stories.ts', 'Default', 'TableDefault'],
+    ['Table.striped.stories.ts', 'Striped', 'TableStriped'],
+  ]) {
+    const source = read(join(storiesDir, file))
+    assert.match(source, /title:\s*'Components\/Table'/, `${file} keeps the Components/Table title`)
+    assert.match(source, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
     assert.match(
-      story,
-      new RegExp(`export const ${variant}: Story =`),
-      `Table.stories.ts must export the ${variant} variant`,
+      source,
+      new RegExp(`import ${component} from '\\./components/${component}\\.svelte'`),
+      `${file} must render ${component}`,
+    )
+    assert.match(
+      source,
+      new RegExp(`export const ${exportName}: Story =`),
+      `${file} must export the ${exportName} story`,
+    )
+    assert.equal(
+      (source.match(/export const /g) ?? []).length,
+      1,
+      `${file} shows one aspect, so it exports one story`,
     )
   }
+
+  for (const removed of ['Compact', 'Hover', 'Combined', 'Overflow']) {
+    assert.ok(
+      !files.some((file) => file.includes(removed)),
+      `${removed} has no Astro story, so it has no Svelte story`,
+    )
+  }
+})
+
+test('the Table story wrappers use the reviewed classes, without the removed props', () => {
+  const defaultStory = read(join(storiesDir, 'components', 'TableDefault.svelte'))
+  const stripedStory = read(join(storiesDir, 'components', 'TableStriped.svelte'))
+
+  for (const [name, source, striped] of [
+    ['TableDefault', defaultStory, false],
+    ['TableStriped', stripedStory, true],
+  ]) {
+    assert.match(source, /<Container size="content" padded>/, `${name} sits in one Container`)
+    assert.match(source, /<Stack>/, `${name} is spaced by Stack, never by Container`)
+    assert.match(
+      source,
+      /\{#snippet caption\(\)\}/,
+      `${name} names the table with the caption snippet`,
+    )
+    assert.equal(
+      /<Table striped>/.test(source),
+      striped,
+      `${name} must ${striped ? '' : 'not '}set the striped prop`,
+    )
+    assert.match(
+      source,
+      /class="rs-table__column-header/,
+      `${name} writes the header element class`,
+    )
+    assert.match(
+      source,
+      /rs-table__column-header--numeric/,
+      `${name} marks numeric columns on their header`,
+    )
+    assert.match(
+      source,
+      /class="rs-table__row-header"/,
+      `${name} writes the row-header element class`,
+    )
+    assert.match(source, /rs-table__cell--numeric/, `${name} marks numeric cells`)
+    assert.match(source, /class="rs-table__body-row"/, `${name} writes the body-row element class`)
+    assert.doesNotMatch(source, /rs-table-holder/, 'the reviewed Table renders no holder')
+    assert.doesNotMatch(source, /\bcompact\b|\bhover\b/, 'compact and hover are not props')
+    assert.ok(
+      !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
+      `${name} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+
+  assert.match(defaultStory, /rs-table__foot-row/, 'the default story shows a totals row')
+  assert.match(
+    defaultStory,
+    /<th class="rs-table__row-header" scope="row">Total<\/th>/,
+    'the totals row names itself through a row header',
+  )
+  assert.ok(
+    (stripedStory.match(/class="rs-table__body-row"/g) ?? []).length >= 3,
+    'the striped story needs alternating rows for the stripe to show',
+  )
+})
+
+test('the Scroll stories share the Base/Scroll title with one story per axis', () => {
+  const files = readdirSync(storiesDir).filter((name) => /^Scroll.*\.stories\.ts$/.test(name))
+  assert.deepEqual(files.sort(), ['Scroll.stories.ts', 'Scroll.vertical.stories.ts'])
+
+  for (const file of files) {
+    const source = read(join(storiesDir, file))
+    assert.match(source, /title:\s*'Base\/Scroll'/, `${file} keeps the Base/Scroll title`)
+    assert.match(source, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
+  }
+
+  assert.match(
+    read(join(storiesDir, 'Scroll.stories.ts')),
+    /export const Horizontal: Story =/,
+    'the sideways story exports Horizontal, as the Astro story does',
+  )
+  assert.match(
+    read(join(storiesDir, 'Scroll.vertical.stories.ts')),
+    /export const Vertical: Story =/,
+    'the vertical story exports Vertical, as the Astro story does',
+  )
+})
+
+test('every Scroll story makes and names its region, as the a11y rules require', () => {
+  for (const file of ['ScrollHorizontal.svelte', 'ScrollVertical.svelte']) {
+    const source = read(join(storiesDir, 'components', file))
+    assert.match(source, /<Container size="content" padded>/, `${file} sits in one Container`)
+    assert.match(source, /<Scroll\b/, `${file} must render a Scroll`)
+    assert.match(source, /tabindex="0"/, `${file} makes the region focusable`)
+    assert.match(source, /role="region"/, `${file} exposes the region role`)
+    assert.match(
+      source,
+      /aria-labelledby="(scroll-horizontal-caption|scroll-vertical-heading)"/,
+      `${file} names the region from a caption or heading`,
+    )
+    assert.match(
+      source,
+      /id="(scroll-horizontal-caption|scroll-vertical-heading)"/,
+      `${file} writes the element the region points at`,
+    )
+    assert.ok(
+      !/<style[\s>]/.test(source) && !/class="(?!rs-)/.test(source),
+      `${file} must not carry story-only styles or non-Rocketship classes`,
+    )
+  }
+
+  const horizontal = read(join(storiesDir, 'components', 'ScrollHorizontal.svelte'))
+  assert.match(horizontal, /<Table>/, 'the sideways story scrolls a table it does not modify')
+  assert.match(horizontal, /\{#snippet caption\(\)\}/, 'the table is named by the caption snippet')
+  assert.match(
+    horizontal,
+    /<span id="scroll-horizontal-caption">/,
+    'the caption snippet slots the element that carries the id',
+  )
+  assert.doesNotMatch(horizontal, /\bvertical\b/, 'the sideways story is not vertical')
+
+  const vertical = read(join(storiesDir, 'components', 'ScrollVertical.svelte'))
+  assert.match(vertical, /<Scroll vertical\b/, 'the vertical story sets the vertical prop')
+  assert.match(
+    vertical,
+    /<h2 id="scroll-vertical-heading">/,
+    'the vertical story is named by a heading above the region',
+  )
 })
 
 test('the Figure variants share one story file with a11y enabled', () => {

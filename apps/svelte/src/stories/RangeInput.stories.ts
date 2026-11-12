@@ -3,7 +3,7 @@ import RangeInputStates from './components/RangeInputStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Range Input',
+  title: 'Forms/Range Input',
   component: RangeInputStates,
   parameters: {
     a11y: { disable: false },

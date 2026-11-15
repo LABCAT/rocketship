@@ -52,25 +52,45 @@
       "$root": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.1843, 0.3569, 0.8588],
-          "hex": "#2f5bdb"
+          "components": [1, 0.4784, 0.2],
+          "hex": "#ff7a33"
         }
       },
       "contrast": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [1, 1, 1],
-          "hex": "#ffffff"
+          "components": [0.0745, 0.102, 0.1843],
+          "hex": "#131a2f"
         }
       },
       "text": {
-        "$value": "{color.accent.$root}"
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.6902, 0.2196, 0.0392],
+          "hex": "#b0380a"
+        }
       },
       "hover": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.1569, 0.302, 0.7294],
-          "hex": "#284dba"
+          "components": [1, 0.5843, 0.349],
+          "hex": "#ff9559"
+        }
+      }
+    },
+    "secondary": {
+      "$root": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 0.7725, 0.2],
+          "hex": "#ffc533"
+        }
+      },
+      "contrast": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.0745, 0.102, 0.1843],
+          "hex": "#131a2f"
         }
       }
     },

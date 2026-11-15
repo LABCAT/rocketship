@@ -1,7 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'small' | 'medium' | 'large'
 
 type NativeButtonType = 'button' | 'submit' | 'reset'
@@ -125,7 +125,7 @@ const classes = [
 
     &--secondary {
       --rs-button-bg: #{rs-token(color-surface)};
-      --rs-button-border-color: #{rs-token(color-accent)};
+      --rs-button-border-color: #{rs-token(color-accent-text)};
       --rs-button-border-width: #{rs-token(border-width-md)};
       --rs-button-color: #{rs-token(color-accent-text)};
       --rs-button-hover-bg: color-mix(
@@ -133,7 +133,7 @@ const classes = [
         #{rs-token(color-accent)} 10%,
         #{rs-token(color-surface)}
       );
-      --rs-button-hover-border-color: #{rs-token(color-accent)};
+      --rs-button-hover-border-color: #{rs-token(color-accent-text)};
     }
 
     &--ghost {
@@ -143,6 +143,21 @@ const classes = [
       --rs-button-color: #{rs-token(color-accent-text)};
       --rs-button-hover-bg: color-mix(in srgb, #{rs-token(color-accent)} 10%, transparent);
       --rs-button-hover-border-color: transparent;
+    }
+
+    /// Outline in both schemes: the dark danger red is too pale for a readable solid fill, so the
+    /// light scheme matches it. Only existing tokens.
+    &--danger {
+      --rs-button-bg: #{rs-token(color-surface)};
+      --rs-button-color: #{rs-token(color-fg)};
+      --rs-button-border-color: #{rs-token(color-danger-accent)};
+      --rs-button-border-width: #{rs-token(border-width-md)};
+      --rs-button-hover-bg: color-mix(
+        in srgb,
+        #{rs-token(color-danger-accent)} 10%,
+        #{rs-token(color-surface)}
+      );
+      --rs-button-hover-border-color: #{rs-token(color-danger-accent)};
     }
 
     &--small {

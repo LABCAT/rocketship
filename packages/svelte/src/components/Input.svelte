@@ -85,7 +85,7 @@
       }
 
       &:focus-visible {
-        border-color: var(--rs-input-focus-border-color, var(--rs-color-accent, #2f5bdb));
+        border-color: var(--rs-input-focus-border-color, #{rs-token(color-accent)});
         outline: 2px solid var(--rs-input-focus-ring-color, var(--rs-color-focus-ring, #296dff));
         outline-offset: 2px;
       }

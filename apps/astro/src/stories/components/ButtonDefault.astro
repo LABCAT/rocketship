@@ -10,9 +10,10 @@ import exampleSource from './ButtonDefaultExample.astro?raw'
 const attributes = [
   {
     name: 'variant',
-    type: "'primary' | 'secondary' | 'ghost'",
+    type: "'primary' | 'secondary' | 'ghost' | 'danger'",
     default: "'primary'",
-    description: 'Use one primary per view for the main action, secondary or ghost for the rest.',
+    description:
+      'Use one primary per view for the main action, secondary or ghost for the rest, and danger for an action that deletes or cannot be undone.',
   },
   {
     name: 'size',

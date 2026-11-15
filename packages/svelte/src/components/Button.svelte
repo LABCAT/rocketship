@@ -148,9 +148,9 @@
 
       &--secondary {
         --rs-button-bg: var(--rs-color-surface, #ffffff);
-        --rs-button-border-color: #{rs-token(color-accent)};
+        --rs-button-border-color: #{rs-token(color-accent-text)};
         --rs-button-border-width: var(--rs-border-width-md, 2px);
-        --rs-button-color: #{rs-token(color-accent)};
+        --rs-button-color: #{rs-token(color-accent-text)};
 
         &:hover {
           filter: none;
@@ -164,7 +164,7 @@
         --rs-button-bg: transparent;
         --rs-button-border-color: transparent;
         --rs-button-border-width: var(--rs-border-width-md, 2px);
-        --rs-button-color: #{rs-token(color-accent)};
+        --rs-button-color: #{rs-token(color-accent-text)};
 
         &:hover {
           filter: none;

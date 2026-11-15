@@ -64,7 +64,11 @@
         }
       },
       "text": {
-        "$value": "{color.accent.$root}"
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 0.4784, 0.2],
+          "hex": "#ff7a33"
+        }
       },
       "hover": {
         "$value": {

@@ -53,7 +53,8 @@
     "./components/RangeInput": "./src/components/RangeInput.astro",
     "./components/Popover": "./src/components/Popover.astro",
     "./components/Tooltip": "./src/components/Tooltip.astro",
-    "./components/Dialog": "./src/components/Dialog.astro"
+    "./components/Dialog": "./src/components/Dialog.astro",
+    "./components/Pagination": "./src/components/Pagination.astro"
   },
   "files": [
     "dist",

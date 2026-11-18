@@ -1,0 +1,199 @@
+---
+import Container from '@labcat2020/rocketship/components/Container'
+import Scroll from '@labcat2020/rocketship/components/Scroll'
+import Stack from '@labcat2020/rocketship/components/Stack'
+import Table from '@labcat2020/rocketship/components/Table'
+import Typography from '@labcat2020/rocketship/components/Typography'
+import Pagination from '@labcat2020/rocketship/components/Pagination'
+import PaginationDefaultExample from './PaginationDefaultExample.astro'
+import exampleSource from './PaginationDefaultExample.astro?raw'
+
+const attributes = [
+  {
+    name: 'currentPage',
+    type: 'number',
+    default: '—',
+    description:
+      'The page being shown, counted from 1. Values outside 1 to totalPages are clamped.',
+  },
+  {
+    name: 'totalPages',
+    type: 'number',
+    default: '—',
+    description: 'How many pages there are. With one page or fewer, nothing is rendered.',
+  },
+  {
+    name: 'baseUrl',
+    type: 'string',
+    default: "''",
+    description:
+      'Where the links point. The page number is added as a query parameter, after any query string already present.',
+  },
+  {
+    name: 'param',
+    type: 'string',
+    default: "'page'",
+    description: 'Name of the query parameter that carries the page number.',
+  },
+  {
+    name: 'hrefFor',
+    type: '(page: number) => string',
+    default: '—',
+    description:
+      'Builds each link yourself, for paths such as /releases/page/3. When set, baseUrl and param are ignored.',
+  },
+  {
+    name: 'siblingCount',
+    type: 'number',
+    default: '1',
+    description:
+      'Pages shown on each side of the current page. The first and last page always show; an ellipsis stands in for the rest.',
+  },
+  {
+    name: 'previousLabel',
+    type: 'string',
+    default: "'Previous'",
+    description: 'Text of the previous link.',
+  },
+  {
+    name: 'nextLabel',
+    type: 'string',
+    default: "'Next'",
+    description: 'Text of the next link.',
+  },
+  {
+    name: 'pageLabel',
+    type: 'string',
+    default: "'Page {page}'",
+    description:
+      'Accessible name of each page link. {page} is replaced with the page number, so word order can follow the language.',
+  },
+  {
+    name: 'aria-label',
+    type: 'string',
+    default: "'Pagination'",
+    description:
+      'Native attribute. Names the nav landmark. Give each pagination on a page its own name.',
+  },
+  { name: 'class', type: 'string', default: '—', description: 'Added to the <nav>.' },
+]
+
+const hooks = [
+  { name: '--rs-pagination-color', default: '--rs-color-fg' },
+  { name: '--rs-pagination-gap', default: '--rs-space-1' },
+  { name: '--rs-pagination-min-size', default: '--rs-space-8' },
+  { name: '--rs-pagination-padding-inline', default: '--rs-space-3' },
+  { name: '--rs-pagination-border-width', default: '--rs-border-width-sm' },
+  { name: '--rs-pagination-border-radius', default: '--rs-radius-md' },
+  { name: '--rs-pagination-font-weight', default: '--rs-font-weight-semibold' },
+  { name: '--rs-pagination-disabled-color', default: '--rs-color-muted' },
+  { name: '--rs-pagination-transition-duration', default: '--rs-transition-fast' },
+]
+---
+
+<Container size="content" padded>
+  <Stack gap="large">
+    <Typography as="article">
+      <h1>Pagination</h1>
+      <p>
+        Pagination links to the pages of a long list. It is a <code>&lt;nav&gt;</code> of plain links,
+        so it works with no script: each link loads its page. The current page is marked with
+        <code>aria-current="page"</code>, and previous or next turn into plain text at either end.
+      </p>
+    </Typography>
+
+    <PaginationDefaultExample />
+
+    <Typography as="article">
+      <h2 id="usage-heading">Usage</h2>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-labelledby="usage-heading"><code>{exampleSource}</code></pre>
+    </Typography>
+
+    <Typography as="article">
+      <h2 id="short-heading">Short lists</h2>
+      <p>
+        When every page fits, all of them show. At the first page, previous is text instead of a
+        link.
+      </p>
+    </Typography>
+
+    <Pagination currentPage={1} totalPages={4} baseUrl="/builds" aria-label="Builds pages" />
+
+    <Typography as="article">
+      <h2 id="translated-heading">Translated labels</h2>
+      <p>
+        Every word comes from a prop. <code>hrefFor</code> builds paths instead of query strings.
+      </p>
+    </Typography>
+
+    <Pagination
+      currentPage={3}
+      totalPages={9}
+      siblingCount={2}
+      hrefFor={(page) => `/fr/versions/page/${page}`}
+      previousLabel="Précédent"
+      nextLabel="Suivant"
+      pageLabel="Page {page} des versions"
+      aria-label="Pagination des versions"
+    />
+
+    <Scroll tabindex="0" role="region" aria-labelledby="props-caption">
+      <Table>
+        <span slot="caption" id="props-caption">Props and attributes</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Name</th>
+            <th class="rs-table__column-header" scope="col">Type</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+            <th class="rs-table__column-header" scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            attributes.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.type}</code>
+                </td>
+                <td class="rs-table__cell">{row.default}</td>
+                <td class="rs-table__cell">{row.description}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table>
+    </Scroll>
+
+    <Scroll tabindex="0" role="region" aria-labelledby="hooks-caption">
+      <Table>
+        <span slot="caption" id="hooks-caption">CSS hooks</span>
+        <thead>
+          <tr>
+            <th class="rs-table__column-header" scope="col">Property</th>
+            <th class="rs-table__column-header" scope="col">Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            hooks.map((row) => (
+              <tr class="rs-table__body-row">
+                <th class="rs-table__row-header" scope="row">
+                  <code>{row.name}</code>
+                </th>
+                <td class="rs-table__cell">
+                  <code>{row.default}</code>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </Table>
+    </Scroll>
+  </Stack>
+</Container>

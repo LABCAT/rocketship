@@ -49,6 +49,7 @@ export default {
             'Card',
             'Table',
             ['Default', 'Striped'],
+            'Pagination',
             'Figure',
             ['Default', 'Portrait'],
             'Alert',

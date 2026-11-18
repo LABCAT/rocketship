@@ -1,0 +1,246 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type Props = {
+  currentPage: number
+  totalPages: number
+  baseUrl?: string
+  param?: string
+  hrefFor?: (page: number) => string
+  siblingCount?: number
+  previousLabel?: string
+  nextLabel?: string
+  pageLabel?: string
+  class?: string
+} & HTMLAttributes<'nav'>
+
+type PageItem = { type: 'page'; page: number } | { type: 'ellipsis'; key: string }
+
+const {
+  currentPage,
+  totalPages,
+  baseUrl = '',
+  param = 'page',
+  hrefFor,
+  siblingCount = 1,
+  previousLabel = 'Previous',
+  nextLabel = 'Next',
+  pageLabel = 'Page {page}',
+  class: className,
+  'aria-label': ariaLabel = 'Pagination',
+  ...attrs
+} = Astro.props as Props
+
+/** Whole number of at least `min`; anything else (NaN, fractions, negatives) is cleaned up. */
+const toCount = (value: number, min: number): number =>
+  Number.isFinite(value) ? Math.max(min, Math.floor(value)) : min
+
+/** Inclusive list of whole numbers from `start` to `end`. */
+const range = (start: number, end: number): number[] =>
+  Array.from({ length: end - start + 1 }, (_, index) => start + index)
+
+const total = toCount(totalPages, 1)
+const current = Math.min(toCount(currentPage, 1), total)
+const siblings = toCount(siblingCount, 0)
+
+/**
+ * Pages to show: first, last, the current page with `siblings` on each side, and an ellipsis
+ * where pages are skipped. The slot count stays fixed, so the row does not jump while paging.
+ */
+const buildItems = (): PageItem[] => {
+  const slots = siblings * 2 + 5
+  if (total <= slots) return range(1, total).map((page) => ({ type: 'page', page }))
+
+  const showStartEllipsis = current - siblings > 3
+  const showEndEllipsis = current + siblings < total - 2
+  const edgeCount = siblings * 2 + 3
+
+  if (!showStartEllipsis) {
+    return [
+      ...range(1, edgeCount).map((page): PageItem => ({ type: 'page', page })),
+      { type: 'ellipsis', key: 'end' },
+      { type: 'page', page: total },
+    ]
+  }
+
+  if (!showEndEllipsis) {
+    return [
+      { type: 'page', page: 1 },
+      { type: 'ellipsis', key: 'start' },
+      ...range(total - edgeCount + 1, total).map((page): PageItem => ({ type: 'page', page })),
+    ]
+  }
+
+  return [
+    { type: 'page', page: 1 },
+    { type: 'ellipsis', key: 'start' },
+    ...range(current - siblings, current + siblings).map((page): PageItem => ({
+      type: 'page',
+      page,
+    })),
+    { type: 'ellipsis', key: 'end' },
+    { type: 'page', page: total },
+  ]
+}
+
+/** Link target for a page: the consumer's `hrefFor`, else `baseUrl` plus `?param=page`. */
+const hrefOf = (page: number): string => {
+  if (hrefFor) return hrefFor(page)
+  const separator = baseUrl.includes('?') ? '&' : '?'
+  return `${baseUrl}${separator}${encodeURIComponent(param)}=${page}`
+}
+
+/** Accessible name of a page link, from the `pageLabel` template. */
+const labelOf = (page: number): string => pageLabel.replace('{page}', String(page))
+
+const items = buildItems()
+const classes = ['rs-pagination', className]
+---
+
+{
+  total > 1 && (
+    <nav {...attrs} aria-label={ariaLabel} class:list={classes}>
+      <ul class="rs-pagination__list" role="list">
+        <li class="rs-pagination__item">
+          {current > 1 ? (
+            <a class="rs-pagination__link" href={hrefOf(current - 1)} rel="prev">
+              {previousLabel}
+            </a>
+          ) : (
+            <span class="rs-pagination__disabled">{previousLabel}</span>
+          )}
+        </li>
+        {items.map((item) =>
+          item.type === 'ellipsis' ? (
+            <li class="rs-pagination__item" aria-hidden="true">
+              <span class="rs-pagination__ellipsis">…</span>
+            </li>
+          ) : (
+            <li class="rs-pagination__item">
+              <a
+                class:list={[
+                  'rs-pagination__link',
+                  item.page === current && 'rs-pagination__link--current',
+                ]}
+                href={hrefOf(item.page)}
+                aria-label={labelOf(item.page)}
+                aria-current={item.page === current ? 'page' : undefined}
+              >
+                {item.page}
+              </a>
+            </li>
+          ),
+        )}
+        <li class="rs-pagination__item">
+          {current < total ? (
+            <a class="rs-pagination__link" href={hrefOf(current + 1)} rel="next">
+              {nextLabel}
+            </a>
+          ) : (
+            <span class="rs-pagination__disabled">{nextLabel}</span>
+          )}
+        </li>
+      </ul>
+    </nav>
+  )
+}
+
+<style is:global lang="scss">
+  @use '../styles/mixins' as *;
+
+  .rs-pagination {
+    --rs-pagination-link-color: #{rs-token(color-accent-text)};
+    --rs-pagination-hover-bg: color-mix(
+      in srgb,
+      #{rs-token(color-accent)} 10%,
+      #{rs-token(color-surface)}
+    );
+    --rs-pagination-current-bg: #{rs-token(color-accent)};
+    --rs-pagination-current-color: #{rs-token(color-accent-contrast)};
+    --rs-pagination-duration: var(
+      --rs-pagination-transition-duration,
+      #{rs-token(transition-fast)}
+    );
+    color: var(--rs-pagination-color, #{rs-token(color-fg)});
+
+    @media (prefers-reduced-motion: reduce) {
+      --rs-pagination-duration: 0s;
+    }
+
+    &__list {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--rs-pagination-gap, #{rs-token(space-1)});
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__item {
+      margin: 0;
+    }
+
+    &__link,
+    &__disabled,
+    &__ellipsis {
+      box-sizing: border-box;
+      align-items: center;
+      display: inline-flex;
+      justify-content: center;
+      margin: 0;
+      min-block-size: var(--rs-pagination-min-size, #{rs-token(space-8)});
+      min-inline-size: var(--rs-pagination-min-size, #{rs-token(space-8)});
+      padding-inline: var(--rs-pagination-padding-inline, #{rs-token(space-3)});
+      border: var(--rs-pagination-border-width, #{rs-token(border-width-sm)}) solid transparent;
+      border-radius: var(--rs-pagination-border-radius, #{rs-token(radius-md)});
+      font-size: inherit;
+      font-variant-numeric: tabular-nums;
+      line-height: #{rs-token(line-height-tight)};
+      text-decoration: none;
+    }
+
+    &__link {
+      background: transparent;
+      color: var(--rs-pagination-link-color);
+      font-weight: var(--rs-pagination-font-weight, #{rs-token(font-weight-semibold)});
+      transition:
+        background-color var(--rs-pagination-duration) ease,
+        color var(--rs-pagination-duration) ease;
+
+      &:hover {
+        background: var(--rs-pagination-hover-bg);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #{rs-token(color-focus-ring)};
+        outline-offset: 2px;
+      }
+    }
+
+    /// The current page is marked by fill and weight, and by a border that forced colours keep.
+    &__link--current {
+      background: var(--rs-pagination-current-bg);
+      border-color: var(--rs-pagination-current-bg);
+      color: var(--rs-pagination-current-color);
+
+      &:hover {
+        background: var(--rs-pagination-current-bg);
+      }
+
+      @media (forced-colors: active) {
+        border-color: Highlight;
+      }
+    }
+
+    /// A previous or next that has nowhere to go is plain text, not a link.
+    &__disabled {
+      color: var(--rs-pagination-disabled-color, #{rs-token(color-muted)});
+      font-weight: var(--rs-pagination-font-weight, #{rs-token(font-weight-semibold)});
+    }
+
+    &__ellipsis {
+      color: var(--rs-pagination-disabled-color, #{rs-token(color-muted)});
+    }
+  }
+</style>

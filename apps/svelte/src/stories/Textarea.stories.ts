@@ -5,7 +5,7 @@ import TextareaStates from './components/TextareaStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Textarea',
+  title: 'Forms/Textarea',
   component: TextareaDefault,
   parameters: {
     a11y: { disable: false },

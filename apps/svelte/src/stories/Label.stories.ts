@@ -3,7 +3,7 @@ import LabelVariants from './components/LabelVariants.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Label',
+  title: 'Forms/Label',
   component: LabelVariants,
   parameters: {
     a11y: { disable: false },

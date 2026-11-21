@@ -3,7 +3,7 @@ import CheckboxStates from './components/CheckboxStates.svelte'
 import '@labcat2020/rocketship/styles'
 
 const meta = {
-  title: 'Components/Checkbox',
+  title: 'Forms/Checkbox',
   component: CheckboxStates,
   parameters: {
     a11y: { disable: false },

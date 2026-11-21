@@ -15,6 +15,36 @@ const rootPkg = readJson(join(repoRoot, 'package.json'))
 const astroPkg = readJson(join(repoRoot, 'apps', 'astro', 'package.json'))
 const mainTs = read(join(appRoot, '.storybook', 'main.ts'))
 
+const sveltePreview = read(join(appRoot, '.storybook', 'preview.ts'))
+const astroPreview = read(join(repoRoot, 'apps', 'astro', '.storybook', 'preview.ts'))
+
+/** Reads a preview file's `storySort.order` literal as a JavaScript value. */
+const readSortOrder = (source) => {
+  const marker = 'order: '
+  const start = source.indexOf(marker)
+  assert.notEqual(start, -1, 'the host must declare a storySort order')
+
+  let depth = 0
+  let end = start + marker.length
+  for (let i = end; i < source.length; i += 1) {
+    if (source[i] === '[') depth += 1
+    if (source[i] !== ']') continue
+    depth -= 1
+    if (depth === 0) {
+      end = i + 1
+      break
+    }
+  }
+
+  return JSON.parse(
+    source
+      .slice(start + marker.length, end)
+      .replace(/\s*\/\/[^\n]*/g, '')
+      .replace(/,(\s*\])/g, '$1')
+      .replace(/'/g, '"'),
+  )
+}
+
 test('apps/svelte is a private Storybook 10 host package', () => {
   assert.equal(sveltePkg.name, '@rocketship/svelte-storybook')
   assert.equal(sveltePkg.private, true)
@@ -152,18 +182,19 @@ test('the Astro host is left unchanged', () => {
 
 test('the Checkbox and Radio stories mirror the Astro States and Set stories', () => {
   const expected = {
-    Checkbox: ['Checkbox.set.stories.ts', 'Checkbox.stories.ts'],
-    Radio: ['Radio.stories.ts'],
-    RadioGroup: ['RadioGroup.stories.ts'],
+    Checkbox: { files: ['Checkbox.set.stories.ts', 'Checkbox.stories.ts'], group: 'Forms' },
+    Radio: { files: ['Radio.stories.ts'], group: 'Forms' },
+    // RadioGroup has no Astro original, so it is not a Forms/ story (decision 147).
+    RadioGroup: { files: ['RadioGroup.stories.ts'], group: 'Components' },
   }
 
-  for (const [component, expectedFiles] of Object.entries(expected)) {
+  for (const [component, expectation] of Object.entries(expected)) {
     const files = readdirSync(storiesDir)
       .filter((name) => new RegExp(`^${component}[.a-z]*\\.stories\\.ts$`).test(name))
       .sort()
     assert.deepEqual(
       files,
-      expectedFiles,
+      expectation.files,
       `${component} has the same stories as the Astro original`,
     )
 
@@ -171,7 +202,7 @@ test('the Checkbox and Radio stories mirror the Astro States and Set stories', (
       const story = read(join(storiesDir, file))
       assert.match(
         story,
-        new RegExp(`title:\\s*'Components/${component}'`),
+        new RegExp(`title:\\s*'${expectation.group}/${component}'`),
         `${file} uses the Astro title`,
       )
       assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, `${file} must enable a11y`)
@@ -413,14 +444,14 @@ test('the Field title lives in exactly one story file', () => {
   const files = readdirSync(storiesDir).filter((name) => /\.stories\.ts$/.test(name))
 
   const owners = files.filter((file) =>
-    /title:\s*'Components\/Field'/.test(read(join(storiesDir, file))),
+    /title:\s*'Forms\/Field'/.test(read(join(storiesDir, file))),
   )
-  assert.deepEqual(owners, ['Field.stories.ts'], 'Components/Field must be declared once')
+  assert.deepEqual(owners, ['Field.stories.ts'], 'Forms/Field must be declared once')
 })
 
 test('the Field stories live in one file exporting Default, Disabled and Snippets', () => {
   const source = read(join(appRoot, 'src', 'stories', 'Field.stories.ts'))
-  assert.match(source, /title:\s*'Components\/Field'/, 'Field keeps its Components/Field title')
+  assert.match(source, /title:\s*'Forms\/Field'/, 'Field keeps its Forms/Field title')
 
   for (const name of ['Default', 'Disabled', 'Snippets']) {
     assert.match(
@@ -452,7 +483,7 @@ test('the Input and Textarea variants each share one story file with a11y enable
     )
 
     const source = read(join(storiesDir, `${component}.stories.ts`))
-    assert.match(source, new RegExp(`title:\\s*'Components/${component}'`))
+    assert.match(source, new RegExp(`title:\\s*'Forms/${component}'`))
     assert.match(
       source,
       /a11y:\s*\{\s*disable:\s*false\s*\}/,
@@ -500,7 +531,7 @@ test('the Select story mirrors the Astro States story with a11y enabled', () => 
   )
 
   const story = read(join(storiesDir, 'Select.stories.ts'))
-  assert.match(story, /title:\s*'Components\/Select'/, 'the Svelte title matches the Astro title')
+  assert.match(story, /title:\s*'Forms\/Select'/, 'the Svelte title matches the Astro title')
   assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Select story must enable a11y')
   assert.match(story, /export const States: Story =/, 'the story exports States, as Astro does')
 
@@ -552,7 +583,7 @@ test('the Fieldset story mirrors the Astro story: one Default example per decisi
   )
 
   const story = read(join(storiesDir, 'Fieldset.stories.ts'))
-  assert.match(story, /title:\s*'Components\/Fieldset'/)
+  assert.match(story, /title:\s*'Forms\/Fieldset'/)
   assert.match(story, /a11y:\s*\{\s*disable:\s*false\s*\}/, 'the Fieldset story must enable a11y')
   // Decision 29: disabled is a state, not an aspect, so it sits inside Default rather than in a
   // Disabled file. Asserting the absence keeps a second file from coming back.
@@ -648,6 +679,51 @@ test('the Fieldset story groups real controls, pairs a locked group with an enab
   }
 })
 
+test('the form stories sit in the Forms/ group and nothing else does', () => {
+  const expected = {
+    'Field.stories.ts': 'Forms/Field',
+    'Fieldset.stories.ts': 'Forms/Fieldset',
+    'Label.stories.ts': 'Forms/Label',
+    'Input.stories.ts': 'Forms/Input',
+    'Textarea.stories.ts': 'Forms/Textarea',
+    'Select.stories.ts': 'Forms/Select',
+    'Checkbox.stories.ts': 'Forms/Checkbox',
+    'Checkbox.set.stories.ts': 'Forms/Checkbox',
+    'Radio.stories.ts': 'Forms/Radio',
+    'FileInput.stories.ts': 'Forms/File Input',
+    'RangeInput.stories.ts': 'Forms/Range Input',
+  }
+
+  for (const [file, title] of Object.entries(expected)) {
+    assert.match(
+      read(join(storiesDir, file)),
+      new RegExp(`title:\\s*'${title}'`),
+      `${file} belongs in ${title}`,
+    )
+  }
+
+  const forms = readdirSync(storiesDir)
+    .filter((name) => /\.stories\.ts$/.test(name))
+    .filter((name) => /title:\s*'Forms\//.test(read(join(storiesDir, name))))
+    .sort()
+  assert.deepEqual(forms, Object.keys(expected).sort(), 'Forms/ holds the form controls only')
+
+  // RadioGroup is Svelte-only: no Astro original, so decision 147 leaves it in Components/.
+  assert.match(
+    read(join(storiesDir, 'RadioGroup.stories.ts')),
+    /title:\s*'Components\/RadioGroup'/,
+    'RadioGroup stays in Components/, as it has no Astro original',
+  )
+})
+
+test('the Svelte host sorts stories in the Astro order', () => {
+  assert.deepEqual(
+    readSortOrder(sveltePreview),
+    readSortOrder(astroPreview),
+    'the Svelte sort order is the Astro one (decision 147)',
+  )
+})
+
 test('the Stack stories share the Base/Stack title with one story per gap aspect', () => {
   const files = readdirSync(storiesDir).filter((name) => /^Stack.*\.stories\.ts$/.test(name))
   assert.deepEqual(files.sort(), ['Stack.gaps.stories.ts', 'Stack.stories.ts'])
@@ -672,8 +748,8 @@ test('the Stack stories share the Base/Stack title with one story per gap aspect
 
 test('the File Input and Range Input stories mirror the Astro States stories', () => {
   for (const [component, file, fixture, title] of [
-    ['FileInput', 'FileInput.stories.ts', 'FileInputStates.svelte', 'Components/File Input'],
-    ['RangeInput', 'RangeInput.stories.ts', 'RangeInputStates.svelte', 'Components/Range Input'],
+    ['FileInput', 'FileInput.stories.ts', 'FileInputStates.svelte', 'Forms/File Input'],
+    ['RangeInput', 'RangeInput.stories.ts', 'RangeInputStates.svelte', 'Forms/Range Input'],
   ]) {
     const files = readdirSync(storiesDir).filter((name) =>
       new RegExp(`^${component}.*\\.stories\\.ts$`).test(name),

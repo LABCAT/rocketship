@@ -1,43 +1,54 @@
 <script lang="ts">
-  import Table from '@labcat2020/rocketship-svelte/components/Table'
   import Container from '@labcat2020/rocketship-svelte/components/Container'
+  import Stack from '@labcat2020/rocketship-svelte/components/Stack'
+  import Table from '@labcat2020/rocketship-svelte/components/Table'
 </script>
 
-<Container as="main" size="content" padded>
-  <Table striped>
-    <thead>
-      <tr>
-        <th scope="col">Service</th>
-        <th scope="col">Environment</th>
-        <th scope="col">Status</th>
-        <th scope="col">Duration</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>checkout-api</td>
-        <td>Production</td>
-        <td>Succeeded</td>
-        <td>1m 42s</td>
-      </tr>
-      <tr>
-        <td>pricing-worker</td>
-        <td>Production</td>
-        <td>Succeeded</td>
-        <td>2m 08s</td>
-      </tr>
-      <tr>
-        <td>search-indexer</td>
-        <td>Staging</td>
-        <td>Rolled back</td>
-        <td>4m 55s</td>
-      </tr>
-      <tr>
-        <td>notifications</td>
-        <td>Staging</td>
-        <td>Succeeded</td>
-        <td>58s</td>
-      </tr>
-    </tbody>
-  </Table>
+<Container size="content" padded>
+  <Stack>
+    <Table striped>
+      {#snippet caption()}Recent deployments{/snippet}
+      <thead>
+        <tr>
+          <th class="rs-table__column-header" scope="col">Project</th>
+          <th class="rs-table__column-header" scope="col">Branch</th>
+          <th class="rs-table__column-header rs-table__column-header--numeric" scope="col">
+            Duration (s)
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Docs site</th>
+          <td class="rs-table__cell">main</td>
+          <td class="rs-table__cell rs-table__cell--numeric">48</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Dashboard</th>
+          <td class="rs-table__cell">release/2.4</td>
+          <td class="rs-table__cell rs-table__cell--numeric">132</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Marketing</th>
+          <td class="rs-table__cell">main</td>
+          <td class="rs-table__cell rs-table__cell--numeric">61</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Dashboard</th>
+          <td class="rs-table__cell">main</td>
+          <td class="rs-table__cell rs-table__cell--numeric">127</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Docs site</th>
+          <td class="rs-table__cell">fix/search-index</td>
+          <td class="rs-table__cell rs-table__cell--numeric">52</td>
+        </tr>
+        <tr class="rs-table__body-row">
+          <th class="rs-table__row-header" scope="row">Marketing</th>
+          <td class="rs-table__cell">campaign/spring</td>
+          <td class="rs-table__cell rs-table__cell--numeric">58</td>
+        </tr>
+      </tbody>
+    </Table>
+  </Stack>
 </Container>

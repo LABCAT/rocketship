@@ -38,7 +38,6 @@ export default {
     'packages/svelte/src/components/Figure.svelte',
     'packages/svelte/src/components/Input.svelte',
     'packages/svelte/src/components/Label.svelte',
-    'packages/svelte/src/components/Table.svelte',
     'packages/svelte/src/components/Textarea.svelte',
     'packages/svelte/src/components/Typography.svelte',
   ],

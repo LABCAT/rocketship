@@ -38,6 +38,7 @@ const componentSubpaths = [
   'Radio',
   'RadioGroup',
   'RangeInput',
+  'Scroll',
   'Select',
   'Stack',
   'Table',
@@ -194,8 +195,10 @@ test('each published component compiles and server-renders its BEM block class',
     Radio: 'rs-radio',
     RadioGroup: 'rs-fieldset',
     RangeInput: 'rs-range-input',
+    Scroll: 'rs-scroll',
     Select: 'rs-select',
     Stack: 'rs-stack',
+    Table: 'rs-table',
     Typography: 'rs-typography',
   }
 
